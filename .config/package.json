@@ -1,0 +1,40 @@
+{
+  "name": "zappy",
+  "version": "1.0.0",
+  "description": "Zappy is an Epitech project simulating fight between monsters",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "husky"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LeJih8-24/Zappy.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/LeJih8-24/Zappy/issues"
+  },
+  "homepage": "https://github.com/LeJih8-24/Zappy#readme",
+  "devDependencies": {
+    "@commitlint/cli": "^21.0.1",
+    "@commitlint/config-conventional": "^21.0.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0"
+  },
+  "lint-staged": {
+    "*.py": [
+      "ruff check --fix",
+      "ruff format"
+    ],
+    "*.{c,cpp,h,hpp}": [
+      "clang-format -i"
+    ]
+  }
+}
