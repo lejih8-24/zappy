@@ -1,1 +1,1 @@
-cd config && npx --no -- commitlint --edit "$1"
+cd .config && npx --no -- commitlint --edit "$1"

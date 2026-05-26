@@ -1,1 +1,1 @@
-cd config && npx lint-staged
+cd .config && npx lint-staged
