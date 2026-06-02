@@ -8,6 +8,7 @@ class NetworkClient:
         self.port = port
         self.socket = None
         self._read_buffer = ""
+        self.max_requests = 0
 
     def connect(self):
         """
@@ -29,11 +30,16 @@ class NetworkClient:
         if not command.endswith("\n"):
             command += "\n"
 
+        if self.max_requests > 10:
+            self.close()
+            return
+
         try:
             self.socket.sendall(command.encode('utf-8'))
         except BrokenPipeError:
-            print("❌ Erreur : Connexion au serveur perdue lors de l'envoi.", file=sys.stderr)
+            print("Erreur : Connexion au serveur perdue lors de l'envoi.", file=sys.stderr)
             sys.exit(84)
+        self.max_requests += 1
 
     def get_responses(self) -> list[str]:
         """
@@ -46,6 +52,7 @@ class NetworkClient:
         ready_to_read, _, _ = select.select([self.socket], [], [], 0.05)
 
         if ready_to_read:
+            self.max_requests = 0
             try:
                 chunk = self.socket.recv(4096).decode('utf-8')
 
