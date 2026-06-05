@@ -17,12 +17,8 @@ set(AI_ENTRY
 "\\n\\tmain()\\n\""
 )
 
-set(AI_SRC_FILES
-    main.py)
-
 set(AI_OUTPUT_PATH "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/zappy_ai")
 
 add_custom_target(zappy_ai ALL
                   printf ${AI_ENTRY} > "${AI_OUTPUT_PATH}"
-                  COMMAND chmod +x "${AI_OUTPUT_PATH}"
-                  SOURCES "${AI_SRC_FILES}")
+                  COMMAND chmod +x "${AI_OUTPUT_PATH}")
