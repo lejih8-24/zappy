@@ -1,6 +1,7 @@
 from CommandModel import *
 import time
 import sys
+import math
 
 class ZappyAI:
     def __init__(self, network, team_name, map_x, map_y):
@@ -126,8 +127,10 @@ class ZappyAI:
         elif self.state == "INCANTATION":
             self._state_incantation()
 
-    def _move_instructions(self, path):
-        if path:
+    def _move_instructions(self, path: list, target_item: str):
+        """Exécute un chemin et ramasse l'objet à la fin."""
+
+        if path is not None:
             for action in path:
                 if action == "Forward":
                     self._queue_command(ForwardCommand())
@@ -136,12 +139,36 @@ class ZappyAI:
                 elif action == "Left":
                     self._queue_command(TurnLeftCommand())
 
-            self._queue_command(TakeCommand("food"))
-
+            self._queue_command(TakeCommand(target_item))
             self.vision_grid = None
         else:
             self._queue_command(ForwardCommand())
             self._queue_command(LookCommand())
+
+    def _generate_path_to_index(self, index: int) -> list[str]:
+        """Convertit un index du tableau Look en séquence d'actions Zappy."""
+        if index == 0:
+            return []
+
+        import math
+        y = math.isqrt(index)
+        x = index - (y * y + y)
+
+        path = []
+
+        for _ in range(y):
+            path.append("Forward")
+
+        if x < 0:
+            path.append("Left")
+            for _ in range(abs(x)):
+                path.append("Forward")
+        elif x > 0:
+            path.append("Right")
+            for _ in range(x):
+                path.append("Forward")
+
+        return path
 
     def _state_survival(self):
         if not self.vision_grid:
