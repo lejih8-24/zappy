@@ -1,3 +1,4 @@
+import uuid
 from abc import ABC, abstractmethod
 from typing import Union
 
@@ -102,8 +103,13 @@ class InventoryCommand(Command):
 
 
 class BroadcastCommand(Command):
-    def __init__(self, text: str):
-        self.text = text
+    def __init__(self, token):
+        self.token = token
+        self.my_id = str(uuid.uuid4())[:4]
+
+    def build_message(self, target_id, level, hierarchy, state, request) -> str:
+        """Génère la chaîne de caractères à envoyer au serveur."""
+        return f"{self.token}|{self.my_id}|{target_id}|{level}|{hierarchy}|{state}|{request}"
 
     @property
     def command_string(self) -> str:
@@ -111,6 +117,10 @@ class BroadcastCommand(Command):
 
     def time_limit(self) -> int:
         return 7
+
+    def parse_response(self, response: str) -> Union[bool, list, dict, int, str]:
+        elements = response.split('|')
+        return elements
 
 
 class ConnectNbrCommand(Command):
