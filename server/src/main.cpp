@@ -5,8 +5,23 @@
 ** Program Entry
 */
 
+#include <zappy.hpp>
+#include <iostream>
 
-int main()
+
+void runServer()
 {
 
+}
+
+int main(int argc, char *argv[])
+{
+    try {
+        runServer();
+    } catch (const std::exception& err) {
+        std::cerr << err.what() << std::endl;
+        return 84;
+    } catch (...) {
+        return 84;
+    }
 }
