@@ -170,25 +170,69 @@ class ZappyAI:
 
         return path
 
+    def _find_path_to_closest(self, target: str) -> list[str] | None:
+        """
+        Trouve la ressource demandée la plus proche (en nombre d'actions Zappy)
+        et retourne le chemin pour y aller. Retourne None si introuvable.
+        """
+        if not self.vision_grid:
+            return None
+
+        import math
+        best_index = -1
+        best_cost = 999
+
+        for i, tile in enumerate(self.vision_grid):
+            if tile.get(target, 0) > 0:
+                y = math.isqrt(i)
+                x = i - (y * y + y)
+
+                cost = y + abs(x) + (1 if x != 0 else 0)
+
+                if cost < best_cost:
+                    best_cost = cost
+                    best_index = i
+
+        if best_index == -1:
+            return None
+
+        return self._generate_path_to_index(best_index)
+
+    def _get_needed_material(self) -> str | None:
+        """Regarde l'inventaire et retourne le nom de la première pierre manquante."""
+        if self.level >= 8:
+            return None
+
+        rule = self.elevation_rules[self.level]["stones"]
+        for stone, required_qty in rule.items():
+            if self.inventory.get(stone, 0) < required_qty:
+                return stone
+        return None
+
     def _state_survival(self):
+        """État de survie : cherche la nourriture la plus proche."""
         if not self.vision_grid:
             self._queue_command(LookCommand())
             return
 
-        # TODO: faire la fonction qui cherche la bouffe la plus proche
         path_to_food = self._find_path_to_closest("food")
-        self._move_instructions(path_to_food)
-
-
+        self._move_instructions(path_to_food, "food")
 
     def _state_farming(self):
+        """État de farming : cherche les pierres manquantes."""
         if not self.vision_grid:
             self._queue_command(LookCommand())
             return
 
-        path_to_mats = self._find_path_to_closest_mat()
+        target_mat = self._get_needed_material()
 
-        self._move_instructions(path_to_mats)
+        if not target_mat:
+            print("Toutes les ressources sont réunies. Passage en mode GROUPING.")
+            self.state = "GROUPING"
+            return
+
+        path_to_mats = self._find_path_to_closest(target_mat)
+        self._move_instructions(path_to_mats, target_mat)
 
     def _state_incantation(self):
         """Objectif : S'élever."""
