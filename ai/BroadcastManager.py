@@ -6,17 +6,12 @@ class BroadcastManager:
     Format strict : Token|Sender_ID|Target_ID|Level|Hierarchy|State|Request
     """
 
-    def __init__(self, target_id: str, level: int, hierarchy: str, state: str, request: str, token: str = "ZappyStras2026"):
-        self.target_id = target_id
-        self.level = level
-        self.hierarchy = hierarchy
-        self.state = state
-        self.request = request
+    def __init__(self, token: str = "ZappyStras2026"):
         self.token = token
 
         self.my_id = str(uuid.uuid4())[:4]
 
-    def format_message(self) -> str:
+    def format_message(self, target_id: str, level: int, hierarchy: str, state: str, request: str) -> str:
         """
         Assemble les données en une chaîne formatée prête à être envoyée dans un BroadcastCommand.
 
@@ -26,10 +21,8 @@ class BroadcastManager:
         :param state: 'FARMING', 'GROUPING', ou 'INCANTING'
         :param request: L'action (ex: 'INCANTATION_CALL', 'OMW', 'ABORT')
         """
-        # On s'assure qu'aucun champ ne contient le délimiteur '|' par erreur
-        safe_request = self.request.replace('|', '')
-
-        return f"{self.token}|{self.my_id}|{self.target_id}|{self.level}|{self.hierarchy}|{self.state}|{safe_request}"
+        safe_request = request.replace('|', '')
+        return f"{self.token}|{self.my_id}|{target_id}|{level}|{hierarchy}|{state}|{safe_request}"
 
     def parse_message(self, raw_text: str) -> dict | None:
         """
