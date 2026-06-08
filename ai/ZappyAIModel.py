@@ -30,8 +30,10 @@ class ZappyAI:
             7: {"players": 6,
                 "stones": {"linemate": 1, "deraumere": 1, "sibur": 1, "mendiane": 0, "phiras": 0, "thystame": 0}},
         }
+
         self.is_alive = True
         self.pending_commands = []
+        self.role = "member"
 
     def run(self):
         while self.is_alive:
@@ -105,6 +107,41 @@ class ZappyAI:
             self.network.send_command(command.command_string)
         else:
             pass
+
+    def can_elevate(self) -> bool:
+        rules = self.elevation_rules[self.level]
+
+        for stone, required_qty in rules["stones"].items():
+            if self.inventory.get(stone, 0) < required_qty:
+                return False
+
+        return True
+
+    def _count_player_case(self):
+        list_vision = self.vision_grid[0]
+        self_case = list_vision.split(' ')
+        number_players = self_case.count('player')
+        return number_players
+
+    def _state_grouping(self):
+        """Gère le regroupement avant incantation."""
+        if self.role == "slave":
+            path = self._path_from_broadcast_direction() # TODO
+            self._move_instructions(path, None)
+            pass
+
+        elif self.role == "master":
+            players_on_tile = self._count_player_case()
+            required_players = self.elevation_rules[self.level]["players"]
+
+            if players_on_tile >= required_players:
+                print(f"Assez de trantoriens ({players_on_tile}/{required_players}).")
+                self._queue_command(BroadcastCommand("ABORT"))
+
+                self.state = "INCANTATION"
+            else:
+                print(f"En attente de trantoriens ({players_on_tile}/{required_players}). Keep Coming !")
+                self._queue_command(BroadcastCommand("COME"))
 
     def _decide_next_action(self):
         if len(self.pending_commands) >= 9:
@@ -235,6 +272,21 @@ class ZappyAI:
         self._move_instructions(path_to_mats, target_mat)
 
     def _state_incantation(self):
-        """Objectif : S'élever."""
-        # TODO: verif d'avoir les bons objets
+        """Prépare le terrain et lance l'incantation."""
+        if not self.can_elevate():
+            print(f"Ressources manquantes pour passer au niveau {self.level + 1}")
+            self.state = "FARMING"
+            return
+
+        print(f"Préparation de l'incantation pour le niveau {self.level + 1}...")
+
+        rules = self.elevation_rules[self.level]
+        for stone, required_qty in rules["stones"].items():
+            for _ in range(required_qty):
+                self._queue_command(SetCommand(stone))
+                self.inventory[stone] -= 1
+
+        print("✨ Lancement de la commande Incantation.")
         self._queue_command(IncantationCommand())
+
+        self.state = "WAITING_ELEVATION"
