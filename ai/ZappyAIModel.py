@@ -2,6 +2,14 @@ from CommandModel import *
 import time
 import sys
 import math
+from enum import Enum
+from BroadcastManager import BroadcastManager
+
+class Role(Enum):
+    Explorer = 0
+    Master = 1
+    Incanting = 2
+    Slave = 3
 
 class ZappyAI:
     def __init__(self, network, team_name, map_x, map_y):
@@ -33,7 +41,8 @@ class ZappyAI:
 
         self.is_alive = True
         self.pending_commands = []
-        self.role = "member"
+        self.role = Role.Explorer
+        self.comms = BroadcastManager(token="AlphaNor_Zappy_26")
 
     def run(self):
         while self.is_alive:
@@ -49,9 +58,10 @@ class ZappyAI:
             time.sleep(0.01)
 
     def _process_server_message(self, message: str):
+        """Routeur principal : Sépare les événements asynchrones des réponses synchrones."""
 
         if message == "dead":
-            print("L'IA est morte de faim.")
+            print("💀 L'IA est morte de faim.")
             self.is_alive = False
             return
 
@@ -59,35 +69,61 @@ class ZappyAI:
             parts = message.split(",", 1)
             if len(parts) == 2:
                 direction = int(parts[0].replace("message", "").strip())
-                text = parts[1].strip()
-                self._handle_incoming_broadcast(direction, text)
+                raw_text = parts[1].strip()
+
+                decoded = self.comms.parse_message(raw_text)
+
+                if decoded:
+                    if decoded["request"] == "INCANTATION_CALL" and decoded["level"] == self.level:
+                        self.role = Role.Slave
+                        self.state = "GROUPING"
+                        self.target_direction = direction
+                        print(f"Entendu l'appel du Master {decoded['sender_id']} à la direction {direction}")
+
+                    elif decoded["request"] == "ABORT" and self.role == Role.Slave:
+                        self.role = Role.Explorer
+                        self.state = "FARMING"
+                        print("Le Master a annulé l'appel. Retour au farming.")
             return
 
         if message.startswith("eject"):
-            # TODO: Gérer l'éjection (recalculer son pathfinding, etc.)
-            print(f"Je me suis fait éjecter ! ({message})")
+            direction = int(message.split(":")[1].strip())
+            print(f"Je me suis fait éjecter depuis la direction {direction} !")
+
+            self.pending_commands.clear()
+            self.vision_grid = None
             return
 
-        if message == "Elevation underway" or message.startswith("Current level:"):
-            if message == "Elevation underway":
-                print("Début de l'incantation, je dois être immobile !")
-                return
+        if message == "Elevation underway":
+            print("Début de l'incantation, je suis immobilisé !")
+            if self.pending_commands and isinstance(self.pending_commands[0], IncantationCommand):
+                self.pending_commands.pop(0)
+            return
 
-            if message.startswith("Current level:"):
-                new_level = int(message.split(":")[1].strip())
-                self.level = new_level
-                print(f"Succès ! Je suis niveau {self.level}")
-                return
+        if message.startswith("Current level:"):
+            new_level = int(message.split(":")[1].strip())
+            self.level = new_level
+
+            self.state = "FARMING"
+            self.role = Role.Explorer
+
+            print(f"Succès ! Je suis niveau {self.level}")
+            return
+
+        if message == "ko" and self.state in ["INCANTATION", "WAITING_ELEVATION"]:
+            print("L'incantation a échoué (un joueur a bougé ou une pierre manque).")
+            self.state = "FARMING"
+            self.role = Role.Explorer
+            return
 
         if self.pending_commands:
             current_command = self.pending_commands.pop(0)
-
             result = current_command.parse_response(message)
-            print(f"Commande {current_command.command_string} terminée. Résultat: {result}")
 
+            print(f"Commande {current_command.command_string} terminée. Résultat: {result}")
             self._update_state_from_result(current_command, result)
         else:
-            print(f"Réponse inattendue (aucune commande en attente) : {message}")
+            print(f"❓ Réponse inattendue (aucune commande en attente) : {message}")
 
     def _update_state_from_result(self, command, result):
 
@@ -125,23 +161,25 @@ class ZappyAI:
 
     def _state_grouping(self):
         """Gère le regroupement avant incantation."""
-        if self.role == "slave":
-            path = self._path_from_broadcast_direction() # TODO
-            self._move_instructions(path, None)
-            pass
 
-        elif self.role == "master":
+        if self.role == "master":
             players_on_tile = self._count_player_case()
             required_players = self.elevation_rules[self.level]["players"]
 
             if players_on_tile >= required_players:
-                print(f"Assez de trantoriens ({players_on_tile}/{required_players}).")
-                self._queue_command(BroadcastCommand("ABORT"))
+                print(f"✅ Assez de trantoriens ({players_on_tile}/{required_players}).")
+
+                # Création et envoi du message d'annulation
+                msg = self.comms.format_message("ALL", self.level, "MASTER", "INCANTING", "ABORT")
+                self._queue_command(BroadcastCommand(msg))
 
                 self.state = "INCANTATION"
             else:
-                print(f"En attente de trantoriens ({players_on_tile}/{required_players}). Keep Coming !")
-                self._queue_command(BroadcastCommand("COME"))
+                print(f"⏳ En attente de trantoriens ({players_on_tile}/{required_players}).")
+
+                # Création et envoi du message d'appel
+                msg = self.comms.format_message("ALL", self.level, "MASTER", "GROUPING", "INCANTATION_CALL")
+                self._queue_command(BroadcastCommand(msg))
 
     def _decide_next_action(self):
         if len(self.pending_commands) >= 9:
