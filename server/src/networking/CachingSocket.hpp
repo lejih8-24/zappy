@@ -15,8 +15,10 @@
 
 
 namespace Zappy::Networking {
-    template <std::size_t S> requires (S > 0)
+    template <char D[]>
     class CachingSocket : public NonBlockingSocket {
+        static constexpr
+
         std::array<char, S> m_Cache;
         std::size_t m_FilledBytes;
 
