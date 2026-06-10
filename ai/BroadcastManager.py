@@ -1,4 +1,5 @@
 import uuid
+from ZappyAIModel import State
 
 class BroadcastManager:
     """
@@ -11,7 +12,7 @@ class BroadcastManager:
 
         self.my_id = str(uuid.uuid4())[:4]
 
-    def format_message(self, target_id: str, level: int, hierarchy: str, state: str, request: str) -> str:
+    def format_message(self, target_id: str, level: int, hierarchy: str, state: State, request: str) -> str:
         """
         Assemble les données en une chaîne formatée prête à être envoyée dans un BroadcastCommand.
 
