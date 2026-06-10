@@ -24,9 +24,8 @@
 *.so.*
 
 
-# Fortran module files
-*.mod
-*.smod
+# Python module files
+__pycache__/
 
 # Compiled Static libraries
 *.lai
