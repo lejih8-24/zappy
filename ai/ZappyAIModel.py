@@ -11,6 +11,15 @@ class Role(Enum):
     Incanting = 2
     Slave = 3
 
+class State(Enum):
+    FARMING = 0
+    INCANTATION = 1
+    GROUPING = 2
+    SURVIVAL = 3
+    WAITING_ELEVATION = 4
+    INCANTING = 5
+
+
 class ZappyAI:
     def __init__(self, network, team_name, map_x, map_y):
         self.network = network
@@ -61,7 +70,7 @@ class ZappyAI:
         """Routeur principal : Sépare les événements asynchrones des réponses synchrones."""
 
         if message == "dead":
-            print("💀 L'IA est morte de faim.")
+            print("L'IA est morte de faim.")
             self.is_alive = False
             return
 
@@ -76,13 +85,13 @@ class ZappyAI:
                 if decoded:
                     if decoded["request"] == "INCANTATION_CALL" and decoded["level"] == self.level:
                         self.role = Role.Slave
-                        self.state = "GROUPING"
+                        self.state = State.GROUPING
                         self.target_direction = direction
                         print(f"Entendu l'appel du Master {decoded['sender_id']} à la direction {direction}")
 
                     elif decoded["request"] == "ABORT" and self.role == Role.Slave:
                         self.role = Role.Explorer
-                        self.state = "FARMING"
+                        self.state = State.FARMING
                         print("Le Master a annulé l'appel. Retour au farming.")
             return
 
@@ -104,15 +113,15 @@ class ZappyAI:
             new_level = int(message.split(":")[1].strip())
             self.level = new_level
 
-            self.state = "FARMING"
+            self.state = State.FARMING
             self.role = Role.Explorer
 
             print(f"Succès ! Je suis niveau {self.level}")
             return
 
-        if message == "ko" and self.state in ["INCANTATION", "WAITING_ELEVATION"]:
+        if message == "ko" and self.state in [State.INCANTATION, State.WAITING_ELEVATION]:
             print("L'incantation a échoué (un joueur a bougé ou une pierre manque).")
-            self.state = "FARMING"
+            self.state = State.FARMING
             self.role = Role.Explorer
             return
 
@@ -167,39 +176,39 @@ class ZappyAI:
             required_players = self.elevation_rules[self.level]["players"]
 
             if players_on_tile >= required_players:
-                print(f"✅ Assez de trantoriens ({players_on_tile}/{required_players}).")
+                print(f"Assez de trantoriens ({players_on_tile}/{required_players}).")
 
                 # Création et envoi du message d'annulation
-                msg = self.comms.format_message("ALL", self.level, "MASTER", "INCANTING", "ABORT")
+                msg = self.comms.format_message("ALL", self.level, "MASTER", State.INCANTATING, "ABORT")
                 self._queue_command(BroadcastCommand(msg))
 
-                self.state = "INCANTATION"
+                self.state = State.INCANTATION
             else:
-                print(f"⏳ En attente de trantoriens ({players_on_tile}/{required_players}).")
+                print(f"En attente de trantoriens ({players_on_tile}/{required_players}).")
 
                 # Création et envoi du message d'appel
-                msg = self.comms.format_message("ALL", self.level, "MASTER", "GROUPING", "INCANTATION_CALL")
+                msg = self.comms.format_message("ALL", self.level, "MASTER", State.GROUPING, "INCANTATION_CALL")
                 self._queue_command(BroadcastCommand(msg))
 
     def _decide_next_action(self):
         if len(self.pending_commands) >= 9:
             return
 
-        if self.inventory.get("food", 0) < 15 and self.state != "INCANTATION":
-            self.state = "SURVIVAL"
+        if self.inventory.get("food", 0) < 15 and self.state != State.INCANTATION:
+            self.state = State.SURVIVAL
         elif self.can_elevate():
-            self.state = "GROUPING"
+            self.state = State.GROUPING
 
-        if self.state == "SURVIVAL":
+        if self.state == State.SURVIVAL:
             self._state_survival()
 
-        elif self.state == "FARMING":
+        elif self.state == State.FARMING:
             self._state_farming()
 
-        elif self.state == "GROUPING":
+        elif self.state == State.GROUPING:
             self._state_grouping()
 
-        elif self.state == "INCANTATION":
+        elif self.state == State.INCANTATION:
             self._state_incantation()
 
     def _move_instructions(self, path: list, target_item: str):
@@ -303,7 +312,7 @@ class ZappyAI:
 
         if not target_mat:
             print("Toutes les ressources sont réunies. Passage en mode GROUPING.")
-            self.state = "GROUPING"
+            self.state = State.GROUPING
             return
 
         path_to_mats = self._find_path_to_closest(target_mat)
@@ -313,7 +322,7 @@ class ZappyAI:
         """Prépare le terrain et lance l'incantation."""
         if not self.can_elevate():
             print(f"Ressources manquantes pour passer au niveau {self.level + 1}")
-            self.state = "FARMING"
+            self.state = State.GROUPING
             return
 
         print(f"Préparation de l'incantation pour le niveau {self.level + 1}...")
@@ -324,7 +333,7 @@ class ZappyAI:
                 self._queue_command(SetCommand(stone))
                 self.inventory[stone] -= 1
 
-        print("✨ Lancement de la commande Incantation.")
+        print("Lancement de la commande Incantation.")
         self._queue_command(IncantationCommand())
 
-        self.state = "WAITING_ELEVATION"
+        self.state = State.WAITING_ELEVATION
