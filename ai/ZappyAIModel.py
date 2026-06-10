@@ -262,7 +262,6 @@ class ZappyAI:
         if not self.vision_grid:
             return None
 
-        import math
         best_index = -1
         best_cost = 999
 
