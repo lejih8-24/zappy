@@ -17,7 +17,7 @@ class State(Enum):
     GROUPING = 2
     SURVIVAL = 3
     WAITING_ELEVATION = 4
-    INCANTING = 5
+    CONTRIBUTING = 5
 
 
 class ZappyAI:
@@ -178,20 +178,18 @@ class ZappyAI:
             if players_on_tile >= required_players:
                 print(f"Assez de trantoriens ({players_on_tile}/{required_players}).")
 
-                # Création et envoi du message d'annulation
-                msg = self.comms.format_message("ALL", self.level, "MASTER", State.INCANTATING, "ABORT")
+                msg = self.comms.format_message("ALL", self.level, Role.Master, State.INCANTATION, "ABORT")
                 self._queue_command(BroadcastCommand(msg))
 
                 self.state = State.INCANTATION
             else:
                 print(f"En attente de trantoriens ({players_on_tile}/{required_players}).")
 
-                # Création et envoi du message d'appel
-                msg = self.comms.format_message("ALL", self.level, "MASTER", State.GROUPING, "INCANTATION_CALL")
+                msg = self.comms.format_message("ALL", self.level, Role.Master, State.GROUPING, "INCANTATION_CALL")
                 self._queue_command(BroadcastCommand(msg))
 
     def _decide_next_action(self):
-        if len(self.pending_commands) >= 9:
+        if len(self.pending_commands) >= 9 or self.state == State.WAITING_ELEVATION:
             return
 
         if self.inventory.get("food", 0) < 15 and self.state != State.INCANTATION:
@@ -317,22 +315,76 @@ class ZappyAI:
         path_to_mats = self._find_path_to_closest(target_mat)
         self._move_instructions(path_to_mats, target_mat)
 
+    def _is_floor_perfect(self) -> bool:
+        """Vérifie si la case contient EXACTEMENT les bonnes pierres et les bons joueurs."""
+        floor = self.vision_grid[0]  # Ex: {'player': 2, 'linemate': 1}
+        rules = self.elevation_rules[self.level]
+
+        # 1. Vérifier le nombre de joueurs
+        if floor.get("player", 0) != rules["players"]:
+            return False
+
+        # 2. Vérifier qu'il n'y a pas d'intrus et que les quantités sont exactes
+        for item, qty in floor.items():
+            if item == "player" or qty == 0:
+                continue  # On ignore les joueurs et les objets à 0
+
+            required_qty = rules["stones"].get(item, 0)
+            if qty != required_qty:
+                return False  # Trop de pierres, ou objet interdit (ex: food)
+
+        # 3. Vérifier qu'il ne manque aucune pierre (au cas où elle ne serait pas dans le dict)
+        for stone, required_qty in rules["stones"].items():
+            if floor.get(stone, 0) != required_qty:
+                return False
+
+        return True
+
+    def _clean_floor(self) -> bool:
+        """Ramasse absolument tout sur la case (sauf les joueurs). Retourne True si on a nettoyé."""
+        floor = self.vision_grid[0]
+        cleaned_something = False
+
+        for item, qty in floor.items():
+            if item != "player" and qty > 0:
+                for _ in range(qty):
+                    self._queue_command(TakeCommand(item))
+                    cleaned_something = True
+
+        return cleaned_something
+
     def _state_incantation(self):
-        """Prépare le terrain et lance l'incantation."""
-        if not self.can_elevate():
-            print(f"Ressources manquantes pour passer au niveau {self.level + 1}")
-            self.state = State.GROUPING
+        """Gère la préparation chirurgicale et le lancement de l'incantation."""
+
+        if not self.vision_grid:
+            self._queue_command(LookCommand())
             return
 
-        print(f"Préparation de l'incantation pour le niveau {self.level + 1}...")
+        if self._is_floor_perfect():
+            print(f"La case est prête ! Lancement de l'Incantation (Niveau {self.level} -> {self.level + 1}).")
+            self._queue_command(IncantationCommand())
+            self.state = "WAITING_ELEVATION"
+            return
 
+        if not self.can_elevate():
+            print(f"Inventaire insuffisant pour préparer le rituel du niveau {self.level + 1}.")
+            msg = self.comms.format_message("ALL", self.level, Role.Master, State.FARMING, "ABORT")
+            self._queue_command(BroadcastCommand(msg))
+            self.state = "FARMING"
+            return
+
+        if self._clean_floor():
+            print("Nettoyage de la case en cours...")
+            self.vision_grid = None
+            self._queue_command(LookCommand())
+            return
+
+        print(f"Dépôt chirurgical des pierres pour le niveau {self.level + 1}...")
         rules = self.elevation_rules[self.level]
         for stone, required_qty in rules["stones"].items():
             for _ in range(required_qty):
                 self._queue_command(SetCommand(stone))
-                self.inventory[stone] -= 1
+                self.inventory[stone] = self.inventory.get(stone, 0) - 1
 
-        print("Lancement de la commande Incantation.")
-        self._queue_command(IncantationCommand())
-
-        self.state = State.WAITING_ELEVATION
+        self.vision_grid = None
+        self._queue_command(LookCommand())
