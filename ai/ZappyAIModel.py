@@ -189,7 +189,55 @@ class ZappyAI:
         path = find_path_to_closest(self.vision_grid, target_mat)
         self._move_instructions(path, target_mat)
 
-    
+    def _state_grouping(self):
+        if self.role == Role.Master:
+            players_on_tile = self._count_player_case()
+            required_players = self.elevation_rules[self.level]["players"]
+
+            if players_on_tile >= required_players:
+                print(f"Assez de trantoriens ({players_on_tile}/{required_players}).")
+                msg = self.comms.format_message("ALL", self.level, Role.Master, State.INCANTATION, "ABORT")
+                self._queue_command(BroadcastCommand(msg))
+                self.state = State.INCANTATION
+            else:
+                print(f"En attente de trantoriens ({players_on_tile}/{required_players}).")
+                msg = self.comms.format_message("ALL", self.level, Role.Master, State.GROUPING,
+                                                "INCANTATION_CALL")
+                self._queue_command(BroadcastCommand(msg))
+        elif self.role == Role.Slave:
+            if not hasattr(self, "target_direction"):
+                return
+
+            k = self.target_direction
+
+            if k == 0:
+                print("Arrivé sur la case du Master ! Je vide mes poches.")
+                self.state = State.CONTRIBUTING
+            elif k == 1:
+                self._queue_command(ForwardCommand())
+            elif k in [2, 3, 4]:
+                self._queue_command(TurnLeftCommand())
+            elif k in [6, 7, 8]:
+                self._queue_command(TurnRightCommand())
+            elif k == 5:
+                self._queue_command(TurnRightCommand())
+
+    def _state_contributing(self):
+        """Le Slave est sur la case du Master et donne toutes ses pierres."""
+        dropped_something = False
+
+        for item, qty in list(self.inventory.items()):
+            if item != "food" and qty > 0:
+                for _ in range(qty):
+                    self._queue_command(SetCommand(item))
+                    self.inventory[item] -= 1
+                    dropped_something = True
+
+        if dropped_something:
+            print("Don de mes pierres en cours...")
+        else:
+            print("Je n'ai plus rien. J'attends le rituel.")
+            self.state = State.WAITING_ELEVATION
 
     def _is_floor_perfect(self) -> bool:
         if not self.vision_grid: return False
@@ -233,17 +281,18 @@ class ZappyAI:
             self.state = State.WAITING_ELEVATION
             return
 
+        if self._clean_floor():
+            print("Ramassage des dons et nettoyage de la case...")
+            self.vision_grid = None
+            self._queue_command(LookCommand())
+            return
+
         if not self.can_elevate():
-            print(f"Inventaire insuffisant pour préparer le rituel du niveau {self.level + 1}.")
+            print(f"Inventaire global insuffisant pour le rituel du niveau {self.level + 1}.")
             msg = self.comms.format_message("ALL", self.level, Role.Master, State.FARMING, "ABORT")
             self._queue_command(BroadcastCommand(msg))
             self.state = State.FARMING
-            return
-
-        if self._clean_floor():
-            print("Nettoyage de la case en cours...")
-            self.vision_grid = None
-            self._queue_command(LookCommand())
+            self.role = Role.Explorer
             return
 
         print(f"Dépôt chirurgical des pierres pour le niveau {self.level + 1}...")
