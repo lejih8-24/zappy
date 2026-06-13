@@ -4,3 +4,8 @@
 ** File description:
 ** render.cpp
 */
+
+
+#include "raylib.h"
+#include <string>
+#include <cmath>
