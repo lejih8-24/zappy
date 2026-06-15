@@ -9,9 +9,9 @@
 
 namespace GUI {
 
-Egg::Egg(int id, int playerId, int x, int y)
+Egg::Egg(int id, int parentId, int x, int y)
     : Entity(id, x, y)
-    , playerId(playerId)
+    , parentPlayerId(parentPlayerId)
 {
 }
 

@@ -13,16 +13,16 @@ namespace GUI {
 
 /*
 ** Related server commands:
-** - enw #e #n X Y (new egg)
+** - enw #e #n X Y (new egg laid by player #n)
 ** - ebo #e (egg hatch)
 ** - edi #e (egg death)
 */
 class Egg : public Entity {
     public:
-        Egg(int id = 0, int playerId = 0, int x = 0, int y = 0);
+        Egg(int id = 0, int parentId = 0, int x = 0, int y = 0);
         ~Egg() = default;
 
-        int playerId = 0;
+        int parentPlayerId = 0;
         bool alive = true;
 };
 
