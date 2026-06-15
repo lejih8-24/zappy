@@ -1,3 +1,5 @@
+#!/usr/local/bin/python
+
 import time
 from CommandModel import *
 from BroadcastManager import BroadcastManager
@@ -23,6 +25,7 @@ class ZappyAI:
         self.role = Role.Explorer
         self.state = State.FARMING
         self.comms = BroadcastManager(token="AlphaNor_Zappy_26")
+        self.previous_debug = ""
 
     def run(self):
         while self.is_alive:
@@ -86,6 +89,8 @@ class ZappyAI:
             self.state = State.FARMING
             self.role = Role.Explorer
             return
+        else:
+            print(f"Message inconnu: {message}")
 
         if self.pending_commands:
             current_command = self.pending_commands.pop(0)
@@ -121,15 +126,42 @@ class ZappyAI:
         return self.vision_grid[0].get('player', 0)
 
     def _decide_next_action(self):
-        if len(self.pending_commands) >= 9 or self.state == State.WAITING_ELEVATION:
+        if len(self.pending_commands) >= 9:
+            debug = f"[DEBUG] File d'attente pleine ({len(self.pending_commands)}/9). Attente des réponses réseau."
+            if debug != self.previous_debug:
+                self.previous_debug = f"[DEBUG] File d'attente pleine ({len(self.pending_commands)}/9). Attente des réponses réseau."
+                print(self.previous_debug)
             return
 
-        if self.inventory.get("food", 0) < 15 and self.state not in [State.INCANTATION, State.CONTRIBUTING]:
+        if self.state == State.WAITING_ELEVATION:
+            debug = f"[DEBUG] En transe (WAITING_ELEVATION). L'IA est bloquée en attendant la fin de l'incantation."
+            if debug != self.previous_debug:
+                self.previous_debug = f"[DEBUG] En transe (WAITING_ELEVATION). L'IA est bloquée en attendant la fin de l'incantation."
+                print(self.previous_debug)
+            return
+
+        current_food = self.inventory.get("food", 0)
+
+        if current_food < 15 and self.state not in [State.INCANTATION, State.CONTRIBUTING]:
+            if self.state != State.SURVIVAL:
+                debug = f"[DEBUG] URGENCE VITALE : Nourriture critique ({current_food}/15). Abandon de l'état {self.state.name}, passage en SURVIVAL !"
+                if debug != self.previous_debug:
+                    self.previous_debug = f"[DEBUG] URGENCE VITALE : Nourriture critique ({current_food}/15). Abandon de l'état {self.state.name}, passage en SURVIVAL !"
+                    print(self.previous_debug)
             self.state = State.SURVIVAL
 
         elif self.can_elevate() and self.state == State.FARMING:
+            debug = f"[DEBUG] J'ai toutes les pierres requises pour le niveau {self.level + 1} ! Je deviens MASTER et passe en GROUPING."
+            if debug != self.previous_debug:
+                self.previous_debug = f"[DEBUG] J'ai toutes les pierres requises pour le niveau {self.level + 1} ! Je deviens MASTER et passe en GROUPING."
+                print(self.previous_debug)
             self.state = State.GROUPING
             self.role = Role.Master
+
+        debug = f"[DEBUG] Réflexion -> État: {self.state.name} | Rôle: {self.role.name} | Nourriture: {current_food}"
+        if debug != self.previous_debug:
+            self.previous_debug = f"[DEBUG] Réflexion -> État: {self.state.name} | Rôle: {self.role.name} | Nourriture: {current_food}"
+            print(self.previous_debug)
 
         if self.state == State.SURVIVAL:
             self._state_survival()

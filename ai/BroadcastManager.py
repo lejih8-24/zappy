@@ -1,5 +1,5 @@
 import uuid
-from ZappyAIModel import State, Role
+from constants import State, Role
 
 class BroadcastManager:
     """
