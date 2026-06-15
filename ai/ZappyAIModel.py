@@ -84,7 +84,7 @@ class ZappyAI:
             print(f"Succès ! Je suis niveau {self.level}")
             return
 
-        if message == "ko" and self.state in [State.INCANTATION, State.WAITING_ELEVATION]:
+        if message == "ko" and self.state == State.WAITING_ELEVATION:
             print("L'incantation a échoué (un joueur a bougé ou une pierre manque).")
             self.state = State.FARMING
             self.role = Role.Explorer
@@ -235,19 +235,32 @@ class ZappyAI:
 
     def _state_grouping(self):
         if self.role == Role.Master:
+            if not self.vision_grid:
+                if not self._is_command_pending(LookCommand):
+                    self._queue_command(LookCommand())
+                return
+
             players_on_tile = self._count_player_case()
             required_players = self.elevation_rules[self.level]["players"]
 
             if players_on_tile >= required_players:
                 print(f"Assez de trantoriens ({players_on_tile}/{required_players}).")
-                msg = self.comms.format_message("ALL", self.level, Role.Master, State.INCANTATION, "ABORT")
-                self._queue_command(BroadcastCommand(msg))
+
+                if not self._is_command_pending(BroadcastCommand):
+                    msg = self.comms.format_message("ALL", self.level, Role.Master, State.INCANTATION,
+                                                    "ABORT")
+                    self._queue_command(BroadcastCommand(msg))
+
                 self.state = State.INCANTATION
             else:
                 print(f"En attente de trantoriens ({players_on_tile}/{required_players}).")
-                msg = self.comms.format_message("ALL", self.level, Role.Master, State.GROUPING,
-                                                "INCANTATION_CALL")
-                self._queue_command(BroadcastCommand(msg))
+
+                if not self._is_command_pending(BroadcastCommand):
+                    msg = self.comms.format_message("ALL", self.level, Role.Master, State.GROUPING,
+                                                    "INCANTATION_CALL")
+                    self._queue_command(BroadcastCommand(msg))
+
+                self.vision_grid = None
         elif self.role == Role.Slave:
             if not hasattr(self, "target_direction"):
                 return
