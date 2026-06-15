@@ -8,9 +8,11 @@
 #include "GuiArgs.hpp"
 #include "exceptions/ArgsException.hpp"
 
+#include <charconv>
 #include <cstdlib>
-#include <exception>
 #include <iostream>
+#include <string>
+#include <system_error>
 
 namespace GUI {
 
@@ -21,24 +23,21 @@ void GuiArgs::printUsage(std::ostream &stream)
     stream << "USAGE: ./zappy_gui -p port [-h machine]\n";
 }
 
-int GuiArgs::parsePort(const std::string &value)
+int GuiArgs::parsePort(std::string_view value)
 {
-    std::size_t parsed = 0;
     int port = 0;
+    const auto *begin = value.data();
+    const auto *end = begin + value.size();
+    const auto result = std::from_chars(begin, end, port);
 
-    try {
-        port = std::stoi(value, &parsed);
-    } catch (const std::exception &) {
-        throw ArgsException("invalid port: must be a number");
-    }
-    if (parsed != value.size())
+    if (result.ec != std::errc() || result.ptr != end)
         throw ArgsException("invalid port: must be a number");
     if (port < 1 || port > 65535)
         throw ArgsException("invalid port: must be between 1 and 65535");
     return port;
 }
 
-std::string GuiArgs::requireValue(int argc, char **argv, int &index)
+std::string_view GuiArgs::requireValue(int argc, char **argv, int &index)
 {
     if (index + 1 >= argc)
         throw ArgsException(std::string("missing value for ") + argv[index]);
@@ -51,23 +50,21 @@ GuiArgs GuiArgs::parseArgs(int argc, char **argv)
     GuiArgs args;
 
     for (int i = 1; i < argc; ++i) {
-        const std::string option = argv[i];
-
-        if (option == "--help") {
+        if (argv[i] == "--help") {
             printUsage(std::cout);
             std::exit(0);
         }
-        if (option == "-p") {
+        if (argv[i] == "-p") {
             args._port = parsePort(requireValue(argc, argv, i));
             continue;
         }
-        if (option == "-h") {
+        if (argv[i] == "-h") {
             args._host = requireValue(argc, argv, i);
             continue;
         }
-        throw ArgsException("unknown argument: " + option);
+        throw ArgsException(std::string("unknown argument: ").append(argv[i]));
     }
-    if (args._port == 0)
+    if (args._port == -1)
         throw ArgsException("missing required argument: -p port");
     return args;
 }

@@ -11,13 +11,13 @@
 #include "Map.hpp"
 #include "Window.hpp"
 
-#include <string>
+#include <string_view>
 
 namespace GUI {
 
 class Render {
     public:
-        Render(const std::string &host, int port);
+        Render(std::string_view host, int port);
         void renderLoop();
 
     private:

@@ -10,6 +10,7 @@
 #include <ostream>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 
 namespace GUI {
 
@@ -23,8 +24,8 @@ class GuiArgs {
         void connect() const;
 
     private:
-        static int parsePort(const std::string &value);
-        static std::string requireValue(int argc, char **argv, int &index);
+        static int parsePort(std::string_view value);
+        static std::string_view requireValue(int argc, char **argv, int &index);
 
         std::string _host = "localhost";
         int _port = -1;

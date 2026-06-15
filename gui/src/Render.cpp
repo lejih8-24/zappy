@@ -9,10 +9,13 @@
 
 #include "raylib.h"
 
+#include <string>
+
 namespace GUI {
 
-Render::Render(const std::string &host, int port)
-    : _window(1280, 720, "Zappy GUI - " + host + ":" + std::to_string(port), 60)
+Render::Render(std::string_view host, int port)
+    : _window(1280, 720,
+          std::string("Zappy GUI - ").append(host).append(":").append(std::to_string(port)), 60)
     , _map(10, 10)
     , _camera({ 0.0f, 20.0f, 20.0f }, { 0.0f, 0.0f, 0.0f })
 {
