@@ -56,12 +56,21 @@ class ZappyAI:
                         self.role = Role.Slave
                         self.state = State.GROUPING
                         self.target_direction = direction
-                        print(f"Entendu l'appel du Master {decoded['sender_id']} à la direction {direction}")
+                        print(f"🏃 Entendu l'appel du Master {decoded['sender_id']} à la direction {direction}")
+
+                    elif decoded["request"] == "INCANTATION_STARTING" and self.role == Role.Slave:
+                        if direction == 0:
+                            print("Je suis sur la case de l'incantation ! Je reste pour le rituel.")
+                            self.state = State.CONTRIBUTING
+                        else:
+                            print("Le groupe est déjà complet et je suis trop loin. Retour au farming.")
+                            self.role = Role.Explorer
+                            self.state = State.FARMING
 
                     elif decoded["request"] == "ABORT" and self.role == Role.Slave:
                         self.role = Role.Explorer
                         self.state = State.FARMING
-                        print("Le Master a annulé l'appel. Retour au farming.")
+                        print("Le Master a annulé l'appel (ressources manquantes). Retour au farming.")
             return
 
         if message.startswith("eject"):
@@ -250,7 +259,7 @@ class ZappyAI:
 
                 if not self._is_command_pending(BroadcastCommand):
                     msg = self.comms.format_message("ALL", self.level, Role.Master, State.INCANTATION,
-                                                    "ABORT")
+                                                    "INCANTATION_STARTING")
                     self._queue_command(BroadcastCommand(self.comms.token, msg))
 
                 self.state = State.INCANTATION
@@ -264,21 +273,21 @@ class ZappyAI:
 
                 self.vision_grid = None
         elif self.role == Role.Slave:
-            if not hasattr(self, "target_direction"):
+            if getattr(self, "target_direction", None) is None:
                 return
 
             k = self.target_direction
 
+            self.target_direction = None
+
             if k == 0:
                 print("Arrivé sur la case du Master ! Je vide mes poches.")
                 self.state = State.CONTRIBUTING
-            elif k == 1:
+            elif k in [1, 2, 8]:
                 self._queue_command(ForwardCommand())
-            elif k in [2, 3, 4]:
+            elif k in [3, 4]:
                 self._queue_command(TurnLeftCommand())
-            elif k in [6, 7, 8]:
-                self._queue_command(TurnRightCommand())
-            elif k == 5:
+            elif k in [5, 6, 7]:
                 self._queue_command(TurnRightCommand())
 
     def _state_contributing(self):
