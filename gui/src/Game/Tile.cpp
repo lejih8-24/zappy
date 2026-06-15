@@ -11,7 +11,7 @@ namespace GUI {
 
 Tile::Tile(int x, int y, const ResourceStock &resources)
     : Position{x, y}
-    , _resources(resources)
+    , resources(resources)
 {
 }
 

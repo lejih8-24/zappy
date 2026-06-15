@@ -11,7 +11,7 @@ namespace GUI {
 
 Entity::Entity(int id, int x, int y)
     : Position{x, y}
-    , _id(id)
+    , id(id)
 {
 }
 

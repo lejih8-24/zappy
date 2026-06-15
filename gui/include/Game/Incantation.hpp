@@ -24,23 +24,10 @@ class Incantation : public Entity {
         Incantation(int id = 0, int x = 0, int y = 0, int level = 0, const std::vector<int> &playerIds = {});
         ~Incantation() = default;
 
-        int getLevel() const { return _level; }
-        void setLevel(int level) { _level = level; }
-
-        const std::vector<int> &getPlayerIds() const { return _playerIds; }
-        void setPlayerIds(const std::vector<int> &playerIds) { _playerIds = playerIds; }
-
-        bool isActive() const { return _active; }
-        void setActive(bool active) { _active = active; }
-
-        bool isSuccess() const { return _success; }
-        void setSuccess(bool success) { _success = success; }
-
-    private:
-        int _level = 0;
-        std::vector<int> _playerIds; //* voir si ça serait pas mieux des ref aux players
-        bool _active = false;
-        bool _success = false;
+        int level = 0;
+        std::vector<int> playerIds; //* voir si ça serait pas mieux des ref aux players
+        bool active = false;
+        bool success = false;
 };
 
 }

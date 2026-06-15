@@ -23,11 +23,11 @@ GUI::GameState createDemoState()
 
     resources[static_cast<std::size_t>(GUI::Resource::Food)] = 3;
     resources[static_cast<std::size_t>(GUI::Resource::Linemate)] = 1;
-    state.getTiles().emplace_back(4, 2, resources);
-    state.getTiles().emplace_back(7, 7, resources);
-    state.getPlayers().emplace(1, GUI::Player(1, 4, 2, GUI::Orientation::North, 1, "TeamA"));
-    state.getEggs().emplace(1, GUI::Egg(1, 1, 6, 5));
-    state.getTeams().emplace_back("TeamA");
+    state.tiles.emplace_back(4, 2, resources);
+    state.tiles.emplace_back(7, 7, resources);
+    state.players.emplace(1, GUI::Player(1, 4, 2, GUI::Orientation::North, 1, "TeamA"));
+    state.eggs.emplace(1, GUI::Egg(1, 1, 6, 5));
+    state.teams.emplace_back("TeamA");
     return state;
 }
 

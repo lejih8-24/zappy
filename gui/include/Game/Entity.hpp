@@ -19,11 +19,7 @@ class Entity : public Position {
         Entity(int id = 0, int x = 0, int y = 0);
         ~Entity() = default;
 
-        int getId() const { return _id; }
-        void setId(int id) { _id = id; }
-
-    private:
-        int _id = 0;
+        int id = 0;
 };
 
 }

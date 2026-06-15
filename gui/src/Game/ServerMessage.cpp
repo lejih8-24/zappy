@@ -10,10 +10,10 @@
 namespace GUI {
 
 ServerMessage::ServerMessage(ServerMessageType type, const std::string &msg, int playerId, float timestamp)
-    : _type(type)
-    , _msg(msg)
-    , _playerId(playerId)
-    , _timestamp(timestamp)
+    : type(type)
+    , msg(msg)
+    , playerId(playerId)
+    , timestamp(timestamp)
 {
 }
 

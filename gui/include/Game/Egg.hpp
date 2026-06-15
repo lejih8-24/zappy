@@ -22,15 +22,8 @@ class Egg : public Entity {
         Egg(int id = 0, int playerId = 0, int x = 0, int y = 0);
         ~Egg() = default;
 
-        int getPlayerId() const { return _playerId; }
-        void setPlayerId(int playerId) { _playerId = playerId; }
-
-        bool isAlive() const { return _alive; }
-        void setAlive(bool alive) { _alive = alive; }
-
-    private:
-        int _playerId = 0;
-        bool _alive = true;
+        int playerId = 0;
+        bool alive = true;
 };
 
 }

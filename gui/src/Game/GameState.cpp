@@ -10,9 +10,9 @@
 namespace GUI {
 
 GameState::GameState(int mapWidth, int mapHeight, int timeUnit)
-    : _mapWidth(mapWidth)
-    , _mapHeight(mapHeight)
-    , _timeUnit(timeUnit)
+    : mapWidth(mapWidth)
+    , mapHeight(mapHeight)
+    , timeUnit(timeUnit)
 {
 }
 

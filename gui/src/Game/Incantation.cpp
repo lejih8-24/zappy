@@ -11,8 +11,8 @@ namespace GUI {
 
 Incantation::Incantation(int id, int x, int y, int level, const std::vector<int> &playerIds)
     : Entity(id, x, y)
-    , _level(level)
-    , _playerIds(playerIds)
+    , level(level)
+    , playerIds(playerIds)
 {
 }
 
