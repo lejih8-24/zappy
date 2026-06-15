@@ -14,7 +14,9 @@
 
 namespace GUI {
 
-enum class Orientation {
+//* Chris comment: Consider using an angle instead of fixed orientations :
+//* (it might make implementation easier and more flexible)
+enum Orientation {
     North = 1,
     East = 2,
     South = 3,
@@ -36,11 +38,10 @@ enum class Orientation {
 */
 class Player : public Entity {
     public:
-        Player(int id = 0, int x = 0, int y = 0, Orientation orientation = Orientation::North, std::size_t level = 1,
-            const std::string &teamName = "");
+        Player(int id = 0, int x = 0, int y = 0, std::size_t level = 1, const std::string &teamName = "");
         ~Player() = default;
 
-        Orientation orientation = Orientation::North;
+        Orientation orientation;
         std::size_t level = 1;
         std::string teamName;
         ResourceStock inventory = {};

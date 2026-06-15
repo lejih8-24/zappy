@@ -25,7 +25,7 @@ GUI::GameState createDemoState()
     resources[static_cast<std::size_t>(GUI::Resource::Linemate)] = 1;
     state.tiles.emplace_back(4, 2, resources);
     state.tiles.emplace_back(7, 7, resources);
-    state.players.emplace(1, GUI::Player(1, 4, 2, GUI::Orientation::North, 1, "TeamA"));
+    state.players.emplace(1, GUI::Player(1, 4, 2, 1, "TeamA"));
     state.eggs.emplace(1, GUI::Egg(1, 1, 6, 5));
     state.teams.emplace_back("TeamA");
     return state;
