@@ -9,6 +9,7 @@
 
 #include "raylib.h"
 
+namespace GUI {
 
 class Map {
     private:
@@ -33,3 +34,5 @@ class Map {
             return _height;
         }
 };
+
+}

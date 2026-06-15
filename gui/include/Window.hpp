@@ -10,6 +10,8 @@
 #include "raylib.h"
 #include <string>
 
+namespace GUI {
+
 class Window {
     public:
         Window(int width, int height, const std::string &title, int fps = 60);
@@ -22,7 +24,10 @@ class Window {
     
         void beginFrame();
         void endFrame();
+        void toggleFullscreen();
     
         int getWidth()  const { return GetScreenWidth();  }
         int getHeight() const { return GetScreenHeight(); }
 };
+
+}

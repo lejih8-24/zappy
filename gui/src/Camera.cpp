@@ -7,8 +7,11 @@
 
 #include "Camera.hpp"
 
+namespace GUI {
+
 GameCamera::GameCamera(Vector3 position, Vector3 target, float fovy)
-    : _initPosition(position), _initTarget(target)
+    : _initPosition(position)
+    , _initTarget(target)
 {
     _camera.position   = position;
     _camera.target     = target;
@@ -42,4 +45,6 @@ void GameCamera::reset()
     _camera.position = _initPosition;
     _camera.target   = _initTarget;
     _camera.up       = { 0.0f, 1.0f, 0.0f };
+}
+
 }

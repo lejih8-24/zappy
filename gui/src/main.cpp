@@ -5,36 +5,24 @@
 ** Program Entry
 */
 
-#include "Window.hpp"
-#include "Map.hpp"
-#include "Camera.hpp"
-#include "raylib.h"
+#include "GuiArgs.hpp"
+#include "Render.hpp"
+#include "exceptions/ArgsException.hpp"
 
+#include <iostream>
 
-int main()
+int main(int argc, char **argv)
 {
-    Window win(1280, 720, "Zappy GUI", 60);
+    try {
+        const GUI::GuiArgs args = GUI::GuiArgs::parseArgs(argc, argv);
+        GUI::Render render(args.getHost(), args.getPort());
 
-    Map map(10, 10);
-
-    GameCamera camera(
-        { 0.0f, 20.0f, 20.0f },
-        { 0.0f,  0.0f,  0.0f }
-    );
-
-    while (!win.shouldClose()) {
-        camera.update();
-
-        win.beginFrame();
-            DrawFPS(10, 10);
-
-            camera.begin3D();
-                map.draw();
-            camera.end3D();
-
-            DrawText("Zappy GUI - 3D Map  |  [WASD] deplacer  [R] reset", 10, 34, 18, RAYWHITE);
-        win.endFrame();
+        args.connect();
+        render.renderLoop();
+        return 0;
+    } catch (const Zappy::Exceptions::ArgsException &error) {
+        std::cerr << "zappy_gui: " << error.what() << '\n';
+        GUI::GuiArgs::printUsage(std::cerr);
+        return 84;
     }
-
-    return 0;
 }

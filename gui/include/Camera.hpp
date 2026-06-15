@@ -9,6 +9,8 @@
 
 #include "raylib.h"
 
+namespace GUI {
+
 class GameCamera {
     public:
         GameCamera(Vector3 position, Vector3 target, float fovy = 45.0f);
@@ -32,3 +34,5 @@ class GameCamera {
         Vector3  _initPosition;
         Vector3  _initTarget;
 };
+
+}

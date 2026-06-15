@@ -7,8 +7,11 @@
 
 #include "Window.hpp"
 
+namespace GUI {
+
 Window::Window(int width, int height, const std::string &title, int fps)
 {
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(width, height, title.c_str());
     SetTargetFPS(fps);
 }
@@ -32,4 +35,11 @@ void Window::beginFrame()
 void Window::endFrame()
 {
     EndDrawing();
+}
+
+void Window::toggleFullscreen()
+{
+    ToggleFullscreen();
+}
+
 }
