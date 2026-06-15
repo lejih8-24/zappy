@@ -98,21 +98,23 @@ class InventoryCommand(Command):
             if len(parts) == 2:
                 name, qty = parts[0], int(parts[1])
                 inventory[name] = qty
-
         return inventory
 
 
 class BroadcastCommand(Command):
-    def __init__(self, token):
+    def __init__(self, token, text):
         self.token = token
         self.my_id = str(uuid.uuid4())[:4]
+        self.text = text
 
     def build_message(self, target_id, level, hierarchy, state, request) -> str:
         """Génère la chaîne de caractères à envoyer au serveur."""
-        return f"{self.token}|{self.my_id}|{target_id}|{level}|{hierarchy}|{state}|{request}"
+        text = f"{self.token}|{self.my_id}|{target_id}|{level}|{hierarchy}|{state}|{request}"
+        return text
 
     @property
     def command_string(self) -> str:
+        print(f"[SENDING NOW]: Broadcast {self.text}")
         return f"Broadcast {self.text}"
 
     def time_limit(self) -> int:
