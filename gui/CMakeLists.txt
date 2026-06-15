@@ -15,7 +15,14 @@ add_executable(zappy_gui
                src/Map.cpp
                src/Camera.cpp
                src/Render.cpp
-               src/GuiArgs.cpp)
+               src/GuiArgs.cpp
+               src/Game/Entity.cpp
+               src/Game/Tile.cpp
+               src/Game/Player.cpp
+               src/Game/Egg.cpp
+               src/Game/Incantation.cpp
+               src/Game/ServerMessage.cpp
+               src/Game/GameState.cpp)
 
 target_include_directories(zappy_gui
                            PRIVATE include)
