@@ -50,19 +50,21 @@ GuiArgs GuiArgs::parseArgs(int argc, char **argv)
     GuiArgs args;
 
     for (int i = 1; i < argc; ++i) {
-        if (argv[i] == "--help") {
+        const std::string_view option = argv[i];
+
+        if (option == "--help") {
             printUsage(std::cout);
             std::exit(0);
         }
-        if (argv[i] == "-p") {
+        if (option == "-p") {
             args._port = parsePort(requireValue(argc, argv, i));
             continue;
         }
-        if (argv[i] == "-h") {
+        if (option == "-h") {
             args._host = requireValue(argc, argv, i);
             continue;
         }
-        throw ArgsException(std::string("unknown argument: ").append(argv[i]));
+        throw ArgsException(std::string("unknown argument: ").append(option));
     }
     if (args._port == -1)
         throw ArgsException("missing required argument: -p port");
