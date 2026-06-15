@@ -21,13 +21,14 @@ namespace GUI {
 */
 class Incantation : public Entity {
     public:
-        Incantation(int id = 0, int x = 0, int y = 0, int level = 0, const std::vector<int> &playerIds = {});
-        ~Incantation() = default;
-
         int level = 0;
         std::vector<int> playerIds; //* voir si ça serait pas mieux des ref aux players
         bool active = false;
         bool success = false;
+
+    public:
+        Incantation(int id = 0, int x = 0, int y = 0, int level = 0, const std::vector<int> &playerIds = {});
+        ~Incantation() = default;
 };
 
 }

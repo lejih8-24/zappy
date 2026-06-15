@@ -31,9 +31,6 @@ namespace GUI {
 */
 class GameState {
     public:
-        GameState(int mapWidth = 0, int mapHeight = 0, int timeUnit = 0);
-        ~GameState() = default;
-
         std::size_t mapWidth = 0;
         std::size_t mapHeight = 0;
         int timeUnit = 0;
@@ -46,6 +43,10 @@ class GameState {
         std::vector<std::string> teams; //? replace by references to a class or smth?
         std::vector<ServerMessage> messages;
         std::vector<Incantation> incantations;
+
+    public:
+        GameState(int mapWidth = 0, int mapHeight = 0, int timeUnit = 0);
+        ~GameState() = default;
 };
 
 }

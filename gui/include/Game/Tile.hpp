@@ -20,14 +20,15 @@ namespace GUI {
 */
 class Tile : public Position {
     public:
-        Tile(int x = 0, int y = 0, const ResourceStock &resources = {});
-        ~Tile() = default;
-
         ResourceStock resources = {};
         //* TODO: voir si ça serait pas mieux d'avoir des références aux objets??
         std::vector<int> playerIds;
         std::vector<int> eggIds;
         std::vector<int> incantationIds;
+
+    public:
+        Tile(int x = 0, int y = 0, const ResourceStock &resources = {});
+        ~Tile() = default;
 };
 
 }

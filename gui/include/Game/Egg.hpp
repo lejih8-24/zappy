@@ -19,11 +19,12 @@ namespace GUI {
 */
 class Egg : public Entity {
     public:
-        Egg(int id = 0, int parentId = 0, int x = 0, int y = 0);
-        ~Egg() = default;
-
         int parentPlayerId = 0;
         bool alive = true;
+
+    public:
+        Egg(int id = 0, int parentId = 0, int x = 0, int y = 0);
+        ~Egg() = default;
 };
 
 }

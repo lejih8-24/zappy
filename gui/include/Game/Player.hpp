@@ -38,9 +38,6 @@ enum Orientation {
 */
 class Player : public Entity {
     public:
-        Player(int id = 0, int x = 0, int y = 0, std::size_t level = 1, const std::string &teamName = "");
-        ~Player() = default;
-
         Orientation orientation;
         std::size_t level = 1;
         std::string teamName;
@@ -49,6 +46,10 @@ class Player : public Entity {
         bool isBroadcasting = false;
         bool isIncantating = false;
         bool isLayingEgg = false;
+
+    public:
+        Player(int id = 0, int x = 0, int y = 0, std::size_t level = 1, const std::string &teamName = "");
+        ~Player() = default;
 };
 
 }

@@ -16,10 +16,11 @@ struct Position {
 
 class Entity : public Position {
     public:
+        int id = 0;
+
+    public:
         Entity(int id = 0, int x = 0, int y = 0);
         ~Entity() = default;
-
-        int id = 0;
 };
 
 }

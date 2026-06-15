@@ -28,14 +28,15 @@ enum class ServerMessageType {
 */
 class ServerMessage {
     public:
-        ServerMessage(ServerMessageType type = ServerMessageType::Info, const std::string &msg = "",
-            int playerId = -1, float timestamp = 0.0f);
-        ~ServerMessage() = default;
-
         ServerMessageType type = ServerMessageType::Info;
         std::string msg;
         int playerId = -1;
         float timestamp = 0.0f;
+
+    public:
+        ServerMessage(ServerMessageType type = ServerMessageType::Info, const std::string &msg = "",
+            int playerId = -1, float timestamp = 0.0f);
+        ~ServerMessage() = default;
 };
 
 }
