@@ -7,8 +7,15 @@
 
 cmake_minimum_required(VERSION 3.15)
 
+add_subdirectory(${CMAKE_SOURCE_DIR}/lib/raylib ${CMAKE_BINARY_DIR}/raylib)
+
 add_executable(zappy_gui
-               src/main.cpp)
+               src/main.cpp
+               src/Window.cpp
+               src/Map.cpp
+               src/Camera.cpp)
 
 target_include_directories(zappy_gui
                            PRIVATE include)
+
+target_link_libraries(zappy_gui PRIVATE raylib)

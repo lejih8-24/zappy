@@ -7,6 +7,7 @@
 
 #include "Window.hpp"
 #include "Map.hpp"
+#include "Camera.hpp"
 #include "raylib.h"
 
 
@@ -16,24 +17,22 @@ int main()
 
     Map map(10, 10);
 
-    Camera3D camera = {};
-    camera.position   = { 0.0f, 20.0f, 20.0f };
-    camera.target     = { 0.0f,  0.0f,  0.0f };
-    camera.up         = { 0.0f,  1.0f,  0.0f };
-    camera.fovy       = 45.0f;
-    camera.projection = CAMERA_PERSPECTIVE;
+    GameCamera camera(
+        { 0.0f, 20.0f, 20.0f },
+        { 0.0f,  0.0f,  0.0f }
+    );
 
     while (!win.shouldClose()) {
-        UpdateCamera(&camera, CAMERA_ORBITAL);
+        camera.update();
 
         win.beginFrame();
             DrawFPS(10, 10);
 
-            BeginMode3D(camera);
+            camera.begin3D();
                 map.draw();
-            EndMode3D();
+            camera.end3D();
 
-            DrawText("Zappy GUI - 3D Map", 10, 34, 20, RAYWHITE);
+            DrawText("Zappy GUI - 3D Map  |  [WASD] deplacer  [R] reset", 10, 34, 18, RAYWHITE);
         win.endFrame();
     }
 
