@@ -89,8 +89,6 @@ class ZappyAI:
             self.state = State.FARMING
             self.role = Role.Explorer
             return
-        else:
-            print(f"Message inconnu: {message}")
 
         if self.pending_commands:
             current_command = self.pending_commands.pop(0)
@@ -99,6 +97,10 @@ class ZappyAI:
             self._update_state_from_result(current_command, result)
         else:
             print(f"Réponse inattendue (aucune commande en attente) : {message}")
+
+    def _is_command_pending(self, command_class) -> bool:
+        """Vérifie si un type de commande précis est déjà dans la file d'attente."""
+        return any(isinstance(cmd, command_class) for cmd in self.pending_commands)
 
     def _update_state_from_result(self, command, result):
         if isinstance(command, InventoryCommand) and isinstance(result, dict):
@@ -150,6 +152,13 @@ class ZappyAI:
                     print(self.previous_debug)
             self.state = State.SURVIVAL
 
+        elif current_food >= 20 and self.state == State.SURVIVAL:
+            debug = f"[DEBUG] Réserves reconstituées ({current_food}/25). Fin de l'urgence, retour au FARMING !"
+            if debug != self.previous_debug:
+                self.previous_debug = f"[DEBUG] Réserves reconstituées ({current_food}/25). Fin de l'urgence, retour au FARMING !"
+                print(self.previous_debug)
+            self.state = State.FARMING
+
         elif self.can_elevate() and self.state == State.FARMING:
             debug = f"[DEBUG] J'ai toutes les pierres requises pour le niveau {self.level + 1} ! Je deviens MASTER et passe en GROUPING."
             if debug != self.previous_debug:
@@ -190,6 +199,7 @@ class ZappyAI:
         else:
             self._queue_command(ForwardCommand())
             self._queue_command(LookCommand())
+            self.vision_grid = None
 
     def _get_needed_material(self) -> str | None:
         if self.level >= 8:
@@ -202,14 +212,16 @@ class ZappyAI:
 
     def _state_survival(self):
         if not self.vision_grid:
-            self._queue_command(LookCommand())
+            if not self._is_command_pending(LookCommand):
+                self._queue_command(LookCommand())
             return
         path = find_path_to_closest(self.vision_grid, "food")
         self._move_instructions(path, "food")
 
     def _state_farming(self):
         if not self.vision_grid:
-            self._queue_command(LookCommand())
+            if not self._is_command_pending(LookCommand):
+                self._queue_command(LookCommand())
             return
 
         target_mat = self._get_needed_material()
