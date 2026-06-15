@@ -36,7 +36,7 @@ enum class Orientation {
 */
 class Player : public Entity {
     public:
-        Player(int id = 0, int x = 0, int y = 0, Orientation orientation = Orientation::North, int level = 1,
+        Player(int id = 0, int x = 0, int y = 0, Orientation orientation = Orientation::North, std::size_t level = 1,
             const std::string &teamName = "");
         ~Player() = default;
 
@@ -66,7 +66,7 @@ class Player : public Entity {
 
     private:
         Orientation _orientation = Orientation::North;
-        int _level = 1;
+        std::size_t _level;
         std::string _teamName;
         ResourceStock _inventory = {};
         bool _alive = true;
