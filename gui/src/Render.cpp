@@ -13,10 +13,11 @@
 
 namespace GUI {
 
-Render::Render(std::string_view host, int port)
-    : _window(1280, 720,
+Render::Render(std::string_view host, int port, const GameState &state)
+    : _state(state)
+    , _window(1280, 720,
           std::string("Zappy GUI - ").append(host).append(":").append(std::to_string(port)), 60)
-    , _map(10, 10)
+    , _map()
     , _camera({ 0.0f, 20.0f, 20.0f }, { 0.0f, 0.0f, 0.0f })
 {
 }
@@ -33,7 +34,7 @@ void Render::renderLoop()
         DrawFPS(10, 10);
 
         _camera.begin3D();
-        _map.draw();
+        _map.draw(_state);
         _camera.end3D();
 
         DrawText("Zappy GUI - 3D Map  |  [WASD] deplacer  [R] reset  [F11] fullscreen", 10, 34, 18,
