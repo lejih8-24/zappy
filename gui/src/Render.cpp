@@ -11,8 +11,8 @@
 
 namespace GUI {
 
-Render::Render()
-    : _window(1280, 720, "Zappy GUI", 60)
+Render::Render(const std::string &host, int port)
+    : _window(1280, 720, "Zappy GUI - " + host + ":" + std::to_string(port), 60)
     , _map(10, 10)
     , _camera({ 0.0f, 20.0f, 20.0f }, { 0.0f, 0.0f, 0.0f })
 {
