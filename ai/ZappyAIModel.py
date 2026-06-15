@@ -109,6 +109,8 @@ class ZappyAI:
             self.vision_grid = result
         elif isinstance(command, TakeCommand) and result is True:
             self.inventory[command.obj_name] += 1
+        elif isinstance(command, SetCommand) and result is True:
+            self.inventory[command.obj_name] = self.inventory.get(command.obj_name, 1) - 1
 
     def _queue_command(self, command):
         if len(self.pending_commands) < 9:
@@ -249,7 +251,7 @@ class ZappyAI:
                 if not self._is_command_pending(BroadcastCommand):
                     msg = self.comms.format_message("ALL", self.level, Role.Master, State.INCANTATION,
                                                     "ABORT")
-                    self._queue_command(BroadcastCommand(msg))
+                    self._queue_command(BroadcastCommand(self.comms.token, msg))
 
                 self.state = State.INCANTATION
             else:
@@ -258,7 +260,7 @@ class ZappyAI:
                 if not self._is_command_pending(BroadcastCommand):
                     msg = self.comms.format_message("ALL", self.level, Role.Master, State.GROUPING,
                                                     "INCANTATION_CALL")
-                    self._queue_command(BroadcastCommand(msg))
+                    self._queue_command(BroadcastCommand(self.comms.token, msg))
 
                 self.vision_grid = None
         elif self.role == Role.Slave:
@@ -328,8 +330,12 @@ class ZappyAI:
         return cleaned_something
 
     def _state_incantation(self):
+        if self._is_command_pending(SetCommand) or self._is_command_pending(TakeCommand):
+            return
+
         if not self.vision_grid:
-            self._queue_command(LookCommand())
+            if not self._is_command_pending(LookCommand):
+                self._queue_command(LookCommand())
             return
 
         if self._is_floor_perfect():
@@ -338,18 +344,17 @@ class ZappyAI:
             self.state = State.WAITING_ELEVATION
             return
 
-        if self._clean_floor():
-            print("Ramassage des dons et nettoyage de la case...")
-            self.vision_grid = None
-            self._queue_command(LookCommand())
+        if not self.can_elevate():
+            print(f"Inventaire insuffisant pour préparer le rituel du niveau {self.level + 1}.")
+            msg = self.comms.format_message("ALL", self.level, Role.Master, State.FARMING, "ABORT")
+            self._queue_command(BroadcastCommand(self.comms.token, msg))
+            self.state = State.FARMING
             return
 
-        if not self.can_elevate():
-            print(f"Inventaire global insuffisant pour le rituel du niveau {self.level + 1}.")
-            msg = self.comms.format_message("ALL", self.level, Role.Master, State.FARMING, "ABORT")
-            self._queue_command(BroadcastCommand(msg))
-            self.state = State.FARMING
-            self.role = Role.Explorer
+        if self._clean_floor():
+            print("Nettoyage de la case en cours...")
+            self.vision_grid = None
+            self._queue_command(LookCommand())
             return
 
         print(f"Dépôt chirurgical des pierres pour le niveau {self.level + 1}...")
@@ -357,7 +362,6 @@ class ZappyAI:
         for stone, required_qty in rules["stones"].items():
             for _ in range(required_qty):
                 self._queue_command(SetCommand(stone))
-                self.inventory[stone] = self.inventory.get(stone, 0) - 1
 
         self.vision_grid = None
         self._queue_command(LookCommand())
