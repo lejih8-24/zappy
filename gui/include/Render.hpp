@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2026
 ** Project - Zappy
 ** File description:
-** GUI renderer
+** GUI render
 */
 
 #pragma once
@@ -13,9 +13,9 @@
 
 namespace GUI {
 
-class Renderer {
+class Render {
     public:
-        Renderer();
+        Render();
         void renderLoop();
 
     private:

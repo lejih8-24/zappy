@@ -14,7 +14,7 @@ add_executable(zappy_gui
                src/Window.cpp
                src/Map.cpp
                src/Camera.cpp
-               src/Renderer.cpp)
+               src/Render.cpp)
 
 target_include_directories(zappy_gui
                            PRIVATE include)

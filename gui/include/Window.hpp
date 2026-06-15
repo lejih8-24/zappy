@@ -24,6 +24,7 @@ class Window {
     
         void beginFrame();
         void endFrame();
+        void toggleFullscreen();
     
         int getWidth()  const { return GetScreenWidth();  }
         int getHeight() const { return GetScreenHeight(); }

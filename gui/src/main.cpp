@@ -5,12 +5,12 @@
 ** Program Entry
 */
 
-#include "Renderer.hpp"
+#include "Render.hpp"
 
 
 int main()
 {
-    GUI::Renderer renderer;
-    renderer.renderLoop();
+    GUI::Render render;
+    render.renderLoop();
     return 0;
 }
