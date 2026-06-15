@@ -7,8 +7,12 @@
 
 #include "Map.hpp"
 
+namespace GUI {
+
 Map::Map(int width, int height, float squareSize)
-    : _width(width), _height(height), _squareSize(squareSize)
+    : _width(width)
+    , _height(height)
+    , _squareSize(squareSize)
 {
 }
 
@@ -35,4 +39,6 @@ void Map::draw() const
             DrawCubeWiresV(pos, size, BLACK);
         }
     }
+}
+
 }

@@ -7,6 +7,8 @@
 
 #include "Window.hpp"
 
+namespace GUI {
+
 Window::Window(int width, int height, const std::string &title, int fps)
 {
     InitWindow(width, height, title.c_str());
@@ -32,4 +34,6 @@ void Window::beginFrame()
 void Window::endFrame()
 {
     EndDrawing();
+}
+
 }
