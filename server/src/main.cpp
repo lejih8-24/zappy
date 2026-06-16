@@ -9,15 +9,11 @@
 #include <iostream>
 
 
-void runServer()
-{
-
-}
-
 int main(int argc, char *argv[])
 {
     try {
-        runServer();
+        Zappy::Server server("127.0.0.1", 5001);
+        server.run();
     } catch (const std::exception& err) {
         std::cerr << err.what() << std::endl;
         return 84;

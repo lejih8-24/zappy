@@ -7,10 +7,14 @@
 
 cmake_minimum_required(VERSION 3.15)
 
+add_subdirectory(../lib/liblattice "${CMAKE_BINARY_DIR}/lib/liblattice")
+
 add_executable(zappy_server
-               src/networking/NonBlockingSocket/NonBlockingSocket.cpp
-               src/networking/Socket/Socket.cpp
+               src/Server/Server.cpp
                src/main.cpp)
 
 target_include_directories(zappy_server
-                           PRIVATE include)
+                           PRIVATE include
+                           PRIVATE ../lib/liblattice/include)
+
+target_link_libraries(zappy_server PRIVATE lattice)
