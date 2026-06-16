@@ -7,32 +7,23 @@
 
 #pragma once
 
+#include "Game/GameState.hpp"
+
 #include "raylib.h"
 
 namespace GUI {
 
 class Map {
-    private:
-        int _width;
-        int _height;
-        float _squareSize;
-
     public:
-        Map(int width, int height, float squareSize = 2.0f);
+        Map(float squareSize = 2.0f);
         ~Map() = default;
 
-        void draw() const;
-        void setSize(int width, int height);
+        void draw(const GameState &state) const;
 
-        int getWidth() const
-        {
-            return _width;
-        }
+    private:
+        Vector3 getTilePosition(int x, int y, const GameState &state, float height = 0.0f) const;
 
-        int getHeight() const
-        {
-            return _height;
-        }
+        float _squareSize;
 };
 
 }

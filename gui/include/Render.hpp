@@ -8,6 +8,7 @@
 #pragma once
 
 #include "Camera.hpp"
+#include "Game/GameState.hpp"
 #include "Map.hpp"
 #include "Window.hpp"
 
@@ -17,10 +18,11 @@ namespace GUI {
 
 class Render {
     public:
-        Render(std::string_view host, int port);
+        Render(std::string_view host, int port, const GameState &state);
         void renderLoop();
 
     private:
+        const GameState &_state;
         Window _window;
         Map _map;
         GameCamera _camera;
