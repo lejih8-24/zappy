@@ -5,6 +5,8 @@ from CommandModel import *
 from BroadcastManager import BroadcastManager
 from constants import Role, State, ELEVATION_RULES
 from pathfinding import find_path_to_closest
+import os
+import json
 
 
 class ZappyAI:
@@ -26,6 +28,31 @@ class ZappyAI:
         self.state = State.FARMING
         self.comms = BroadcastManager(token="AlphaNor_Zappy_26")
         self.previous_debug = ""
+
+        self.pos_x = 0
+        self.pos_y = 0
+
+        if not any(f.endswith('.json') for f in os.listdir('.') if f.startswith('.zappy_stats')):
+            os.makedirs(".zappy_stats", exist_ok=True)
+
+    def _save_dashboard_state(self):
+        """Sauvegarde l'état actuel dans un fichier JSON partagé."""
+        state_data = {
+            "id": self.comms.my_id,
+            "role": self.role.name,
+            "state": self.state.name,
+            "level": self.level,
+            "position": [self.pos_x, self.pos_y],
+            "inventory": self.inventory
+        }
+
+        os.makedirs(".zappy_stats", exist_ok=True)
+        filename = f".zappy_stats/drone_{self.comms.my_id}.json"
+
+        temp_filename = f"{filename}.tmp"
+        with open(temp_filename, "w") as f:
+            json.dump(state_data, f)
+        os.replace(temp_filename, filename)
 
     def run(self):
         while self.is_alive:
@@ -121,7 +148,7 @@ class ZappyAI:
         elif isinstance(command, SetCommand) and result is True:
             self.inventory[command.obj_name] = self.inventory.get(command.obj_name, 1) - 1
         elif isinstance(command, ForkCommand) and result is True:
-            print("[DEBUG] L'œuf a été pondu avec succès ! Retour au travail.")
+            print("[DEBUG] L'oeuf a été pondu avec succès ! Retour au travail.")
             self.state = State.FARMING
 
     def _queue_command(self, command):
@@ -206,6 +233,8 @@ class ZappyAI:
         elif self.state == State.FORKING:
             self._state_forking()
 
+        self._save_dashboard_state()
+
     def _move_instructions(self, path: list, target_item: str):
         if path is not None:
             for action in path:
@@ -248,13 +277,25 @@ class ZappyAI:
             return
 
         target_mat = self._get_needed_material()
+
         if not target_mat:
             print("Toutes les ressources sont réunies. Passage en mode GROUPING.")
             self.state = State.GROUPING
             return
 
-        path = find_path_to_closest(self.vision_grid, target_mat)
-        self._move_instructions(path, target_mat)
+        path_to_mats = find_path_to_closest(self.vision_grid, target_mat)
+
+        if path_to_mats is not None:
+            self._move_instructions(path_to_mats, target_mat)
+        else:
+            path_to_food = find_path_to_closest(self.vision_grid, "food")
+
+            if path_to_food is not None and self.inventory.get("food", 0) < 40:
+                self._move_instructions(path_to_food, "food")
+            else:
+                self._queue_command(ForwardCommand())
+                self._queue_command(LookCommand())
+                self.vision_grid = None
 
     def _state_grouping(self):
         if self.role == Role.Master:
