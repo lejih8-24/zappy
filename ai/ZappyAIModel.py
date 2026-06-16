@@ -120,6 +120,9 @@ class ZappyAI:
             self.inventory[command.obj_name] += 1
         elif isinstance(command, SetCommand) and result is True:
             self.inventory[command.obj_name] = self.inventory.get(command.obj_name, 1) - 1
+        elif isinstance(command, ForkCommand) and result is True:
+            print("[DEBUG] L'œuf a été pondu avec succès ! Retour au travail.")
+            self.state = State.FARMING
 
     def _queue_command(self, command):
         if len(self.pending_commands) < 9:
@@ -385,4 +388,9 @@ class ZappyAI:
         self._queue_command(LookCommand())
 
     def _state_forking(self):
-        return
+        """L'IA s'immobilise pour pondre un œuf."""
+        if self._is_command_pending(ForkCommand):
+            return
+
+        print("[DEBUG] Envoi de la commande Fork au serveur (blocage de 42 ticks)...")
+        self._queue_command(ForkCommand())
