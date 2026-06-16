@@ -56,7 +56,7 @@ class ZappyAI:
                         self.role = Role.Slave
                         self.state = State.GROUPING
                         self.target_direction = direction
-                        print(f"🏃 Entendu l'appel du Master {decoded['sender_id']} à la direction {direction}")
+                        print(f"Entendu l'appel du Master {decoded['sender_id']} à la direction {direction}")
 
                     elif decoded["request"] == "INCANTATION_STARTING" and self.role == Role.Slave:
                         if direction == 0:
