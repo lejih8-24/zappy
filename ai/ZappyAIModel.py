@@ -80,10 +80,15 @@ class ZappyAI:
 
                 if decoded:
                     if decoded["request"] == "INCANTATION_CALL" and decoded["level"] == self.level:
-                        self.role = Role.Slave
-                        self.state = State.GROUPING
-                        self.target_direction = direction
-                        print(f"Entendu l'appel du Master {decoded['sender_id']} à la direction {direction}")
+                        if self.role != Role.Master:
+                            self.role = Role.Slave
+                            self.state = State.GROUPING
+                            self.target_direction = direction
+                            print(
+                                f"[COMMS] Entendu l'appel du Master {decoded['sender_id']} à la direction {direction}. Je passe Slave.")
+                        else:
+                            print(
+                                f"[COMMS] J'entends un appel ({decoded['sender_id']}) mais je suis déjà MASTER. J'ignore.")
 
                     elif decoded["request"] == "INCANTATION_STARTING" and self.role == Role.Slave:
                         if direction == 0:
