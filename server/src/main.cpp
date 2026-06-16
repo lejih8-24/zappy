@@ -12,7 +12,10 @@
 int main(int argc, char *argv[])
 {
     try {
-        Zappy::Server server("127.0.0.1", 5001);
+        auto server = Zappy::Server::Builder()
+            .fromArguments(argc, argv)
+            .build();
+
         server.run();
     } catch (const std::exception& err) {
         std::cerr << err.what() << std::endl;
