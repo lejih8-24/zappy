@@ -9,4 +9,4 @@
 #pragma once
 
 #include "zappy/exceptions.hpp"
-#include "zappy/networking.hpp"
+#include "../src/Server/Server.hpp"
