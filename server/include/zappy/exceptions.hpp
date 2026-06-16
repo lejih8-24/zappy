@@ -8,5 +8,6 @@
 
 #pragma once
 
+#include "../../src/exceptions/ArgumentParseException/ArgumentParseException.hpp"
 #include "../../src/exceptions/BaseException.hpp"
-#include "../../src/exceptions/SocketException.hpp"
+#include "../../src/exceptions/ParseException.hpp"
