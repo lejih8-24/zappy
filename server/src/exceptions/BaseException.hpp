@@ -14,7 +14,8 @@
 
 namespace Zappy::Exceptions {
     class BaseException : public std::exception {
-        std::string m_Message;
+        protected:
+            std::string m_Message;
 
         public:
             BaseException(std::string_view msg) : m_Message(msg) {}
