@@ -2,6 +2,7 @@ import sys
 import argparse
 import time
 from network import NetworkClient
+from ZappyAIModel import ZappyAI
 
 def parse_arguments():
     """
@@ -30,15 +31,15 @@ def handle_handshake(client: NetworkClient, team_name: str) -> tuple[int, int, i
     map_x = 0
     map_y = 0
 
-    print("⏳ Attente du handshake...")
+    print("Attente du handshake...")
 
     while step < 3:
         responses = client.get_responses()
         for response in responses:
-            print(f"📥 Serveur: {response}")
+            print(f"Serveur: {response}")
 
             if step == 0 and response == "WELCOME":
-                print(f"📤 Envoi du nom d'équipe : {team_name}")
+                print(f"Envoi du nom d'équipe : {team_name}")
                 client.send_command(team_name)
                 step = 1
 
@@ -70,42 +71,26 @@ def handle_handshake(client: NetworkClient, team_name: str) -> tuple[int, int, i
 
     return client_num, map_x, map_y
 
-
 def main():
     args = parse_arguments()
-
-    print(f"Démarrage de l'IA pour l'équipe '{args.name}' sur {args.host}:{args.port}")
+    print(f"Démarrage de l'IA '{args.name}' sur {args.host}:{args.port}")
 
     client = NetworkClient(args.host, args.port)
     client.connect()
 
     try:
         client_num, map_x, map_y = handle_handshake(client, args.name)
-        print("Handshake terminé avec succès ! Début du jeu.")
+        print("Handshake terminé ! Transfert du contrôle au cerveau de l'IA.")
 
-        # Ici on va initialiser l'IA
+        ai = ZappyAI(client, args.name, map_x, map_y)
 
-        while True:
-            responses = client.get_responses()
-
-            for response in responses:
-                if response == "dead":
-                    print("L'IA est morte de faim.")
-                    sys.exit(0)
-
-                # AI update here
-
-            # Décision et commandes ici
-            # send_command
-
-            time.sleep(0.01)
+        ai.run()
 
     except KeyboardInterrupt:
         print("\nInterruption par l'utilisateur.")
     finally:
         client.close()
         print("Connexion fermée.")
-
 
 if __name__ == "__main__":
     main()
