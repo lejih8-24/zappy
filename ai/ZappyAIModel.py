@@ -170,6 +170,13 @@ class ZappyAI:
                 print(self.previous_debug)
             self.state = State.FARMING
 
+        elif current_food > 35 and self.state == State.FARMING:
+            debug = f"[DEBUG] Abondance de nourriture ({current_food}). Lancement d'un processus de Fork !"
+            if debug != self.previous_debug:
+                self.previous_debug = f"[DEBUG] Abondance de nourriture ({current_food}). Lancement d'un processus de Fork !"
+                print(self.previous_debug)
+            self.state = State.FORKING
+
         elif self.can_elevate() and self.state == State.FARMING:
             debug = f"[DEBUG] J'ai toutes les pierres requises pour le niveau {self.level + 1} ! Je deviens MASTER et passe en GROUPING."
             if debug != self.previous_debug:
@@ -193,6 +200,8 @@ class ZappyAI:
             self._state_contributing()
         elif self.state == State.INCANTATION:
             self._state_incantation()
+        elif self.state == State.FORKING:
+            self._state_forking()
 
     def _move_instructions(self, path: list, target_item: str):
         if path is not None:
@@ -374,3 +383,6 @@ class ZappyAI:
 
         self.vision_grid = None
         self._queue_command(LookCommand())
+
+    def _state_forking(self):
+        return
