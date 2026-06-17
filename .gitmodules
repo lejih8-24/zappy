@@ -1,0 +1,3 @@
+[submodule "liblattice"]
+  path = lib/liblattice
+  url = git@github.com:Bard-Gaming/liblattice.git
