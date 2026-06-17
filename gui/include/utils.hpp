@@ -8,5 +8,6 @@
 
 #pragma once
 
+#include "../src/utils/LineBuffer.hpp"
 #include "../src/utils/Zip.hpp"
 #include "../src/utils/ZipIterator.hpp"
