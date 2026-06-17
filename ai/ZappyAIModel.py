@@ -7,9 +7,10 @@ from constants import Role, State, ELEVATION_RULES
 from pathfinding import find_path_to_closest
 import os
 import json
+from ai_states import AIStatesMixin
 
 
-class ZappyAI:
+class ZappyAI(AIStatesMixin):
     def __init__(self, network, team_name, map_x, map_y):
         self.network = network
         self.team_name = team_name
@@ -142,10 +143,6 @@ class ZappyAI:
         else:
             print(f"Réponse inattendue (aucune commande en attente) : {message}")
 
-    def _is_command_pending(self, command_class) -> bool:
-        """Vérifie si un type de commande précis est déjà dans la file d'attente."""
-        return any(isinstance(cmd, command_class) for cmd in self.pending_commands)
-
     def _update_state_from_result(self, command, result):
         if isinstance(command, InventoryCommand) and isinstance(result, dict):
             self.inventory = result
@@ -183,23 +180,6 @@ class ZappyAI:
                 self.pos_y = (self.pos_y - 1) % self.map_y
             elif self.orientation == 3:
                 self.pos_x = (self.pos_x - 1) % self.map_x
-
-    def _queue_command(self, command):
-        if len(self.pending_commands) < 9:
-            self.pending_commands.append(command)
-            self.network.send_command(command.command_string)
-
-    def can_elevate(self) -> bool:
-        rules = self.elevation_rules[self.level]
-        for stone, required_qty in rules["stones"].items():
-            if self.inventory.get(stone, 0) < required_qty:
-                return False
-        return True
-
-    def _count_player_case(self):
-        if not self.vision_grid:
-            return 0
-        return self.vision_grid[0].get('player', 0)
 
     def _decide_next_action(self):
         if len(self.pending_commands) >= 9:
@@ -268,6 +248,27 @@ class ZappyAI:
 
         self._save_dashboard_state()
 
+    def _queue_command(self, command):
+        if len(self.pending_commands) < 9:
+            self.pending_commands.append(command)
+            self.network.send_command(command.command_string)
+
+    def _is_command_pending(self, command_class) -> bool:
+        """Vérifie si un type de commande précis est déjà dans la file d'attente."""
+        return any(isinstance(cmd, command_class) for cmd in self.pending_commands)
+
+    def can_elevate(self) -> bool:
+        rules = self.elevation_rules[self.level]
+        for stone, required_qty in rules["stones"].items():
+            if self.inventory.get(stone, 0) < required_qty:
+                return False
+        return True
+
+    def _count_player_case(self):
+        if not self.vision_grid:
+            return 0
+        return self.vision_grid[0].get('player', 0)
+
     def _move_instructions(self, path: list, target_item: str):
         if path is not None:
             for action in path:
@@ -295,107 +296,7 @@ class ZappyAI:
                 return stone
         return None
 
-    def _state_survival(self):
-        if not self.vision_grid:
-            if not self._is_command_pending(LookCommand):
-                self._queue_command(LookCommand())
-            return
-        path = find_path_to_closest(self.vision_grid, "food")
-        self._move_instructions(path, "food")
-        if not self._is_command_pending(InventoryCommand):
-            self._queue_command(InventoryCommand())
 
-    def _state_farming(self):
-        if not self.vision_grid:
-            if not self._is_command_pending(LookCommand):
-                self._queue_command(LookCommand())
-            return
-
-        target_mat = self._get_needed_material()
-
-        if not target_mat:
-            print("Toutes les ressources sont réunies. Passage en mode GROUPING.")
-            self.state = State.GROUPING
-            return
-
-        path_to_mats = find_path_to_closest(self.vision_grid, target_mat)
-
-        if path_to_mats is not None:
-            self._move_instructions(path_to_mats, target_mat)
-        else:
-            path_to_food = find_path_to_closest(self.vision_grid, "food")
-
-            if path_to_food is not None and self.inventory.get("food", 0) < 40:
-                self._move_instructions(path_to_food, "food")
-            else:
-                self._queue_command(ForwardCommand())
-                self._queue_command(LookCommand())
-                if not self._is_command_pending(InventoryCommand):
-                    self._queue_command(InventoryCommand())
-                self.vision_grid = None
-
-    def _state_grouping(self):
-        if self.role == Role.Master:
-            if not self.vision_grid:
-                if not self._is_command_pending(LookCommand):
-                    self._queue_command(LookCommand())
-                return
-
-            players_on_tile = self._count_player_case()
-            required_players = self.elevation_rules[self.level]["players"]
-
-            if players_on_tile >= required_players:
-                print(f"Assez de trantoriens ({players_on_tile}/{required_players}).")
-
-                if not self._is_command_pending(BroadcastCommand):
-                    msg = self.comms.format_message("ALL", self.level, Role.Master, State.INCANTATION,
-                                                    "INCANTATION_STARTING")
-                    self._queue_command(BroadcastCommand(self.comms.token, msg))
-
-                self.state = State.INCANTATION
-            else:
-                print(f"En attente de trantoriens ({players_on_tile}/{required_players}).")
-
-                if not self._is_command_pending(BroadcastCommand):
-                    msg = self.comms.format_message("ALL", self.level, Role.Master, State.GROUPING,
-                                                    "INCANTATION_CALL")
-                    self._queue_command(BroadcastCommand(self.comms.token, msg))
-
-                self.vision_grid = None
-        elif self.role == Role.Slave:
-            if getattr(self, "target_direction", None) is None:
-                return
-
-            k = self.target_direction
-
-            self.target_direction = None
-
-            if k == 0:
-                print("Arrivé sur la case du Master ! Je vide mes poches.")
-                self.state = State.CONTRIBUTING
-            elif k in [1, 2, 8]:
-                self._queue_command(ForwardCommand())
-            elif k in [3, 4]:
-                self._queue_command(TurnLeftCommand())
-            elif k in [5, 6, 7]:
-                self._queue_command(TurnRightCommand())
-
-    def _state_contributing(self):
-        """Le Slave est sur la case du Master et donne toutes ses pierres."""
-        dropped_something = False
-
-        for item, qty in list(self.inventory.items()):
-            if item != "food" and qty > 0:
-                for _ in range(qty):
-                    self._queue_command(SetCommand(item))
-                    self.inventory[item] -= 1
-                    dropped_something = True
-
-        if dropped_something:
-            print("Don de mes pierres en cours...")
-        else:
-            print("Je n'ai plus rien. J'attends le rituel.")
-            self.state = State.WAITING_ELEVATION
 
     def _is_floor_perfect(self) -> bool:
         if not self.vision_grid: return False
@@ -427,51 +328,6 @@ class ZappyAI:
                     self._queue_command(TakeCommand(item))
                     cleaned_something = True
         return cleaned_something
-
-    def _state_incantation(self):
-        if self._is_command_pending(SetCommand) or self._is_command_pending(TakeCommand):
-            return
-
-        if not self.vision_grid:
-            if not self._is_command_pending(LookCommand):
-                self._queue_command(LookCommand())
-            return
-
-        if self._is_floor_perfect():
-            print(f"La case est prête ! Lancement de l'Incantation (Niveau {self.level} -> {self.level + 1}).")
-            self._queue_command(IncantationCommand())
-            self.state = State.WAITING_ELEVATION
-            return
-
-        if not self.can_elevate():
-            print(f"Inventaire insuffisant pour préparer le rituel du niveau {self.level + 1}.")
-            msg = self.comms.format_message("ALL", self.level, Role.Master, State.FARMING, "ABORT")
-            self._queue_command(BroadcastCommand(self.comms.token, msg))
-            self.state = State.FARMING
-            return
-
-        if self._clean_floor():
-            print("Nettoyage de la case en cours...")
-            self.vision_grid = None
-            self._queue_command(LookCommand())
-            return
-
-        print(f"Dépôt chirurgical des pierres pour le niveau {self.level + 1}...")
-        rules = self.elevation_rules[self.level]
-        for stone, required_qty in rules["stones"].items():
-            for _ in range(required_qty):
-                self._queue_command(SetCommand(stone))
-
-        self.vision_grid = None
-        self._queue_command(LookCommand())
-
-    def _state_forking(self):
-        """L'IA s'immobilise pour pondre un œuf."""
-        if self._is_command_pending(ForkCommand):
-            return
-
-        print("[DEBUG] Envoi de la commande Fork au serveur (blocage de 42 ticks)...")
-        self._queue_command(ForkCommand())
 
     def _integrate_vision_to_map(self, vision_list: list):
         """Transforme le tableau Look en coordonnées absolues et met à jour la carte mentale."""
