@@ -48,7 +48,7 @@ namespace Zappy::Utils {
         using ValuePair = std::pair<ValueA, ValueB>;
 
         public:
-            ZipIterator(A iterator);
+            ZipIterator(A iteratorA, B iteratorB) : m_IteratorA(iteratorA), m_IteratorB(iteratorB) {}
 
             ZipIterator& operator++()
             {
