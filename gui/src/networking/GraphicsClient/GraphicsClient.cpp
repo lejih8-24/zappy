@@ -11,6 +11,7 @@
 
 Zappy::Networking::GraphicsClient::GraphicsClient()
     : m_Server()
+    , m_ResponseBuffer()
     , m_TeamNames()
 {
 }
@@ -105,28 +106,31 @@ void Zappy::Networking::GraphicsClient::doHandshake()
 
 std::string_view Zappy::Networking::GraphicsClient::getline(bool wait)
 {
-    // TODO: add caching to avoid losing data on cutoff
-    constexpr std::size_t size = 4096;
-    static char buffer[size];
+    m_ResponseBuffer.popLine();
+
+    auto bufferLine = m_ResponseBuffer.getLine();
+    if (bufferLine)
+        return *bufferLine;
 
     if (!wait) {
         pollfd pollEvents = { m_Server.fileno(), POLL_IN, 0 };
 
-        if (::poll(&pollEvents, 1, -1) != 0)
+        if (::poll(&pollEvents, 1, 100) < 0)
             return std::string_view();
 
         if (!(pollEvents.revents & POLL_IN))
             return std::string_view();
     }
 
-    auto bytesRead = m_Server.read(buffer, size);
+    std::array<char, 1024> buffer;
+    auto bytesRead = m_Server.read(buffer, buffer.size());
     if (bytesRead <= 0)
         return std::string_view();
 
-    std::string_view line(buffer, bytesRead);
-    auto end = line.find('\n');
+    m_ResponseBuffer.pushBack(std::span(buffer.data(), bytesRead));
+    bufferLine = m_ResponseBuffer.getLine();
 
-    return std::string_view(line.begin(), end);
+    return bufferLine ? *bufferLine : std::string_view();
 }
 
 void Zappy::Networking::GraphicsClient::send(std::string_view msg)

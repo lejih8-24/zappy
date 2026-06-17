@@ -9,6 +9,7 @@
 #pragma once
 
 #include "../ResponseParser/ResponseParser.hpp"
+#include <utils.hpp>
 #include <lattice.hpp>
 #include <string_view>
 #include <optional>
@@ -21,6 +22,7 @@ namespace Zappy::Networking {
         using coordinate = unsigned int;
 
         Lattice::Socket m_Server;
+        Utils::LineBuffer<4096> m_ResponseBuffer;
         // std::deque<> m_EventQueue;
         std::vector<std::string> m_TeamNames;
 
