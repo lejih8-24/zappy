@@ -11,11 +11,13 @@
 #include <charconv>
 
 
-auto Zappy::Networking::ResponseParser::parseMapSize(std::string_view response) -> Position
+auto Zappy::Networking::ResponseParser::parseMapSize(std::string_view line) -> Position
 {
+    std::string_view response = line;
+
     std::string_view command = extractWord(response);
     if (command != "msz")
-        throw Exceptions::ServerException("invalid map size response: '" + std::string(response) + "'");
+        throw Exceptions::ServerException("invalid map size response: '" + std::string(line) + "'");
 
     std::string_view width = extractWord(response);
     std::string_view height = extractWord(response);
@@ -23,11 +25,13 @@ auto Zappy::Networking::ResponseParser::parseMapSize(std::string_view response) 
     return { toInteger(width), toInteger(height) };
 }
 
-auto Zappy::Networking::ResponseParser::parseTileContents(std::string_view response) -> Zappy::Networking::TileContents
+auto Zappy::Networking::ResponseParser::parseTileContents(std::string_view line) -> Zappy::Networking::TileContents
 {
+    std::string_view response = line;
+
     std::string_view command = extractWord(response);
     if (command != "bct")
-        throw Exceptions::ServerException("invalid tile contents response: '" + std::string(response) + "'");
+        throw Exceptions::ServerException("invalid tile contents response: '" + std::string(line) + "'");
 
     std::string_view tileX = extractWord(response);
     std::string_view tileY = extractWord(response);
