@@ -11,9 +11,10 @@
 #include "exceptions/ArgsException.hpp"
 #include "game/Resources/Resources.hpp"
 #include "networking/GraphicsClient/GraphicsClient.hpp"
+#include "raylib.h"
 #include <game.hpp>
-
 #include <iostream>
+
 
 namespace {
 
@@ -36,8 +37,12 @@ GUI::GameState createDemoState()
 
 }
 
-int main(int argc, char **argv)
+int main(int argc, char *argv[])
 {
+    #ifdef NDEBUG
+    ::SetTraceLogLevel(LOG_NONE);
+    #endif
+
     try {
         const GUI::GuiArgs args = GUI::GuiArgs::parseArgs(argc, argv);
         GUI::GameState state = createDemoState();
@@ -47,12 +52,22 @@ int main(int argc, char **argv)
         auto [x, y] = client.mapSize();
         std::cout << "map size: { " << x << "; " << y << " }" << std::endl;
 
+        auto contents = client.tileContents(1, 1);
+        std::cout << contents.position.x << ", " << contents.position.y << ": " << contents.resources << std::endl;
+
+        contents = client.tileContents(2, 1);
+        std::cout << contents.position.x << ", " << contents.position.y << ": " << contents.resources << std::endl;
+
         args.connect();
         render.renderLoop();
-        return 0;
     } catch (const Zappy::Exceptions::ArgsException &error) {
-        std::cerr << "zappy_gui: " << error.what() << '\n';
+        std::cerr << argv[0] << ": " << error.what() << '\n';
         GUI::GuiArgs::printUsage(std::cerr);
+        return 84;
+    } catch (const std::exception& error) {
+        std::cerr << error.what() << std::endl;
+        return 84;
+    } catch (...) {
         return 84;
     }
 }
