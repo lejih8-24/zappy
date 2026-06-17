@@ -8,9 +8,10 @@ from pathfinding import find_path_to_closest
 import os
 import json
 from ai_states import AIStatesMixin
+from ai_movement import AIMovementMixin
 
 
-class ZappyAI(AIStatesMixin):
+class ZappyAI(AIStatesMixin, AIMovementMixin):
     def __init__(self, network, team_name, map_x, map_y):
         self.network = network
         self.team_name = team_name
