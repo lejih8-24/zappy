@@ -7,24 +7,27 @@
 
 cmake_minimum_required(VERSION 3.15)
 
-add_subdirectory(${CMAKE_SOURCE_DIR}/lib/raylib ${CMAKE_BINARY_DIR}/raylib)
+add_subdirectory(${CMAKE_SOURCE_DIR}/lib/raylib     ${CMAKE_BINARY_DIR}/lib/raylib)
+add_subdirectory(${CMAKE_SOURCE_DIR}/lib/liblattice ${CMAKE_BINARY_DIR}/lib/liblattice)
 
 add_executable(zappy_gui
-               src/main.cpp
-               src/Window.cpp
-               src/Map.cpp
-               src/Camera.cpp
-               src/Render.cpp
-               src/GuiArgs.cpp
-               src/Game/Entity.cpp
-               src/Game/Tile.cpp
-               src/Game/Player.cpp
                src/Game/Egg.cpp
+               src/Game/Entity.cpp
+               src/Game/GameState.cpp
                src/Game/Incantation.cpp
+               src/Game/Player.cpp
                src/Game/ServerMessage.cpp
-               src/Game/GameState.cpp)
+               src/Game/Tile.cpp
+               src/Camera.cpp
+               src/GuiArgs.cpp
+               src/Map.cpp
+               src/Render.cpp
+               src/Window.cpp
+               src/main.cpp)
 
 target_include_directories(zappy_gui
-                           PRIVATE include)
+                           PRIVATE include
+                           PRIVATE ../lib/liblattice/include)
 
-target_link_libraries(zappy_gui PRIVATE raylib)
+target_link_libraries(zappy_gui PRIVATE raylib
+                                PRIVATE lattice)
