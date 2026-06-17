@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "../ResponseParser/ResponseParser.hpp"
 #include <lattice.hpp>
 #include <string_view>
 #include <optional>
@@ -16,11 +17,6 @@
 
 
 namespace Zappy::Networking {
-    struct Position {
-        unsigned int x;
-        unsigned int y;
-    };
-
     class GraphicsClient {
         using coordinate = unsigned int;
 
@@ -36,12 +32,12 @@ namespace Zappy::Networking {
             bool isConnected() const { return m_Server.isOpen(); }
 
             Position mapSize();
-            void tileContents(coordinate x, coordinate y);
+            TileContents tileContents(coordinate x, coordinate y);
             void mapContents();
 
             const std::vector<std::string>& teamNames();
 
-            Position playerPosition(unsigned int playerId);
+            PlayerPosition playerPosition(unsigned int playerId);
             unsigned int playerLevel(unsigned int playerId);
             void playerInventory(unsigned int playerId);
 
@@ -56,6 +52,6 @@ namespace Zappy::Networking {
             void doHandshake();
 
             std::string_view getline(bool wait = true);
-            void send(std::string msg);
+            void send(std::string_view msg);
     };
 }

@@ -9,7 +9,9 @@
 #include "Game/GameState.hpp"
 #include "Render.hpp"
 #include "exceptions/ArgsException.hpp"
+#include "game/Resources/Resources.hpp"
 #include "networking/GraphicsClient/GraphicsClient.hpp"
+#include <game.hpp>
 
 #include <iostream>
 

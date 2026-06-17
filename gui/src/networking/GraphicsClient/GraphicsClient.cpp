@@ -8,6 +8,7 @@
 
 #include "GraphicsClient.hpp"
 
+
 Zappy::Networking::GraphicsClient::GraphicsClient()
     : m_Server()
     , m_TeamNames()
@@ -28,28 +29,22 @@ Zappy::Networking::GraphicsClient::GraphicsClient(GraphicsClient&& other)
     swap(other);
 }
 
-#include <charconv>
-
 auto Zappy::Networking::GraphicsClient::mapSize() -> Position
 {
-    send("msz");
+    send("msz\n");
 
     std::string_view response = getline();
-    if (!response.starts_with("msz "))
-        return { 0, 0 };
-
-    std::string_view mapSize = response.substr(4);
-
-    Position result = { 0, 0 };
-    auto [ptr, ec] = std::from_chars(mapSize.begin(), mapSize.end(), result.x);
-    std::from_chars(ptr + 1, mapSize.end(), result.y);
-
-    return result;
+    return ResponseParser::parseMapSize(response);
 }
 
-void Zappy::Networking::GraphicsClient::tileContents(coordinate x, coordinate y)
+auto Zappy::Networking::GraphicsClient::tileContents(coordinate x, coordinate y) -> TileContents
 {
+    std::string msg = "bct ";
+    msg += std::to_string(x) + ' ' + std::to_string(y) + '\n';
+    send(msg);
 
+    std::string_view response = getline();
+    return ResponseParser::parseTileContents(response);
 }
 
 void Zappy::Networking::GraphicsClient::mapContents()
@@ -63,9 +58,9 @@ const std::vector<std::string>& Zappy::Networking::GraphicsClient::teamNames()
     return m_TeamNames;
 }
 
-auto Zappy::Networking::GraphicsClient::playerPosition(unsigned int playerId) -> Position
+auto Zappy::Networking::GraphicsClient::playerPosition(unsigned int playerId) -> PlayerPosition
 {
-    return { 1, 1 };
+    return { 0, { 0, 0 }, 0.f };
 }
 
 unsigned int Zappy::Networking::GraphicsClient::playerLevel(unsigned int playerId)
@@ -100,7 +95,7 @@ void Zappy::Networking::GraphicsClient::doHandshake()
     if (line != "WELCOME")
         throw Lattice::Exceptions::SocketException("invalid response in zappy server handshake");
 
-    send("GRAPHIC");
+    send("GRAPHIC\n");
 
     line = getline(false);
     while (!line.empty()) {
@@ -134,10 +129,15 @@ std::string_view Zappy::Networking::GraphicsClient::getline(bool wait)
     return std::string_view(line.begin(), end);
 }
 
-void Zappy::Networking::GraphicsClient::send(std::string msg)
+void Zappy::Networking::GraphicsClient::send(std::string_view msg)
 {
-    if (!msg.ends_with('\n'))
-        msg += '\n';
+    std::string sanitized;
+
+    if (!msg.ends_with('\n')) {
+        sanitized = msg;
+        sanitized += '\n';
+        msg = sanitized;
+    }
 
     m_Server.write(msg);
 }
