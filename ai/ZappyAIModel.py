@@ -269,35 +269,6 @@ class ZappyAI(AIStatesMixin):
             return 0
         return self.vision_grid[0].get('player', 0)
 
-    def _move_instructions(self, path: list, target_item: str):
-        if path is not None:
-            for action in path:
-                if action == "Forward":
-                    self._queue_command(ForwardCommand())
-                elif action == "Right":
-                    self._queue_command(TurnRightCommand())
-                elif action == "Left":
-                    self._queue_command(TurnLeftCommand())
-
-            if target_item:
-                self._queue_command(TakeCommand(target_item))
-            self.vision_grid = None
-        else:
-            self._queue_command(ForwardCommand())
-            self._queue_command(LookCommand())
-            self.vision_grid = None
-
-    def _get_needed_material(self) -> str | None:
-        if self.level >= 8:
-            return None
-        rule = self.elevation_rules[self.level]["stones"]
-        for stone, required_qty in rule.items():
-            if self.inventory.get(stone, 0) < required_qty:
-                return stone
-        return None
-
-
-
     def _is_floor_perfect(self) -> bool:
         if not self.vision_grid: return False
         floor = self.vision_grid[0]
@@ -329,26 +300,12 @@ class ZappyAI(AIStatesMixin):
                     cleaned_something = True
         return cleaned_something
 
-    def _integrate_vision_to_map(self, vision_list: list):
-        """Transforme le tableau Look en coordonnées absolues et met à jour la carte mentale."""
-        dx_abs = 0
-        dy_abs = 0
-        import math
 
-        for i, tile_content in enumerate(vision_list):
-            dy_rel = math.isqrt(i)
-            dx_rel = i - (dy_rel * dy_rel + dy_rel)
-
-            if self.orientation == 0:
-                dx_abs, dy_abs = dx_rel, dy_rel
-            elif self.orientation == 1:
-                dx_abs, dy_abs = dy_rel, -dx_rel
-            elif self.orientation == 2:
-                dx_abs, dy_abs = -dx_rel, -dy_rel
-            elif self.orientation == 3:
-                dx_abs, dy_abs = -dy_rel, dx_rel
-
-            target_x = (self.pos_x + dx_abs) % self.map_x
-            target_y = (self.pos_y + dy_abs) % self.map_y
-
-            self.world_map[(target_x, target_y)] = tile_content
+    def _get_needed_material(self) -> str | None:
+        if self.level >= 8:
+            return None
+        rule = self.elevation_rules[self.level]["stones"]
+        for stone, required_qty in rule.items():
+            if self.inventory.get(stone, 0) < required_qty:
+                return stone
+        return None
