@@ -108,6 +108,25 @@ class ZappyAI(AIStatesMixin, AIMovementMixin):
                         self.role = Role.Explorer
                         self.state = State.FARMING
                         print("Le Master a annulé l'appel (ressources manquantes). Retour au farming.")
+
+                elif decoded["request"] == "DATA_SHARE":
+                    try:
+                        raw_data = decoded.get("data", "")
+                        parts = raw_data.split("|")
+                        if len(parts) == 4:
+                            share_x = int(parts[0])
+                            share_y = int(parts[1])
+                            resource = parts[2]
+                            qty = int(parts[3])
+
+                            target_pos = (share_x, share_y)
+
+                            if target_pos not in self.world_map:
+                                self.world_map[target_pos] = {}
+
+                            self.world_map[target_pos][resource] = qty
+                    except Exception as e:
+                        print(f"Erreur lors du parsing de la synchronisation cartographique : {e}")
             return
 
         if message.startswith("eject"):
@@ -228,11 +247,6 @@ class ZappyAI(AIStatesMixin, AIMovementMixin):
                 print(self.previous_debug)
             self.state = State.GROUPING
             self.role = Role.Master
-
-        debug = f"[DEBUG] Réflexion -> État: {self.state.name} | Rôle: {self.role.name} | Nourriture: {current_food}"
-        if debug != self.previous_debug:
-            self.previous_debug = f"[DEBUG] Réflexion -> État: {self.state.name} | Rôle: {self.role.name} | Nourriture: {current_food}"
-            print(self.previous_debug)
 
         if self.state == State.SURVIVAL:
             self._state_survival()

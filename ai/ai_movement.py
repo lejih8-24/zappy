@@ -46,5 +46,16 @@ class AIMovementMixin:
 
             target_x = (self.pos_x + dx_abs) % self.map_x
             target_y = (self.pos_y + dy_abs) % self.map_y
+            target_pos = (target_x, target_y)
 
+            old_tile = self.world_map.get(target_pos, {})
             self.world_map[(target_x, target_y)] = tile_content
+
+            for resource, qty in tile_content.items():
+                if resource != "player" and resource != "food" and qty > old_tile.get(resource, 0):
+                    # On ne spamme pas le réseau si on a déjà un Broadcast en attente
+                    if not self._is_command_pending(BroadcastCommand):
+                        # Formatage du paquet : "DATA_SHARE", data="X|Y|resource|qty"
+                        data_payload = f"{target_x}|{target_y}|{resource}|{qty}"
+                        msg = self.comms.format_message("ALL", self.level, self.role.name, self.state.name, f"DATA_SHARE({data_payload})")
+                        self._queue_command(BroadcastCommand(self.comms.token, msg))
