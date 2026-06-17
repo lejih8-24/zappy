@@ -11,6 +11,7 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/lib/raylib     ${CMAKE_BINARY_DIR}/lib/rayl
 add_subdirectory(${CMAKE_SOURCE_DIR}/lib/liblattice ${CMAKE_BINARY_DIR}/lib/liblattice)
 
 add_executable(zappy_gui
+               src/networking/GraphicsClient/GraphicsClient.cpp
                src/Game/Egg.cpp
                src/Game/Entity.cpp
                src/Game/GameState.cpp

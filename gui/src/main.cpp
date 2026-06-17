@@ -9,6 +9,7 @@
 #include "Game/GameState.hpp"
 #include "Render.hpp"
 #include "exceptions/ArgsException.hpp"
+#include "networking/GraphicsClient/GraphicsClient.hpp"
 
 #include <iostream>
 
@@ -39,6 +40,10 @@ int main(int argc, char **argv)
         const GUI::GuiArgs args = GUI::GuiArgs::parseArgs(argc, argv);
         GUI::GameState state = createDemoState();
         GUI::Render render(args.getHost(), args.getPort(), state);
+
+        Zappy::Networking::GraphicsClient client("127.0.0.1", 5000);
+        auto [x, y] = client.mapSize();
+        std::cout << "map size: { " << x << "; " << y << " }" << std::endl;
 
         args.connect();
         render.renderLoop();

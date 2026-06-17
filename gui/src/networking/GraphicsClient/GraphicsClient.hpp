@@ -24,7 +24,7 @@ namespace Zappy::Networking {
     class GraphicsClient {
         using coordinate = unsigned int;
 
-        Lattice::NonBlockingSocket m_Server;
+        Lattice::Socket m_Server;
         // std::deque<> m_EventQueue;
         std::vector<std::string> m_TeamNames;
 
@@ -51,5 +51,11 @@ namespace Zappy::Networking {
 
             inline void operator=(GraphicsClient&& other) { swap(other); }
             void swap(GraphicsClient& other);
+
+        private:
+            void doHandshake();
+
+            std::string_view getline(bool wait = true);
+            void send(std::string msg);
     };
 }
