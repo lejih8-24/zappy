@@ -29,7 +29,11 @@ namespace Zappy::Networking {
         std::vector<std::string> m_TeamNames;
 
         public:
+            GraphicsClient();
             GraphicsClient(std::string_view ip, std::uint16_t port);
+            GraphicsClient(GraphicsClient&& other);
+
+            bool isConnected() const { return m_Server.isOpen(); }
 
             Position mapSize();
             void tileContents(coordinate x, coordinate y);
@@ -44,5 +48,8 @@ namespace Zappy::Networking {
             unsigned int getTime();
 
             std::optional<int> pollEvent();
+
+            inline void operator=(GraphicsClient&& other) { swap(other); }
+            void swap(GraphicsClient& other);
     };
 }
