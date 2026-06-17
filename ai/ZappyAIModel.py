@@ -31,6 +31,9 @@ class ZappyAI:
 
         self.pos_x = 0
         self.pos_y = 0
+        self.orientation = 0
+
+        self.world_map = {}
 
         if not any(f.endswith('.json') for f in os.listdir('.') if f.startswith('.zappy_stats')):
             os.makedirs(".zappy_stats", exist_ok=True)
@@ -146,15 +149,40 @@ class ZappyAI:
     def _update_state_from_result(self, command, result):
         if isinstance(command, InventoryCommand) and isinstance(result, dict):
             self.inventory = result
+
         elif isinstance(command, LookCommand) and isinstance(result, list):
             self.vision_grid = result
+            self._integrate_vision_to_map(result)
+
         elif isinstance(command, TakeCommand) and result is True:
             self.inventory[command.obj_name] += 1
+            current_pos = (self.pos_x, self.pos_y)
+            if current_pos in self.world_map and command.obj_name in self.world_map[current_pos]:
+                if self.world_map[current_pos][command.obj_name] > 0:
+                    self.world_map[current_pos][command.obj_name] -= 1
+
         elif isinstance(command, SetCommand) and result is True:
             self.inventory[command.obj_name] = self.inventory.get(command.obj_name, 1) - 1
+
         elif isinstance(command, ForkCommand) and result is True:
             print("[DEBUG] L'oeuf a été pondu avec succès ! Retour au travail.")
             self.state = State.FARMING
+
+        elif isinstance(command, TurnRightCommand) and result is True:
+            self.orientation = (self.orientation + 1) % 4
+
+        elif isinstance(command, TurnLeftCommand) and result is True:
+            self.orientation = (self.orientation - 1) % 4
+            
+        elif isinstance(command, ForwardCommand) and result is True:
+            if self.orientation == 0:
+                self.pos_y = (self.pos_y + 1) % self.map_y
+            elif self.orientation == 1:
+                self.pos_x = (self.pos_x + 1) % self.map_x
+            elif self.orientation == 2:
+                self.pos_y = (self.pos_y - 1) % self.map_y
+            elif self.orientation == 3:
+                self.pos_x = (self.pos_x - 1) % self.map_x
 
     def _queue_command(self, command):
         if len(self.pending_commands) < 9:
@@ -440,3 +468,27 @@ class ZappyAI:
 
         print("[DEBUG] Envoi de la commande Fork au serveur (blocage de 42 ticks)...")
         self._queue_command(ForkCommand())
+
+    def _integrate_vision_to_map(self, vision_list: list):
+        """Transforme le tableau Look en coordonnées absolues et met à jour la carte mentale."""
+        dx_abs = 0
+        dy_abs = 0
+        import math
+
+        for i, tile_content in enumerate(vision_list):
+            dy_rel = math.isqrt(i)
+            dx_rel = i - (dy_rel * dy_rel + dy_rel)
+
+            if self.orientation == 0:
+                dx_abs, dy_abs = dx_rel, dy_rel
+            elif self.orientation == 1:
+                dx_abs, dy_abs = dy_rel, -dx_rel
+            elif self.orientation == 2:
+                dx_abs, dy_abs = -dx_rel, -dy_rel
+            elif self.orientation == 3:
+                dx_abs, dy_abs = -dy_rel, dx_rel
+
+            target_x = (self.pos_x + dx_abs) % self.map_x
+            target_y = (self.pos_y + dy_abs) % self.map_y
+
+            self.world_map[(target_x, target_y)] = tile_content
