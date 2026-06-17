@@ -13,7 +13,7 @@
 
 
 namespace Zappy::Exceptions {
-    class ServerException {
+    class ServerException : public std::exception {
         std::string m_Message;
 
         public:
