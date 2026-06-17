@@ -173,7 +173,7 @@ class ZappyAI:
 
         elif isinstance(command, TurnLeftCommand) and result is True:
             self.orientation = (self.orientation - 1) % 4
-            
+
         elif isinstance(command, ForwardCommand) and result is True:
             if self.orientation == 0:
                 self.pos_y = (self.pos_y + 1) % self.map_y
@@ -302,6 +302,8 @@ class ZappyAI:
             return
         path = find_path_to_closest(self.vision_grid, "food")
         self._move_instructions(path, "food")
+        if not self._is_command_pending(InventoryCommand):
+            self._queue_command(InventoryCommand())
 
     def _state_farming(self):
         if not self.vision_grid:
@@ -328,6 +330,8 @@ class ZappyAI:
             else:
                 self._queue_command(ForwardCommand())
                 self._queue_command(LookCommand())
+                if not self._is_command_pending(InventoryCommand):
+                    self._queue_command(InventoryCommand())
                 self.vision_grid = None
 
     def _state_grouping(self):
