@@ -13,6 +13,7 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/lib/liblattice ${CMAKE_BINARY_DIR}/lib/libl
 add_executable(zappy_gui
                src/game/Resources/Resources.cpp
                src/networking/GraphicsClient/GraphicsClient.cpp
+               src/networking/ResponseParser/ResponseParser.cpp
                src/Game/Egg.cpp
                src/Game/Entity.cpp
                src/Game/GameState.cpp
