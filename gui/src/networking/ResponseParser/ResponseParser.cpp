@@ -11,7 +11,65 @@
 #include <charconv>
 
 
-auto Zappy::Networking::ResponseParser::parseMapSize(std::string_view line) -> Position
+auto Zappy::Networking::ResponseParser::parse(std::string_view line) -> Event
+{
+    if (line.empty())
+        return UnknownCommand();
+
+    switch (line[0]) {
+        case 'b': return parseTileContents(line);
+        case 'e': return parseEggCommand(line);
+        case 'm': return parseMapSize(line);
+        case 'p': return parsePlayerCommand(line);
+        case 't': return parseTeamName(line);
+        case 's': return parseServerCommand(line);
+        default:  return UnknownCommand();
+    }
+}
+
+auto Zappy::Networking::ResponseParser::parseEggCommand(std::string_view line) -> Event
+{
+    switch (line[1]) {
+        // TODO: Implement
+        default: return UnknownCommand();
+    }
+}
+
+auto Zappy::Networking::ResponseParser::parsePlayerCommand(std::string_view line) -> Event
+{
+    if (line.length() != 3)
+        return UnknownCommand();
+
+    switch (line[1]) {
+        case 'b': return parsePlayerBroadcast(line);
+        case 'd': // TODO
+        case 'e': return parsePlayerExpulsion(line);
+        case 'f': // TODO
+        case 'g': // TODO
+        case 'i': {
+            switch (line[2]) {
+                case 'c': return parsePlayerIncantationStart(line);
+                case 'e': return parsePlayerIncantationEnd(line);
+                case 'n': return parsePlayerInventory(line);
+                default:  return UnknownCommand();
+            }
+        }
+        case 'l': return parsePlayerLevel(line);
+        case 'n': return parseNewPlayerConnect(line);
+        case 'p': return parsePlayerPosition(line);
+        default: return UnknownCommand();
+    }
+}
+
+auto Zappy::Networking::ResponseParser::parseServerCommand(std::string_view line) -> Event
+{
+    switch (line[1]) {
+        // TODO: Implement
+        default: return UnknownCommand();
+    }
+}
+
+auto Zappy::Networking::ResponseParser::parseMapSize(std::string_view line) -> MapSize
 {
     std::string_view response = line;
 
@@ -33,21 +91,65 @@ auto Zappy::Networking::ResponseParser::parseTileContents(std::string_view line)
     if (command != "bct")
         throw Exceptions::ServerException("invalid tile contents response: '" + std::string(line) + "'");
 
-    std::string_view tileX = extractWord(response);
-    std::string_view tileY = extractWord(response);
-    Position tilePos = { toInteger(tileX), toInteger(tileY) };
+    auto tileX = extractInteger(response);
+    auto tileY = extractInteger(response);
 
     Game::Resources resources = {
-        .food      = toInteger(extractWord(response)),
-        .linemate  = toInteger(extractWord(response)),
-        .deraumere = toInteger(extractWord(response)),
-        .sibur     = toInteger(extractWord(response)),
-        .mendiane  = toInteger(extractWord(response)),
-        .phiras    = toInteger(extractWord(response)),
-        .thystame  = toInteger(extractWord(response)),
+        .food      = extractInteger(response),
+        .linemate  = extractInteger(response),
+        .deraumere = extractInteger(response),
+        .sibur     = extractInteger(response),
+        .mendiane  = extractInteger(response),
+        .phiras    = extractInteger(response),
+        .thystame  = extractInteger(response),
     };
 
-    return { tilePos, resources };
+    return { tileX, tileY, resources };
+}
+
+auto Zappy::Networking::ResponseParser::parseTeamName(std::string_view response) -> TeamName
+{
+    return {};
+}
+
+auto Zappy::Networking::ResponseParser::parseNewPlayerConnect(std::string_view response) -> NewPlayerConnect
+{
+    return {};  // TODO: implement
+}
+
+auto Zappy::Networking::ResponseParser::parsePlayerPosition(std::string_view response) -> PlayerPosition
+{
+    return {};  // TODO: implement
+}
+
+auto Zappy::Networking::ResponseParser::parsePlayerLevel(std::string_view response) -> PlayerLevel
+{
+    return {};  // TODO: implement
+}
+
+auto Zappy::Networking::ResponseParser::parsePlayerInventory(std::string_view response) -> PlayerInventory
+{
+    return {};  // TODO: implement
+}
+
+auto Zappy::Networking::ResponseParser::parsePlayerBroadcast(std::string_view response) -> PlayerBroadcast
+{
+    return {};  // TODO: implement
+}
+
+auto Zappy::Networking::ResponseParser::parsePlayerExpulsion(std::string_view response) -> PlayerExpulsion
+{
+    return {};  // TODO: implement
+}
+
+auto Zappy::Networking::ResponseParser::parsePlayerIncantationStart(std::string_view response) -> PlayerIncantationStart
+{
+    return {};  // TODO: implement
+}
+
+auto Zappy::Networking::ResponseParser::parsePlayerIncantationEnd(std::string_view response) -> PlayerIncantationEnd
+{
+    return {};  // TODO: implement
 }
 
 std::pair<std::string_view, std::string_view> Zappy::Networking::ResponseParser::splitWord(std::string_view line)

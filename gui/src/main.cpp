@@ -52,11 +52,11 @@ int main(int argc, char *argv[])
         auto [x, y] = client.mapSize();
         std::cout << "map size: { " << x << "; " << y << " }" << std::endl;
 
-        auto contents = client.tileContents(1, 1);
-        std::cout << contents.position.x << ", " << contents.position.y << ": " << contents.resources << std::endl;
+        auto tile = client.tileContents(1, 1);
+        std::cout << "tile[" << tile.x << ", " << tile.y << "]: " << tile.resources << std::endl;
 
-        contents = client.tileContents(2, 1);
-        std::cout << contents.position.x << ", " << contents.position.y << ": " << contents.resources << std::endl;
+        tile = client.tileContents(2, 1);
+        std::cout << "tile[" << tile.x << ", " << tile.y << "]: " << tile.resources << std::endl;
 
         args.connect();
         render.renderLoop();
