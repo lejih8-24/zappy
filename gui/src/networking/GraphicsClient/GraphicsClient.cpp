@@ -30,7 +30,7 @@ Zappy::Networking::GraphicsClient::GraphicsClient(GraphicsClient&& other)
     swap(other);
 }
 
-auto Zappy::Networking::GraphicsClient::mapSize() -> Position
+auto Zappy::Networking::GraphicsClient::mapSize() -> MapSize
 {
     send("msz\n");
 
@@ -61,7 +61,7 @@ const std::vector<std::string>& Zappy::Networking::GraphicsClient::teamNames()
 
 auto Zappy::Networking::GraphicsClient::playerPosition(unsigned int playerId) -> PlayerPosition
 {
-    return { 0, { 0, 0 }, 0.f };
+    return { 0, 0, 0, 0.f };
 }
 
 unsigned int Zappy::Networking::GraphicsClient::playerLevel(unsigned int playerId)

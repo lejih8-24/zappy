@@ -33,7 +33,7 @@ namespace Zappy::Networking {
 
             bool isConnected() const { return m_Server.isOpen(); }
 
-            Position mapSize();
+            MapSize mapSize();
             TileContents tileContents(coordinate x, coordinate y);
             void mapContents();
 
