@@ -22,7 +22,9 @@ add_executable(zappy_gui
                src/Game/Egg.cpp
                src/Game/Incantation.cpp
                src/Game/ServerMessage.cpp
-               src/Game/GameState.cpp)
+               src/Game/GameState.cpp
+               src/Network/NetworkClient.cpp
+               src/Protocol/Parser.cpp)
 
 target_include_directories(zappy_gui
                            PRIVATE include)

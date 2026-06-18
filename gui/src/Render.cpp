@@ -13,7 +13,7 @@
 
 namespace GUI {
 
-Render::Render(std::string_view host, int port, const GameState &state)
+Render::Render(std::string_view host, int port, GameState &state)
     : _state(state)
     , _window(1280, 720,
           std::string("Zappy GUI - ").append(host).append(":").append(std::to_string(port)), 60)
@@ -24,10 +24,21 @@ Render::Render(std::string_view host, int port, const GameState &state)
 
 void Render::renderLoop()
 {
+    double lastMove = GetTime(); // pour faire bouger perso
+
     while (!_window.shouldClose()) {
         if (IsKeyPressed(KEY_F11))
             _window.toggleFullscreen();
 
+        // tentative de déplacements du joueur toutes les secondes
+        if (GetTime() - lastMove >= 1.0) {
+            if (!_state.players.empty()) {
+                auto &player = _state.players.begin()->second;
+                player.x = (player.x + 1) % static_cast<int>(_state.mapWidth);
+            }
+            lastMove = GetTime();
+        }
+        // fin
         _camera.update();
 
         _window.beginFrame();

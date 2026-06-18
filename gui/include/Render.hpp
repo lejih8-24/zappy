@@ -18,11 +18,11 @@ namespace GUI {
 
 class Render {
     public:
-        Render(std::string_view host, int port, const GameState &state);
+        Render(std::string_view host, int port, GameState &state);
         void renderLoop();
 
     private:
-        const GameState &_state;
+        GameState &_state;
         Window _window;
         Map _map;
         GameCamera _camera;
