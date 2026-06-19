@@ -73,9 +73,26 @@ void Zappy::Networking::GraphicsClient::mapContents()
     send("mct\n");
 }
 
+/**
+ * Fills the given vector with
+ * the names of every team registered
+ * in the zappy server.
+ *
+ * This process clears any existing
+ * values in the vector.
+ */
 void Zappy::Networking::GraphicsClient::teamNames(std::vector<std::string>& names)
 {
+    names.clear();
+    send("tna\n");
 
+    std::string_view response = getResponse("tna");
+    while (response.starts_with("tna")) {
+        auto team = ResponseParser::parseTeamName(response);
+        names.push_back(std::move(team.name));
+
+        response = getResponse("tna", false);
+    }
 }
 
 auto Zappy::Networking::GraphicsClient::playerPosition(unsigned int playerId) -> PlayerPosition
@@ -190,13 +207,13 @@ bool Zappy::Networking::GraphicsClient::isValidResponse(std::string_view respons
     return true;
 }
 
-std::string_view Zappy::Networking::GraphicsClient::getResponse(std::string_view cmd)
+std::string_view Zappy::Networking::GraphicsClient::getResponse(std::string_view cmd, bool wait)
 {
-    std::string_view response = getline();
+    std::string_view response = getline(wait);
 
-    while (isValidResponse(response) && !response.starts_with(cmd)) {
+    while (!response.empty() && isValidResponse(response) && !response.starts_with(cmd)) {
         m_EventQueue.push_front(ResponseParser::parse(cmd));
-        response = getline();
+        response = getline(wait);
     }
 
     return response;

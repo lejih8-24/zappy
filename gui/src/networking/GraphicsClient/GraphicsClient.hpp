@@ -57,7 +57,7 @@ namespace Zappy::Networking {
             static bool isValidResponse(std::string_view response);
 
             std::string_view getline(bool wait = true);
-            std::string_view getResponse(std::string_view cmd);
+            std::string_view getResponse(std::string_view cmd, bool wait = true);
             void send(std::string_view msg);
     };
 }

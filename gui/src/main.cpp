@@ -54,6 +54,7 @@ class EventHandler : public Zappy::Networking::BaseEventHandler {
         }
 };
 
+#include <iomanip>
 int main(int argc, char *argv[])
 {
     #ifdef NDEBUG
@@ -66,13 +67,12 @@ int main(int argc, char *argv[])
         GUI::Render render(args.getHost(), args.getPort(), state);
 
         Zappy::Networking::GraphicsClient client("127.0.0.1", 5000);
-        auto [x, y] = client.mapSize();
-        std::cout << "map size: { " << x << "; " << y << " }" << std::endl;
 
-        auto tile = client.tileContents(1, 1);
-        std::cout << "tile[" << tile.x << ", " << tile.y << "]: " << tile.resources << std::endl;
-
-        tile = client.tileContents(2, 1);
+        std::vector<std::string> teams;
+        client.teamNames(teams);
+        for (const auto& name : teams) {
+            std::cout << "team: " << std::quoted(name) << std::endl;
+        }
 
         auto event = client.pollEvent();
         while (event) {
@@ -80,7 +80,6 @@ int main(int argc, char *argv[])
             event = client.pollEvent();
         }
 
-        args.connect();
         render.renderLoop();
     } catch (const Zappy::Exceptions::ArgsException &error) {
         std::cerr << argv[0] << ": " << error.what() << '\n';
