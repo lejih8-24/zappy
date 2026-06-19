@@ -7,12 +7,9 @@ from ai.ai_movement import AINavigator
 from ai.ai_states import AIState
 from ai.dashboard import Display
 from ai.logger import AILogger
-from ai.btree.bt_core import Selector, Sequence, NodeStatus
+from ai.btree.bt_core import Selector, Sequence
 from ai.btree.bt_nodes import IsHungry, ActionSearchFood, ActionFarmStones
-from constants import Role, State, ELEVATION_RULES
-from pathfinding import find_path_to_closest
-import os
-import json
+from constants import Role, State
 from ai.network import ServerEvent
 
 
@@ -28,6 +25,11 @@ class ZappyAI:
         self.states = AIState(self.id, team_name)
         self.Navigation = AINavigator(self)
         self.bt = self._build_behavior_tree()
+
+        self.world_map = {}
+        self.orientation = 0
+        self.pos_x = 0
+        self.pos_y = 0
 
         self.is_alive = True
         self.pending_commands = []
@@ -163,7 +165,7 @@ class ZappyAI:
             self.inventory[command.obj_name] = self.inventory.get(command.obj_name, 1) - 1
 
         elif isinstance(command, ForkCommand) and result is True:
-            self.logger.Good("[DEBUG] L'oeuf a été pondu avec succès ! Retour au travail.")
+            self.logger.Good("L'oeuf a été pondu avec succès ! Retour au travail.")
             self.state = State.FARMING
 
         elif isinstance(command, TurnRightCommand) and result is True:
@@ -184,7 +186,7 @@ class ZappyAI:
 
     def _decide_next_action(self):
         if len(self.pending_commands) >= 9:
-            self.logger.Info(f"[DEBUG] File d'attente pleine ({len(self.pending_commands)}/9). Attente des réponses réseau.")
+            self.logger.Info(f"File d'attente pleine ({len(self.pending_commands)}/9). Attente des réponses réseau.")
 
         self.bt.tick(self)
 
@@ -210,3 +212,27 @@ class ZappyAI:
                     self.queue_command(TakeCommand(item))
                     cleaned_something = True
         return cleaned_something
+
+    def _integrate_vision_to_map(self, vision_list: list):
+        """Transforme le tableau Look en coordonnées absolues et met à jour la carte mentale."""
+        dx_abs = 0
+        dy_abs = 0
+        import math
+
+        for i, tile_content in enumerate(vision_list):
+            dy_rel = math.isqrt(i)
+            dx_rel = i - (dy_rel * dy_rel + dy_rel)
+
+            if self.orientation == 0:
+                dx_abs, dy_abs = dx_rel, dy_rel
+            elif self.orientation == 1:
+                dx_abs, dy_abs = dy_rel, -dx_rel
+            elif self.orientation == 2:
+                dx_abs, dy_abs = -dx_rel, -dy_rel
+            elif self.orientation == 3:
+                dx_abs, dy_abs = -dy_rel, dx_rel
+
+            target_x = (self.pos_x + dx_abs) % self.map_x
+            target_y = (self.pos_y + dy_abs) % self.map_y
+
+            self.world_map[(target_x, target_y)] = tile_content
