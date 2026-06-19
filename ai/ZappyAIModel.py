@@ -3,6 +3,7 @@
 import time
 from CommandModel import *
 from BroadcastManager import BroadcastManager
+from ai.logger import AILogger
 from constants import Role, State, ELEVATION_RULES
 from pathfinding import find_path_to_closest
 
@@ -13,6 +14,7 @@ class ZappyAI:
         self.team_name = team_name
         self.map_x = map_x
         self.map_y = map_y
+        self.logger = AILogger
 
         self.level = 1
         self.inventory = {"food": 10, "linemate": 0, "deraumere": 0, "sibur": 0, "mendiane": 0, "phiras": 0,
@@ -25,7 +27,6 @@ class ZappyAI:
         self.role = Role.Explorer
         self.state = State.FARMING
         self.comms = BroadcastManager(token="AlphaNor_Zappy_26")
-        self.previous_debug = ""
 
     def run(self):
         while self.is_alive:
@@ -56,7 +57,7 @@ class ZappyAI:
                         self.role = Role.Slave
                         self.state = State.GROUPING
                         self.target_direction = direction
-                        print(f"🏃 Entendu l'appel du Master {decoded['sender_id']} à la direction {direction}")
+                        print(f"Entendu l'appel du Master {decoded['sender_id']} à la direction {direction}")
 
                     elif decoded["request"] == "INCANTATION_STARTING" and self.role == Role.Slave:
                         if direction == 0:
