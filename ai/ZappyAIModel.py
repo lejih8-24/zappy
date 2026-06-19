@@ -81,29 +81,29 @@ class ZappyAI:
 
         if req == "INCANTATION_CALL":
             if self.states.is_master:
-                print(f"[COMMS] Appel de {sender_id} entendu, mais je suis déjà MASTER. J'ignore.")
+                self.logger.Info(f"[COMMS] Appel de {sender_id} entendu, mais je suis déjà MASTER. J'ignore.")
                 return
 
             self.states.last_master_id = sender_id
             self.states.master_direction = direction
-            print(f"[COMMS] Master {sender_id} appelle dans la direction {direction}. Enregistré.")
+            self.logger.Info(f"[COMMS] Master {sender_id} appelle dans la direction {direction}. Enregistré.")
 
         elif req == "INCANTATION_STARTING":
             if direction == 0:
-                print("[COMMS] Rituel démarré. Je suis sur la case, verrouillage de ma position.")
+                self.logger.Info("[COMMS] Rituel démarré. Je suis sur la case, verrouillage de ma position.")
                 self.states.ready_for_incantation = True
             else:
-                print("[COMMS] Le groupe est complet et je suis en retard. Annulation du suivi.")
+                self.logger.Info("[COMMS] Le groupe est complet et je suis en retard. Annulation du suivi.")
                 self.states.clear_master_call()
 
         elif req == "ABORT":
-            print(f"[COMMS] Le Master {sender_id} a annulé l'appel. Retour au travail.")
+            self.logger.Info(f"[COMMS] Le Master {sender_id} a annulé l'appel. Retour au travail.")
             self.states.clear_master_call()
 
     def _handle_command_response(self, raw_message: str):
         """Associe la réponse à la commande en attente."""
         if raw_message == "ko" and self.states.state == State.WAITING_ELEVATION:
-            print("L'incantation a échoué (un joueur a bougé ou une pierre manque).")
+            self.logger.Warn("L'incantation a échoué (un joueur a bougé ou une pierre manque).")
             self.states.state = State.FARMING
             self.states.role = Role.Explorer
             return
@@ -113,22 +113,22 @@ class ZappyAI:
             result = current_command.parse_response(raw_message)
             self._update_state_from_result(current_command, result)
         else:
-            print(f"Réponse inattendue (aucune commande en attente) : {raw_message}")
+            self.logger.Error(f"Réponse inattendue (aucune commande en attente) : {raw_message}")
 
 
     def _process_server_event(self, event: ServerEvent):
         """Route les événements propres vers les bons organes de l'IA."""
         if event.type == "DEAD":
-            print("L'IA est morte de faim.")
+            self.logger.Error("L'IA est morte de faim.")
             self.is_alive = False
 
         elif event.type == "EJECT":
-            print(f"Je me suis fait éjecter depuis la direction {event.data['direction']} !")
+            self.logger.Warn(f"Je me suis fait éjecter depuis la direction {event.data['direction']} !")
             self.pending_commands.clear()
             self.states.vision_grid = None
 
         elif event.type == "ELEVATION_START":
-            print("Début de l'incantation, je suis immobilisé !")
+            self.logger.Good("Début de l'incantation, je suis immobilisé !")
             if self.pending_commands and isinstance(self.pending_commands[0], IncantationCommand):
                 self.pending_commands.pop(0)
 
@@ -136,7 +136,7 @@ class ZappyAI:
             self.states.level = event.data["level"]
             self.states.state = State.FARMING
             self.states.role = Role.Explorer
-            print(f"Succès ! Je suis niveau {self.states.level}")
+            self.logger.Good(f"Succès ! Je suis niveau {self.states.level}")
 
         elif event.type == "BROADCAST":
             self._handle_broadcast(event.data["direction"], event.data["decoded"])
@@ -163,7 +163,7 @@ class ZappyAI:
             self.inventory[command.obj_name] = self.inventory.get(command.obj_name, 1) - 1
 
         elif isinstance(command, ForkCommand) and result is True:
-            print("[DEBUG] L'oeuf a été pondu avec succès ! Retour au travail.")
+            self.logger.Good("[DEBUG] L'oeuf a été pondu avec succès ! Retour au travail.")
             self.state = State.FARMING
 
         elif isinstance(command, TurnRightCommand) and result is True:
@@ -184,11 +184,7 @@ class ZappyAI:
 
     def _decide_next_action(self):
         if len(self.pending_commands) >= 9:
-            debug = f"[DEBUG] File d'attente pleine ({len(self.pending_commands)}/9). Attente des réponses réseau."
-            if debug != self.previous_debug:
-                self.previous_debug = f"[DEBUG] File d'attente pleine ({len(self.pending_commands)}/9). Attente des réponses réseau."
-                print(self.previous_debug)
-            return
+            self.logger.Info(f"[DEBUG] File d'attente pleine ({len(self.pending_commands)}/9). Attente des réponses réseau.")
 
         self.bt.tick(self)
 

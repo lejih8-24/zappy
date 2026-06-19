@@ -16,7 +16,7 @@ class Display:
             "role": role,
             "state": state,
             "level": level,
-            "position": position, # [self.pos_x, self.pos_y]
+            "position": position,
             "inventory": inventory
         }
 

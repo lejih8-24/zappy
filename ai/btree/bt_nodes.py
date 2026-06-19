@@ -42,6 +42,4 @@ class ActionFarmStones(Node):
         if not ai.vision_grid:
             ai.queue_command(LookCommand())
             return NodeStatus.RUNNING
-
-        print("Recherche de pierres précieuses...")
         return NodeStatus.RUNNING
