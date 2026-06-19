@@ -8,11 +8,9 @@ from constants import Role, State, ELEVATION_RULES
 from pathfinding import find_path_to_closest
 import os
 import json
-from ai_states import AIStatesMixin
-from ai_movement import AIMovementMixin
 
 
-class ZappyAI(AIStatesMixin, AIMovementMixin):
+class ZappyAI:
     def __init__(self, network, team_name, map_x, map_y):
         self.network = network
         self.team_name = team_name
@@ -210,58 +208,6 @@ class ZappyAI(AIStatesMixin, AIMovementMixin):
                 self.previous_debug = f"[DEBUG] File d'attente pleine ({len(self.pending_commands)}/9). Attente des réponses réseau."
                 print(self.previous_debug)
             return
-
-        if self.state == State.WAITING_ELEVATION:
-            debug = f"[DEBUG] En transe (WAITING_ELEVATION). L'IA est bloquée en attendant la fin de l'incantation."
-            if debug != self.previous_debug:
-                self.previous_debug = f"[DEBUG] En transe (WAITING_ELEVATION). L'IA est bloquée en attendant la fin de l'incantation."
-                print(self.previous_debug)
-            return
-
-        current_food = self.inventory.get("food", 0)
-
-        if current_food < 15 and self.state not in [State.INCANTATION, State.CONTRIBUTING]:
-            if self.state != State.SURVIVAL:
-                debug = f"[DEBUG] URGENCE VITALE : Nourriture critique ({current_food}/15). Abandon de l'état {self.state.name}, passage en SURVIVAL !"
-                if debug != self.previous_debug:
-                    self.previous_debug = f"[DEBUG] URGENCE VITALE : Nourriture critique ({current_food}/15). Abandon de l'état {self.state.name}, passage en SURVIVAL !"
-                    print(self.previous_debug)
-            self.state = State.SURVIVAL
-
-        elif current_food >= 20 and self.state == State.SURVIVAL:
-            debug = f"[DEBUG] Réserves reconstituées ({current_food}/25). Fin de l'urgence, retour au FARMING !"
-            if debug != self.previous_debug:
-                self.previous_debug = f"[DEBUG] Réserves reconstituées ({current_food}/25). Fin de l'urgence, retour au FARMING !"
-                print(self.previous_debug)
-            self.state = State.FARMING
-
-        elif current_food > 35 and self.state == State.FARMING:
-            debug = f"[DEBUG] Abondance de nourriture ({current_food}). Lancement d'un processus de Fork !"
-            if debug != self.previous_debug:
-                self.previous_debug = f"[DEBUG] Abondance de nourriture ({current_food}). Lancement d'un processus de Fork !"
-                print(self.previous_debug)
-            self.state = State.FORKING
-
-        elif self.can_elevate() and self.state == State.FARMING:
-            debug = f"[DEBUG] J'ai toutes les pierres requises pour le niveau {self.level + 1} ! Je deviens MASTER et passe en GROUPING."
-            if debug != self.previous_debug:
-                self.previous_debug = f"[DEBUG] J'ai toutes les pierres requises pour le niveau {self.level + 1} ! Je deviens MASTER et passe en GROUPING."
-                print(self.previous_debug)
-            self.state = State.GROUPING
-            self.role = Role.Master
-
-        if self.state == State.SURVIVAL:
-            self._state_survival()
-        elif self.state == State.FARMING:
-            self._state_farming()
-        elif self.state == State.GROUPING:
-            self._state_grouping()
-        elif self.state == State.CONTRIBUTING:
-            self._state_contributing()
-        elif self.state == State.INCANTATION:
-            self._state_incantation()
-        elif self.state == State.FORKING:
-            self._state_forking()
 
         self._save_dashboard_state()
 
