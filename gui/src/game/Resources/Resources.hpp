@@ -13,6 +13,16 @@
 
 
 namespace Zappy::Game {
+    enum class ResourceType {
+        FOOD,
+        LINEMATE,
+        DERAUMERE,
+        SIBUR,
+        MENDIANE,
+        PHIRAS,
+        THYSTAME,
+    };
+
     /**
      * Zappy game resources.
      */
@@ -38,6 +48,8 @@ namespace Zappy::Game {
 
         inline Resources operator-(const Resources& other) const { return Resources(*this) -= other; }
         Resources& operator-=(const Resources& other);
+
+        inline Quantity& operator[](ResourceType type) noexcept { return reinterpret_cast<Quantity*>(this)[static_cast<std::size_t>(type)]; }
 
         operator std::string() const;
 
