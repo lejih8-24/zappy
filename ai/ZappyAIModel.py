@@ -18,7 +18,7 @@ class ZappyAI(AIStatesMixin, AIMovementMixin):
         self.team_name = team_name
         self.map_x = map_x
         self.map_y = map_y
-        self.logger = AILogger
+        self.logger = AILogger("./ai.logs")
 
         self.level = 1
         self.inventory = {"food": 10, "linemate": 0, "deraumere": 0, "sibur": 0, "mendiane": 0, "phiras": 0,
