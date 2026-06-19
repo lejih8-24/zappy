@@ -10,7 +10,9 @@
 #include "Render.hpp"
 #include "exceptions/ArgsException.hpp"
 #include "game/Resources/Resources.hpp"
-#include "networking/GraphicsClient/GraphicsClient.hpp"
+#include <networking.hpp>
+#include "networking/BaseEventHandler.hpp"
+#include "networking/events/TileContents.hpp"
 #include "raylib.h"
 #include <game.hpp>
 #include <iostream>
@@ -37,6 +39,21 @@ GUI::GameState createDemoState()
 
 }
 
+class EventHandler : public Zappy::Networking::BaseEventHandler {
+    public:
+        using Zappy::Networking::BaseEventHandler::BaseEventHandler;
+        using Zappy::Networking::BaseEventHandler::operator();
+
+        void operator()(const Zappy::Networking::TileContents& tile)
+        {
+            std::cout << "tile["
+                      << tile.x << ", "
+                      << tile.y << "]: "
+                      << tile.resources
+                      << std::endl;
+        }
+};
+
 int main(int argc, char *argv[])
 {
     #ifdef NDEBUG
@@ -56,7 +73,12 @@ int main(int argc, char *argv[])
         std::cout << "tile[" << tile.x << ", " << tile.y << "]: " << tile.resources << std::endl;
 
         tile = client.tileContents(2, 1);
-        std::cout << "tile[" << tile.x << ", " << tile.y << "]: " << tile.resources << std::endl;
+
+        auto event = client.pollEvent();
+        while (event) {
+            std::visit(EventHandler(), *event);
+            event = client.pollEvent();
+        }
 
         args.connect();
         render.renderLoop();

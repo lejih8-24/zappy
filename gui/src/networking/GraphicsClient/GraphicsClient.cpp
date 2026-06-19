@@ -7,12 +7,17 @@
 */
 
 #include "GraphicsClient.hpp"
+#include <networking.hpp>
+#include <thread>
+
+
+using std::chrono_literals::operator""ms;
 
 
 Zappy::Networking::GraphicsClient::GraphicsClient()
     : m_Server()
     , m_ResponseBuffer()
-    , m_TeamNames()
+    , m_EventQueue()
 {
 }
 
@@ -34,7 +39,7 @@ auto Zappy::Networking::GraphicsClient::mapSize() -> MapSize
 {
     send("msz\n");
 
-    std::string_view response = getline();
+    std::string_view response = getResponse("msz");
     return ResponseParser::parseMapSize(response);
 }
 
@@ -44,7 +49,7 @@ auto Zappy::Networking::GraphicsClient::tileContents(coordinate x, coordinate y)
     msg += std::to_string(x) + ' ' + std::to_string(y) + '\n';
     send(msg);
 
-    std::string_view response = getline();
+    std::string_view response = getResponse("bct");
     return ResponseParser::parseTileContents(response);
 }
 
@@ -53,10 +58,9 @@ void Zappy::Networking::GraphicsClient::mapContents()
 
 }
 
-const std::vector<std::string>& Zappy::Networking::GraphicsClient::teamNames()
+void Zappy::Networking::GraphicsClient::teamNames(std::vector<std::string>& names)
 {
-    // TODO: fetch team names
-    return m_TeamNames;
+
 }
 
 auto Zappy::Networking::GraphicsClient::playerPosition(unsigned int playerId) -> PlayerPosition
@@ -79,15 +83,37 @@ unsigned int Zappy::Networking::GraphicsClient::getTime()
     return 0;
 }
 
-auto Zappy::Networking::GraphicsClient::pollEvent() -> std::optional<int>
+void Zappy::Networking::GraphicsClient::setTime(unsigned int units)
 {
-    return {};
+    return;
+}
+
+auto Zappy::Networking::GraphicsClient::pollEvent() -> std::optional<Event>
+{
+    refreshEvents();
+
+    if (m_EventQueue.empty())
+        return {};
+
+    Event event = m_EventQueue.back();
+    m_EventQueue.pop_back();
+    return event;
 }
 
 void Zappy::Networking::GraphicsClient::swap(GraphicsClient& other)
 {
     std::swap(m_Server, other.m_Server);
-    std::swap(m_TeamNames, other.m_TeamNames);
+    std::swap(m_ResponseBuffer, other.m_ResponseBuffer);
+}
+
+void Zappy::Networking::GraphicsClient::refreshEvents()
+{
+    std::string_view line = getline(false);
+
+    while (!line.empty()) {
+        m_EventQueue.push_front(ResponseParser::parse(line));
+        line = getline(false);
+    }
 }
 
 void Zappy::Networking::GraphicsClient::doHandshake()
@@ -98,10 +124,13 @@ void Zappy::Networking::GraphicsClient::doHandshake()
 
     send("GRAPHIC\n");
 
-    line = getline(false);
-    while (!line.empty()) {
-        line = getline(false);
-    }
+    // Sleep for 100ms to let server send all
+    // initial events. This is not necessary,
+    // since the events will get handled anyway,
+    // but it increases runtime performance.
+    std::this_thread::sleep_for(100ms);
+
+    refreshEvents();
 }
 
 std::string_view Zappy::Networking::GraphicsClient::getline(bool wait)
@@ -115,7 +144,7 @@ std::string_view Zappy::Networking::GraphicsClient::getline(bool wait)
     if (!wait) {
         pollfd pollEvents = { m_Server.fileno(), POLL_IN, 0 };
 
-        if (::poll(&pollEvents, 1, 100) < 0)
+        if (::poll(&pollEvents, 1, 0) < 0)
             return std::string_view();
 
         if (!(pollEvents.revents & POLL_IN))
@@ -131,6 +160,31 @@ std::string_view Zappy::Networking::GraphicsClient::getline(bool wait)
     bufferLine = m_ResponseBuffer.getLine();
 
     return bufferLine ? *bufferLine : std::string_view();
+}
+
+bool Zappy::Networking::GraphicsClient::isValidResponse(std::string_view response)
+{
+    static constexpr std::array<std::string_view, 3> failedResponses = {"seg", "suc", "sbp"};
+
+    for (auto fail : failedResponses) {
+        if (!response.starts_with(fail))
+            continue;
+        return false;
+    }
+
+    return true;
+}
+
+std::string_view Zappy::Networking::GraphicsClient::getResponse(std::string_view cmd)
+{
+    std::string_view response = getline();
+
+    while (isValidResponse(response) && !response.starts_with(cmd)) {
+        m_EventQueue.push_front(ResponseParser::parse(cmd));
+        response = getline();
+    }
+
+    return response;
 }
 
 void Zappy::Networking::GraphicsClient::send(std::string_view msg)

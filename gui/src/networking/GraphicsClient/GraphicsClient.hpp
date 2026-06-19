@@ -8,13 +8,14 @@
 
 #pragma once
 
-#include "../ResponseParser/ResponseParser.hpp"
+#include "../Event.hpp"
 #include <utils.hpp>
 #include <lattice.hpp>
 #include <string_view>
 #include <optional>
 #include <cstdint>
 #include <vector>
+#include <deque>
 
 
 namespace Zappy::Networking {
@@ -23,8 +24,7 @@ namespace Zappy::Networking {
 
         Lattice::Socket m_Server;
         Utils::LineBuffer<4096> m_ResponseBuffer;
-        // std::deque<> m_EventQueue;
-        std::vector<std::string> m_TeamNames;
+        std::deque<Event> m_EventQueue;
 
         public:
             GraphicsClient();
@@ -36,24 +36,28 @@ namespace Zappy::Networking {
             MapSize mapSize();
             TileContents tileContents(coordinate x, coordinate y);
             void mapContents();
-
-            const std::vector<std::string>& teamNames();
+            void teamNames(std::vector<std::string>& names);
 
             PlayerPosition playerPosition(unsigned int playerId);
             unsigned int playerLevel(unsigned int playerId);
             void playerInventory(unsigned int playerId);
 
             unsigned int getTime();
+            void setTime(unsigned int units);
 
-            std::optional<int> pollEvent();
+            std::optional<Event> pollEvent();
 
             inline void operator=(GraphicsClient&& other) { swap(other); }
             void swap(GraphicsClient& other);
 
         private:
+            void refreshEvents();
             void doHandshake();
 
+            static bool isValidResponse(std::string_view response);
+
             std::string_view getline(bool wait = true);
+            std::string_view getResponse(std::string_view cmd);
             void send(std::string_view msg);
     };
 }
