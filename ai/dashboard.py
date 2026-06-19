@@ -3,6 +3,31 @@ import time
 import json
 import curses
 
+class Display:
+    def __init__(self, folder: str = '.zappy_stats'):
+        self.folder = folder
+        if not any(f.endswith('.json') for f in os.listdir('.') if f.startswith('.zappy_stats')):
+            os.makedirs(".zappy_stats", exist_ok=True)
+
+    def save_dashboard_state(self, id, role, state, level, position, inventory):
+        """Sauvegarde l'état actuel dans un fichier JSON partagé."""
+        state_data = {
+            "id": id,
+            "role": role,
+            "state": state,
+            "level": level,
+            "position": position, # [self.pos_x, self.pos_y]
+            "inventory": inventory
+        }
+
+        os.makedirs(".zappy_stats", exist_ok=True)
+        filename = f".zappy_stats/drone_{id}.json"
+
+        temp_filename = f"{filename}.tmp"
+        with open(temp_filename, "w") as f:
+            json.dump(state_data, f)
+        os.replace(temp_filename, filename)
+
 
 def draw_dashboard(stdscr):
     # Configuration de curses

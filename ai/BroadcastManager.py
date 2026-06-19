@@ -7,10 +7,10 @@ class BroadcastManager:
     Format strict : Token|Sender_ID|Target_ID|Level|Hierarchy|State|Request
     """
 
-    def __init__(self, token: str = "ZappyStras2026"):
+    def __init__(self, my_id: str, token: str = "ZappyStras2026"):
         self.token = token
 
-        self.my_id = str(uuid.uuid4())[:4]
+        self.my_id = id
 
     def format_message(self, target_id: str, level: int, hierarchy: Role, state: State, request: str) -> str:
         """

@@ -3,6 +3,8 @@
 import time
 from CommandModel import *
 from BroadcastManager import BroadcastManager
+from ai.ai_states import AIState
+from ai.dashboard import Display
 from ai.logger import AILogger
 from constants import Role, State, ELEVATION_RULES
 from pathfinding import find_path_to_closest
@@ -12,52 +14,20 @@ import json
 
 class ZappyAI:
     def __init__(self, network, team_name, map_x, map_y):
+        self.id = str(uuid.uuid4())[:4]
         self.network = network
-        self.team_name = team_name
         self.map_x = map_x
         self.map_y = map_y
         self.logger = AILogger("./ai.logs")
-
-        self.level = 1
-        self.inventory = {"food": 10, "linemate": 0, "deraumere": 0, "sibur": 0, "mendiane": 0, "phiras": 0,
-                          "thystame": 0}
-        self.elevation_rules = ELEVATION_RULES
+        self.comms = BroadcastManager(self.id, token="AlphaNor_Zappy_26")
+        self.display = Display()
+        self.states = AIState(self.id, team_name)
 
         self.is_alive = True
         self.pending_commands = []
-        self.vision_grid = None
-        self.role = Role.Explorer
-        self.state = State.FARMING
-        self.comms = BroadcastManager(token="AlphaNor_Zappy_26")
-        self.previous_debug = ""
 
-        self.pos_x = 0
-        self.pos_y = 0
-        self.orientation = 0
 
-        self.world_map = {}
 
-        if not any(f.endswith('.json') for f in os.listdir('.') if f.startswith('.zappy_stats')):
-            os.makedirs(".zappy_stats", exist_ok=True)
-
-    def _save_dashboard_state(self):
-        """Sauvegarde l'état actuel dans un fichier JSON partagé."""
-        state_data = {
-            "id": self.comms.my_id,
-            "role": self.role.name,
-            "state": self.state.name,
-            "level": self.level,
-            "position": [self.pos_x, self.pos_y],
-            "inventory": self.inventory
-        }
-
-        os.makedirs(".zappy_stats", exist_ok=True)
-        filename = f".zappy_stats/drone_{self.comms.my_id}.json"
-
-        temp_filename = f"{filename}.tmp"
-        with open(temp_filename, "w") as f:
-            json.dump(state_data, f)
-        os.replace(temp_filename, filename)
 
     def run(self):
         while self.is_alive:
@@ -209,7 +179,7 @@ class ZappyAI:
                 print(self.previous_debug)
             return
 
-        self._save_dashboard_state()
+        self.display.save_dashboard_state(self.states.name, self.states.role, self.states.state, self.states.level, [0, 0], self.states.inventory)
 
     def _queue_command(self, command):
         if len(self.pending_commands) < 9:
