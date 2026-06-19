@@ -152,9 +152,18 @@ auto Zappy::Networking::ResponseParser::parsePlayerPosition(std::string_view lin
     };
 }
 
-auto Zappy::Networking::ResponseParser::parsePlayerLevel(std::string_view response) -> PlayerLevel
+auto Zappy::Networking::ResponseParser::parsePlayerLevel(std::string_view line) -> PlayerLevel
 {
-    return {};  // TODO: implement
+    std::string_view response = line;
+
+    std::string_view command = extractWord(response);
+    if (command != "plv")
+        throw Exceptions::ServerException("invalid player level response: '" + std::string(line) + "'");
+
+    return {
+        .id    = extractId(response),
+        .level = extractInteger(response),
+    };
 }
 
 auto Zappy::Networking::ResponseParser::parsePlayerInventory(std::string_view response) -> PlayerInventory
