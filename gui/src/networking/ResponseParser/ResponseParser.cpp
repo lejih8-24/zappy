@@ -200,9 +200,26 @@ auto Zappy::Networking::ResponseParser::parsePlayerExpulsion(std::string_view li
     };
 }
 
-auto Zappy::Networking::ResponseParser::parsePlayerIncantationStart(std::string_view response) -> PlayerIncantationStart
+auto Zappy::Networking::ResponseParser::parsePlayerIncantationStart(std::string_view line) -> PlayerIncantationStart
 {
-    return {};  // TODO: implement
+    std::string_view response = line;
+
+    std::string_view command = extractWord(response);
+    if (command != "pbc")
+        throw Exceptions::ServerException("invalid player inventory response: '" + std::string(line) + "'");
+
+    PlayerIncantationStart result = {
+        .x     = extractInteger(response),
+        .y     = extractInteger(response),
+        .level = extractInteger(response),
+        .playerIds = {},
+    };
+
+    while (response.starts_with('#')) {
+        result.playerIds.push_back(extractId(response));
+    }
+
+    return result;
 }
 
 auto Zappy::Networking::ResponseParser::parsePlayerIncantationEnd(std::string_view response) -> PlayerIncantationEnd
