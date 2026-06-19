@@ -157,9 +157,20 @@ auto Zappy::Networking::ResponseParser::parsePlayerLevel(std::string_view line) 
     };
 }
 
-auto Zappy::Networking::ResponseParser::parsePlayerInventory(std::string_view response) -> PlayerInventory
+auto Zappy::Networking::ResponseParser::parsePlayerInventory(std::string_view line) -> PlayerInventory
 {
-    return {};  // TODO: implement
+    std::string_view response = line;
+
+    std::string_view command = extractWord(response);
+    if (command != "pin")
+        throw Exceptions::ServerException("invalid player inventory response: '" + std::string(line) + "'");
+
+    return {
+        .id        = extractId(response),
+        .x         = extractInteger(response),
+        .y         = extractInteger(response),
+        .inventory = extractResources(response),
+    };
 }
 
 auto Zappy::Networking::ResponseParser::parsePlayerBroadcast(std::string_view response) -> PlayerBroadcast
