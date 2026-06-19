@@ -209,9 +209,9 @@ auto Zappy::Networking::ResponseParser::parsePlayerIncantationStart(std::string_
         throw Exceptions::ServerException("invalid player inventory response: '" + std::string(line) + "'");
 
     PlayerIncantationStart result = {
-        .x     = extractInteger(response),
-        .y     = extractInteger(response),
-        .level = extractInteger(response),
+        .x         = extractInteger(response),
+        .y         = extractInteger(response),
+        .level     = extractInteger(response),
         .playerIds = {},
     };
 
@@ -222,9 +222,19 @@ auto Zappy::Networking::ResponseParser::parsePlayerIncantationStart(std::string_
     return result;
 }
 
-auto Zappy::Networking::ResponseParser::parsePlayerIncantationEnd(std::string_view response) -> PlayerIncantationEnd
+auto Zappy::Networking::ResponseParser::parsePlayerIncantationEnd(std::string_view line) -> PlayerIncantationEnd
 {
-    return {};  // TODO: implement
+    std::string_view response = line;
+
+    std::string_view command = extractWord(response);
+    if (command != "pbc")
+        throw Exceptions::ServerException("invalid player inventory response: '" + std::string(line) + "'");
+
+    return {
+        .x      = extractInteger(response),
+        .y      = extractInteger(response),
+        .result = std::string(response),
+    };
 }
 
 std::pair<std::string_view, std::string_view> Zappy::Networking::ResponseParser::splitWord(std::string_view line)

@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <string>
+
 
 namespace Zappy::Networking {
     /**
@@ -17,6 +19,6 @@ namespace Zappy::Networking {
     struct PlayerIncantationEnd {
         unsigned int x;
         unsigned int y;
-        int result;  // TODO: ensure result is an int (not specified)
+        std::string result;  // TODO: ensure result is a string
     };
 }
