@@ -53,9 +53,24 @@ auto Zappy::Networking::GraphicsClient::tileContents(coordinate x, coordinate y)
     return ResponseParser::parseTileContents(response);
 }
 
+/**
+ * Requests the server to send the contents
+ * of the whole map as events.
+ *
+ * Usage:
+ * GraphicsClient client;
+ * client.mapContents();
+ *
+ * // map contents are sent via events
+ * auto event = client.pollEvent();
+ * while (event) {
+ *     std::visit(EventHandler(), *event);
+ *     event = client.pollEvent();
+ * }
+ */
 void Zappy::Networking::GraphicsClient::mapContents()
 {
-
+    send("mct\n");
 }
 
 void Zappy::Networking::GraphicsClient::teamNames(std::vector<std::string>& names)
