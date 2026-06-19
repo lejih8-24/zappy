@@ -107,9 +107,15 @@ auto Zappy::Networking::ResponseParser::parseTileContents(std::string_view line)
     return { tileX, tileY, resources };
 }
 
-auto Zappy::Networking::ResponseParser::parseTeamName(std::string_view response) -> TeamName
+auto Zappy::Networking::ResponseParser::parseTeamName(std::string_view line) -> TeamName
 {
-    return {};
+    std::string_view response = line;
+
+    std::string_view command = extractWord(response);
+    if (command != "tna")
+        throw Exceptions::ServerException("invalid team name response: '" + std::string(line) + "'");
+
+    return { .name = std::string(response) };
 }
 
 auto Zappy::Networking::ResponseParser::parseNewPlayerConnect(std::string_view response) -> NewPlayerConnect
