@@ -10,7 +10,7 @@ class BroadcastManager:
     def __init__(self, my_id: str, token: str = "ZappyStras2026"):
         self.token = token
 
-        self.my_id = id
+        self.my_id = my_id
 
     def format_message(self, target_id: str, level: int, hierarchy: Role, state: State, request: str) -> str:
         """

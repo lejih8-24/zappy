@@ -6,6 +6,17 @@ class Role(Enum):
     Incanting = 2
     Slave = 3
 
+    def __str__(self):
+        if self.value == 0:
+            return "Explorer"
+        if self.value == 1:
+            return "Master"
+        if self.value == 2:
+            return "Incanting"
+        if self.value == 3:
+            return "Slave"
+        return None
+
 class State(Enum):
     FARMING = 0
     INCANTATION = 1
@@ -14,6 +25,24 @@ class State(Enum):
     WAITING_ELEVATION = 4
     CONTRIBUTING = 5
     FORKING = 6
+
+    def __str__(self):
+        if self.value == 0:
+            return "FARMING"
+        if self.value == 1:
+            return "INCANTATION"
+        if self.value == 2:
+            return "GROUPING"
+        if self.value == 3:
+            return "SURVIVAL"
+        if self.value == 4:
+            return "WAITING_ELEVATION"
+        if self.value == 5:
+            return "CONTRIBUTING"
+        if self.value == 6:
+            return "FORKING"
+        return None
+
 
 ELEVATION_RULES = {
     1: {"players": 1, "stones": {"linemate": 1, "deraumere": 0, "sibur": 0, "mendiane": 0, "phiras": 0, "thystame": 0}},

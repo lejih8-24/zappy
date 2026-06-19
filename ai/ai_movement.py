@@ -1,4 +1,3 @@
-from ai.ZappyAIModel import ZappyAI
 from constants import State, Role
 from CommandModel import *
 from pathfinding import find_path_to_closest

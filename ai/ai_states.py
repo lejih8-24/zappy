@@ -25,6 +25,11 @@ class AIState:
         self.last_master_id = None
         self.ready_for_incantation = False
 
+        self.world_map = {}
+        self.orientation = 0
+        self.pos_x = 0
+        self.pos_y = 0
+
     def can_elevate(self) -> bool:
         rules = self.elevation_rules[self.level]
         for stone, required_qty in rules["stones"].items():

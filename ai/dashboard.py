@@ -3,6 +3,9 @@ import time
 import json
 import curses
 
+from constants import State, Role
+
+
 class Display:
     def __init__(self, folder: str = '.zappy_stats'):
         self.folder = folder
@@ -13,8 +16,8 @@ class Display:
         """Sauvegarde l'état actuel dans un fichier JSON partagé."""
         state_data = {
             "id": id,
-            "role": role,
-            "state": state,
+            "role": role.value,
+            "state": state.value,
             "level": level,
             "position": position,
             "inventory": inventory
@@ -77,16 +80,16 @@ def draw_dashboard(stdscr):
                     inv = data["inventory"]
 
                     color = curses.color_pair(4)
-                    if "SURVIVAL" in state:
+                    if State.SURVIVAL == state:
                         color = curses.color_pair(3)
-                    elif "Master" in role:
+                    elif Role.Master == role:
                         color = curses.color_pair(1)
-                    elif "Slave" in role:
+                    elif Role.Slave == role:
                         color = curses.color_pair(2)
 
                     stdscr.addstr(row, 2, f"🤖 Drone [{d_id}]", curses.A_BOLD)
                     stdscr.addstr(row, 18, f"Niveau: {level}  |  Pos estimée: ({pos[0]},{pos[1]})  |  ")
-                    stdscr.addstr(row, 48, f"Rôle: {role:<8}  État: {state:<15}", color)
+                    stdscr.addstr(row, 48, f"Rôle: {role.__str__():<8}  État: {state.__str__():<15}", color)
 
                     inv_str = (f"Nourriture: {inv.get('food', 0):<2} │ "
                                f"L: {inv.get('linemate', 0)} │ D: {inv.get('deraumere', 0)} │ "

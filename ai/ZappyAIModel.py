@@ -3,14 +3,14 @@
 import time
 from CommandModel import *
 from BroadcastManager import BroadcastManager
-from ai.ai_movement import AINavigator
-from ai.ai_states import AIState
-from ai.dashboard import Display
-from ai.logger import AILogger
-from ai.btree.bt_core import Selector, Sequence
-from ai.btree.bt_nodes import IsHungry, ActionSearchFood, ActionFarmStones
+from ai_movement import AINavigator
+from ai_states import AIState
+from dashboard import Display
+from logger import AILogger
+from btree.bt_core import Selector, Sequence
+from btree.bt_nodes import IsHungry, ActionSearchFood, ActionFarmStones, CanElevate, ActionGroupAndIncant
 from constants import Role, State
-from ai.network import ServerEvent
+from network import ServerEvent, ProtocolParser
 
 
 class ZappyAI:
@@ -19,17 +19,13 @@ class ZappyAI:
         self.network = network
         self.map_x = map_x
         self.map_y = map_y
-        self.logger = AILogger("./ai.logs")
+        self.logger = AILogger("./ai.logs", self.id)
         self.comms = BroadcastManager(self.id, token="AlphaNor_Zappy_26")
         self.display = Display()
         self.states = AIState(self.id, team_name)
-        self.Navigation = AINavigator(self)
+        self.navigator = AINavigator(self)
         self.bt = self._build_behavior_tree()
-
-        self.world_map = {}
-        self.orientation = 0
-        self.pos_x = 0
-        self.pos_y = 0
+        self.parser = ProtocolParser(self.comms)
 
         self.is_alive = True
         self.pending_commands = []
@@ -37,25 +33,20 @@ class ZappyAI:
     def _build_behavior_tree(self):
         """Construit l'arbre d'intelligence de bas en haut."""
 
-        # Branche 1 : Survie
-        # SI je suis affamé ET que je cherche de la food
         survival_branch = Sequence([IsHungry(), ActionSearchFood()])
 
         # Branche 2 : Fork
         # SI je suis riche en food ET que je lance le Fork
         # fork_branch = Sequence([HasEnoughFood(), ActionFork()])
 
-        # Branche 3 : Élévation
-        # elevation_branch = Sequence([CanElevate(), ActionGroupAndIncant()])
+        elevation_branch = Sequence([CanElevate(), ActionGroupAndIncant()])
 
-        # Branche 4 : Farming par défaut
         farming_branch = ActionFarmStones()
 
-        # Le Noeud Racine : Un Sélecteur qui lit de haut en bas
         root = Selector([
             survival_branch,
             # fork_branch,
-            # elevation_branch,
+            elevation_branch,
             farming_branch
         ])
 
@@ -64,8 +55,11 @@ class ZappyAI:
     def run(self):
         while self.is_alive:
             responses = self.network.get_responses()
-            for response in responses:
-                self._process_server_event(response)
+            for raw_response in responses:
+                event = self.parser.parse(raw_response)
+
+                if event.type != "IGNORE":
+                    self._process_server_event(event)
 
             if self.is_alive:
                 self._decide_next_action()
@@ -138,6 +132,7 @@ class ZappyAI:
             self.states.level = event.data["level"]
             self.states.state = State.FARMING
             self.states.role = Role.Explorer
+            self.states.is_master = False
             self.logger.Good(f"Succès ! Je suis niveau {self.states.level}")
 
         elif event.type == "BROADCAST":
@@ -148,41 +143,48 @@ class ZappyAI:
 
     def _update_state_from_result(self, command, result):
         if isinstance(command, InventoryCommand) and isinstance(result, dict):
-            self.inventory = result
+            self.states.inventory = result
 
         elif isinstance(command, LookCommand) and isinstance(result, list):
-            self.vision_grid = result
+            self.states.vision_grid = result
             self._integrate_vision_to_map(result)
 
         elif isinstance(command, TakeCommand) and result is True:
-            self.inventory[command.obj_name] += 1
-            current_pos = (self.pos_x, self.pos_y)
-            if current_pos in self.world_map and command.obj_name in self.world_map[current_pos]:
-                if self.world_map[current_pos][command.obj_name] > 0:
-                    self.world_map[current_pos][command.obj_name] -= 1
+            self.states.inventory[command.obj_name] = self.states.inventory.get(command.obj_name, 0) + 1
+
+            current_pos = (self.states.pos_x, self.states.pos_y)
+            if current_pos in self.states.world_map and command.obj_name in self.states.world_map[
+                current_pos]:
+                if self.states.world_map[current_pos][command.obj_name] > 0:
+                    self.states.world_map[current_pos][command.obj_name] -= 1
 
         elif isinstance(command, SetCommand) and result is True:
-            self.inventory[command.obj_name] = self.inventory.get(command.obj_name, 1) - 1
+            self.states.inventory[command.obj_name] = self.states.inventory.get(command.obj_name, 1) - 1
+
+            current_pos = (self.states.pos_x, self.states.pos_y)
+            if current_pos not in self.states.world_map:
+                self.states.world_map[current_pos] = {}
+            self.states.world_map[current_pos][command.obj_name] = self.states.world_map[current_pos].get(
+                command.obj_name, 0) + 1
 
         elif isinstance(command, ForkCommand) and result is True:
             self.logger.Good("L'oeuf a été pondu avec succès ! Retour au travail.")
-            self.state = State.FARMING
 
         elif isinstance(command, TurnRightCommand) and result is True:
-            self.orientation = (self.orientation + 1) % 4
+            self.states.orientation = (self.states.orientation + 1) % 4
 
         elif isinstance(command, TurnLeftCommand) and result is True:
-            self.orientation = (self.orientation - 1) % 4
+            self.states.orientation = (self.states.orientation - 1) % 4
 
         elif isinstance(command, ForwardCommand) and result is True:
-            if self.orientation == 0:
-                self.pos_y = (self.pos_y + 1) % self.map_y
-            elif self.orientation == 1:
-                self.pos_x = (self.pos_x + 1) % self.map_x
-            elif self.orientation == 2:
-                self.pos_y = (self.pos_y - 1) % self.map_y
-            elif self.orientation == 3:
-                self.pos_x = (self.pos_x - 1) % self.map_x
+            if self.states.orientation == 0:
+                self.states.pos_y = (self.states.pos_y + 1) % self.map_y
+            elif self.states.orientation == 1:
+                self.states.pos_x = (self.states.pos_x + 1) % self.map_x
+            elif self.states.orientation == 2:
+                self.states.pos_y = (self.states.pos_y - 1) % self.map_y
+            elif self.states.orientation == 3:
+                self.states.pos_x = (self.states.pos_x - 1) % self.map_x
 
     def _decide_next_action(self):
         if len(self.pending_commands) >= 9:
@@ -202,8 +204,8 @@ class ZappyAI:
         return any(isinstance(cmd, command_class) for cmd in self.pending_commands)
 
     def _clean_floor(self) -> bool:
-        if not self.vision_grid: return False
-        floor = self.vision_grid[0]
+        if not self.states.vision_grid: return False
+        floor = self.states.vision_grid[0]
         cleaned_something = False
 
         for item, qty in floor.items():
@@ -223,16 +225,16 @@ class ZappyAI:
             dy_rel = math.isqrt(i)
             dx_rel = i - (dy_rel * dy_rel + dy_rel)
 
-            if self.orientation == 0:
+            if self.states.orientation == 0:
                 dx_abs, dy_abs = dx_rel, dy_rel
-            elif self.orientation == 1:
+            elif self.states.orientation == 1:
                 dx_abs, dy_abs = dy_rel, -dx_rel
-            elif self.orientation == 2:
+            elif self.states.orientation == 2:
                 dx_abs, dy_abs = -dx_rel, -dy_rel
-            elif self.orientation == 3:
+            elif self.states.orientation == 3:
                 dx_abs, dy_abs = -dy_rel, dx_rel
 
-            target_x = (self.pos_x + dx_abs) % self.map_x
-            target_y = (self.pos_y + dy_abs) % self.map_y
+            target_x = (self.states.pos_x + dx_abs) % self.map_x
+            target_y = (self.states.pos_y + dy_abs) % self.map_y
 
-            self.world_map[(target_x, target_y)] = tile_content
+            self.states.world_map[(target_x, target_y)] = tile_content
