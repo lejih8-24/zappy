@@ -3,6 +3,7 @@
 import time
 from CommandModel import *
 from BroadcastManager import BroadcastManager
+from ai.ai_movement import AINavigator
 from ai.ai_states import AIState
 from ai.dashboard import Display
 from ai.logger import AILogger
@@ -22,6 +23,7 @@ class ZappyAI:
         self.comms = BroadcastManager(self.id, token="AlphaNor_Zappy_26")
         self.display = Display()
         self.states = AIState(self.id, team_name)
+        self.Navigation = AINavigator(self)
 
         self.is_alive = True
         self.pending_commands = []
@@ -181,7 +183,7 @@ class ZappyAI:
 
         self.display.save_dashboard_state(self.states.name, self.states.role, self.states.state, self.states.level, [0, 0], self.states.inventory)
 
-    def _queue_command(self, command):
+    def queue_command(self, command):
         if len(self.pending_commands) < 9:
             self.pending_commands.append(command)
             self.network.send_command(command.command_string)
