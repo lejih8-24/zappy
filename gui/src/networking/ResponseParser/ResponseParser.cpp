@@ -136,9 +136,20 @@ auto Zappy::Networking::ResponseParser::parseNewPlayerConnect(std::string_view l
     };
 }
 
-auto Zappy::Networking::ResponseParser::parsePlayerPosition(std::string_view response) -> PlayerPosition
+auto Zappy::Networking::ResponseParser::parsePlayerPosition(std::string_view line) -> PlayerPosition
 {
-    return {};  // TODO: implement
+    std::string_view response = line;
+
+    std::string_view command = extractWord(response);
+    if (command != "ppo")
+        throw Exceptions::ServerException("invalid player position response: '" + std::string(line) + "'");
+
+    return {
+        .id          = extractId(response),
+        .x           = extractInteger(response),
+        .y           = extractInteger(response),
+        .rotationDeg = extractOrientation(response),
+    };
 }
 
 auto Zappy::Networking::ResponseParser::parsePlayerLevel(std::string_view response) -> PlayerLevel
