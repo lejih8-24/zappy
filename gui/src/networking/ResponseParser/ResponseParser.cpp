@@ -91,20 +91,11 @@ auto Zappy::Networking::ResponseParser::parseTileContents(std::string_view line)
     if (command != "bct")
         throw Exceptions::ServerException("invalid tile contents response: '" + std::string(line) + "'");
 
-    auto tileX = extractInteger(response);
-    auto tileY = extractInteger(response);
-
-    Game::Resources resources = {
-        .food      = extractInteger(response),
-        .linemate  = extractInteger(response),
-        .deraumere = extractInteger(response),
-        .sibur     = extractInteger(response),
-        .mendiane  = extractInteger(response),
-        .phiras    = extractInteger(response),
-        .thystame  = extractInteger(response),
+    return {
+        .x         = extractInteger(response),
+        .y         = extractInteger(response),
+        .resources = extractResources(response),
     };
-
-    return { tileX, tileY, resources };
 }
 
 auto Zappy::Networking::ResponseParser::parseTeamName(std::string_view line) -> TeamName
@@ -240,6 +231,19 @@ int Zappy::Networking::ResponseParser::extractId(std::string_view& line)
         return idValue;
 
     throw Exceptions::ServerException("invalid id from server: " + std::string(id));
+}
+
+auto Zappy::Networking::ResponseParser::extractResources(std::string_view& line) -> Game::Resources
+{
+    return {
+        .food      = extractInteger(line),
+        .linemate  = extractInteger(line),
+        .deraumere = extractInteger(line),
+        .sibur     = extractInteger(line),
+        .mendiane  = extractInteger(line),
+        .phiras    = extractInteger(line),
+        .thystame  = extractInteger(line),
+    };
 }
 
 float Zappy::Networking::ResponseParser::extractOrientation(std::string_view& line)
