@@ -118,9 +118,22 @@ auto Zappy::Networking::ResponseParser::parseTeamName(std::string_view line) -> 
     return { .name = std::string(response) };
 }
 
-auto Zappy::Networking::ResponseParser::parseNewPlayerConnect(std::string_view response) -> NewPlayerConnect
+auto Zappy::Networking::ResponseParser::parseNewPlayerConnect(std::string_view line) -> NewPlayerConnect
 {
-    return {};  // TODO: implement
+    std::string_view response = line;
+
+    std::string_view command = extractWord(response);
+    if (command != "pnw")
+        throw Exceptions::ServerException("invalid player connection response: '" + std::string(line) + "'");
+
+    return {
+        .id          = extractId(response),
+        .x           = extractInteger(response),
+        .y           = extractInteger(response),
+        .rotationDeg = extractOrientation(response),
+        .level       = extractInteger(response),
+        .teamName    = std::string(response)
+    };
 }
 
 auto Zappy::Networking::ResponseParser::parsePlayerPosition(std::string_view response) -> PlayerPosition
