@@ -8,9 +8,11 @@ from ai_states import AIState
 from dashboard import Display
 from logger import AILogger
 from btree.bt_core import Selector, Sequence
-from btree.bt_nodes import IsHungry, ActionSearchFood, ActionFarmStones, CanElevate, ActionGroupAndIncant
+from btree.bt_nodes import IsHungry, ActionSearchFood, ActionFarmStones, CanElevate, ActionGroupAndIncant, \
+    HasMasterCall, ActionJoinMaster, ActionContributeStones
 from constants import Role, State
 from network import ServerEvent, ProtocolParser
+import random
 
 
 class ZappyAI:
@@ -44,10 +46,10 @@ class ZappyAI:
         farming_branch = ActionFarmStones()
 
         root = Selector([
-            survival_branch,
-            # fork_branch,
-            elevation_branch,
-            farming_branch
+            Sequence([IsHungry(), ActionSearchFood()]),
+            Sequence([HasMasterCall(), ActionJoinMaster(), ActionContributeStones()]),
+            Sequence([CanElevate(), ActionGroupAndIncant()]),
+            ActionFarmStones()
         ])
 
         return root
@@ -77,12 +79,23 @@ class ZappyAI:
 
         if req == "INCANTATION_CALL":
             if self.states.is_master:
-                self.logger.Info(f"[COMMS] Appel de {sender_id} entendu, mais je suis déjà MASTER. J'ignore.")
+                required_players = self.states.elevation_rules[self.states.level]["players"]
+                if self.states.count_player_case() >= required_players:
+                    return
+
+                my_id = self.id
+
+                if random.random() > 0.5:
+                    self.logger.Warn(f"[COMMS] Conflit de Masters ! J'abandonne mon rituel pour rejoindre {sender_id}.")
+                    self.states.is_master = False
+                    self.states.master_direction = direction
+                    self.states.last_master_id = sender_id
+                else:
+                    self.logger.Warn(f"[COMMS] Conflit avec {sender_id}, je maintiens mon rituel, c'est lui qui viendra.")
                 return
 
             self.states.last_master_id = sender_id
             self.states.master_direction = direction
-            self.logger.Info(f"[COMMS] Master {sender_id} appelle dans la direction {direction}. Enregistré.")
 
         elif req == "INCANTATION_STARTING":
             if direction == 0:
@@ -199,7 +212,7 @@ class ZappyAI:
             self.pending_commands.append(command)
             self.network.send_command(command.command_string)
 
-    def _is_command_pending(self, command_class) -> bool:
+    def is_command_pending(self, command_class) -> bool:
         """Vérifie si un type de commande précis est déjà dans la file d'attente."""
         return any(isinstance(cmd, command_class) for cmd in self.pending_commands)
 

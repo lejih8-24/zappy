@@ -143,13 +143,14 @@ class ActionGroupAndIncant(Node):
         rules = ai.states.elevation_rules[ai.states.level]
         required_players = rules["players"]
 
-        if players_on_tile < required_players:
-            ai.logger.Info(f"[MASTER] Appel aux alliés ({players_on_tile}/{required_players})...")
-            msg = ai.comms.format_message("ALL", ai.states.level, "Master", "GROUPING", "INCANTATION_CALL")
-            ai.queue_command(BroadcastCommand(ai.id, msg))
+        if required_players > 1:
+            if players_on_tile < required_players:
+                if not ai.is_command_pending(BroadcastCommand):
+                    msg = ai.comms.format_message("ALL", ai.states.level, "Master", "GROUPING", "INCANTATION_CALL")
+                    ai.queue_command(BroadcastCommand(ai.id, msg))
 
-            ai.states.vision_grid = None
-            return NodeStatus.RUNNING
+                ai.states.vision_grid = None
+                return NodeStatus.RUNNING
 
         msg = ai.comms.format_message("ALL", ai.states.level, "Master", "INCANTATION", "INCANTATION_STARTING")
         ai.queue_command(BroadcastCommand(ai.id, msg))
