@@ -38,9 +38,9 @@ namespace Zappy::Networking {
             void mapContents();
             void teamNames(std::vector<std::string>& names);
 
-            PlayerPosition playerPosition(unsigned int playerId);
-            unsigned int playerLevel(unsigned int playerId);
-            void playerInventory(unsigned int playerId);
+            PlayerPosition playerPosition(int playerId);
+            unsigned int playerLevel(int playerId);
+            Game::Resources playerInventory(int playerId);
 
             unsigned int getTime();
             void setTime(unsigned int units);

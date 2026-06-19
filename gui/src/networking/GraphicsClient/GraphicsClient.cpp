@@ -8,6 +8,7 @@
 
 #include "GraphicsClient.hpp"
 #include <networking.hpp>
+#include <exceptions.hpp>
 #include <thread>
 
 
@@ -95,23 +96,39 @@ void Zappy::Networking::GraphicsClient::teamNames(std::vector<std::string>& name
     }
 }
 
-auto Zappy::Networking::GraphicsClient::playerPosition(unsigned int playerId) -> PlayerPosition
+auto Zappy::Networking::GraphicsClient::playerPosition(int playerId) -> PlayerPosition
 {
-    return { 0, 0, 0, 0.f };
+    send("ppo #" + std::to_string(playerId) + "\n");
+
+    std::string_view response = getResponse("ppo");
+    return ResponseParser::parsePlayerPosition(response);
 }
 
-unsigned int Zappy::Networking::GraphicsClient::playerLevel(unsigned int playerId)
+unsigned int Zappy::Networking::GraphicsClient::playerLevel(int playerId)
 {
-    return 0;
+    send("plv #" + std::to_string(playerId) + "\n");
+
+    std::string_view response = getResponse("plv");
+    auto player = ResponseParser::parsePlayerLevel(response);
+    return player.level;
 }
 
-void Zappy::Networking::GraphicsClient::playerInventory(unsigned int playerId)
+auto Zappy::Networking::GraphicsClient::playerInventory(int playerId) -> Game::Resources
 {
+    send("pin #" + std::to_string(playerId) + "\n");
 
+    std::string_view response = getResponse("pin");
+    auto player = ResponseParser::parsePlayerInventory(response);
+    return player.inventory;
 }
 
 unsigned int Zappy::Networking::GraphicsClient::getTime()
 {
+    // send("sgt\n");
+
+    // std::string_view response = getResponse("sgt");
+    // auto server = ResponseParser::parseElapsedTimeRequest(response);
+    // return server.elapsed_time;
     return 0;
 }
 
