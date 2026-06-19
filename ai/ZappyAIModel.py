@@ -7,10 +7,13 @@ from ai.ai_movement import AINavigator
 from ai.ai_states import AIState
 from ai.dashboard import Display
 from ai.logger import AILogger
+from ai.btree.bt_core import Selector, Sequence, NodeStatus
+from ai.btree.bt_nodes import IsHungry, ActionSearchFood, ActionFarmStones
 from constants import Role, State, ELEVATION_RULES
 from pathfinding import find_path_to_closest
 import os
 import json
+from ai.network import ServerEvent
 
 
 class ZappyAI:
@@ -24,116 +27,122 @@ class ZappyAI:
         self.display = Display()
         self.states = AIState(self.id, team_name)
         self.Navigation = AINavigator(self)
+        self.bt = self._build_behavior_tree()
 
         self.is_alive = True
         self.pending_commands = []
 
+    def _build_behavior_tree(self):
+        """Construit l'arbre d'intelligence de bas en haut."""
 
+        # Branche 1 : Survie
+        # SI je suis affamé ET que je cherche de la food
+        survival_branch = Sequence([IsHungry(), ActionSearchFood()])
 
+        # Branche 2 : Fork
+        # SI je suis riche en food ET que je lance le Fork
+        # fork_branch = Sequence([HasEnoughFood(), ActionFork()])
+
+        # Branche 3 : Élévation
+        # elevation_branch = Sequence([CanElevate(), ActionGroupAndIncant()])
+
+        # Branche 4 : Farming par défaut
+        farming_branch = ActionFarmStones()
+
+        # Le Noeud Racine : Un Sélecteur qui lit de haut en bas
+        root = Selector([
+            survival_branch,
+            # fork_branch,
+            # elevation_branch,
+            farming_branch
+        ])
+
+        return root
 
     def run(self):
         while self.is_alive:
             responses = self.network.get_responses()
             for response in responses:
-                self._process_server_message(response)
+                self._process_server_event(response)
 
             if self.is_alive:
                 self._decide_next_action()
 
             time.sleep(0.01)
 
-    def _process_server_message(self, message: str):
-        if message == "dead":
-            print("L'IA est morte de faim.")
-            self.is_alive = False
+    def _handle_broadcast(self, direction: int, decoded: dict):
+        """Gère la réception des messages et met à jour exclusivement le Blackboard."""
+        req = decoded.get("request")
+        level = decoded.get("level")
+        sender_id = decoded.get("sender_id")
+
+        if req != "DATA_SHARE" and level != self.states.level:
             return
 
-        if message.startswith("message"):
-            parts = message.split(",", 1)
-            if len(parts) == 2:
-                direction = int(parts[0].replace("message", "").strip())
-                raw_text = parts[1].strip()
-                decoded = self.comms.parse_message(raw_text)
+        if req == "INCANTATION_CALL":
+            if self.states.is_master:
+                print(f"[COMMS] Appel de {sender_id} entendu, mais je suis déjà MASTER. J'ignore.")
+                return
 
-                if decoded:
-                    if decoded["request"] == "INCANTATION_CALL" and decoded["level"] == self.level:
-                        if self.role != Role.Master:
-                            self.role = Role.Slave
-                            self.state = State.GROUPING
-                            self.target_direction = direction
-                            print(
-                                f"[COMMS] Entendu l'appel du Master {decoded['sender_id']} à la direction {direction}. Je passe Slave.")
-                        else:
-                            print(
-                                f"[COMMS] J'entends un appel ({decoded['sender_id']}) mais je suis déjà MASTER. J'ignore.")
+            self.states.last_master_id = sender_id
+            self.states.master_direction = direction
+            print(f"[COMMS] Master {sender_id} appelle dans la direction {direction}. Enregistré.")
 
-                    elif decoded["request"] == "INCANTATION_STARTING" and self.role == Role.Slave:
-                        if direction == 0:
-                            print("Je suis sur la case de l'incantation ! Je reste pour le rituel.")
-                            self.state = State.CONTRIBUTING
-                        else:
-                            print("Le groupe est déjà complet et je suis trop loin. Retour au farming.")
-                            self.role = Role.Explorer
-                            self.state = State.FARMING
+        elif req == "INCANTATION_STARTING":
+            if direction == 0:
+                print("[COMMS] Rituel démarré. Je suis sur la case, verrouillage de ma position.")
+                self.states.ready_for_incantation = True
+            else:
+                print("[COMMS] Le groupe est complet et je suis en retard. Annulation du suivi.")
+                self.states.clear_master_call()
 
-                    elif decoded["request"] == "ABORT" and self.role == Role.Slave:
-                        self.role = Role.Explorer
-                        self.state = State.FARMING
-                        print("Le Master a annulé l'appel (ressources manquantes). Retour au farming.")
+        elif req == "ABORT":
+            print(f"[COMMS] Le Master {sender_id} a annulé l'appel. Retour au travail.")
+            self.states.clear_master_call()
 
-                elif decoded["request"] == "DATA_SHARE":
-                    try:
-                        raw_data = decoded.get("data", "")
-                        parts = raw_data.split("|")
-                        if len(parts) == 4:
-                            share_x = int(parts[0])
-                            share_y = int(parts[1])
-                            resource = parts[2]
-                            qty = int(parts[3])
-
-                            target_pos = (share_x, share_y)
-
-                            if target_pos not in self.world_map:
-                                self.world_map[target_pos] = {}
-
-                            self.world_map[target_pos][resource] = qty
-                    except Exception as e:
-                        print(f"Erreur lors du parsing de la synchronisation cartographique : {e}")
-            return
-
-        if message.startswith("eject"):
-            direction = int(message.split(":")[1].strip())
-            print(f"Je me suis fait éjecter depuis la direction {direction} !")
-            self.pending_commands.clear()
-            self.vision_grid = None
-            return
-
-        if message == "Elevation underway":
-            print("Début de l'incantation, je suis immobilisé !")
-            if self.pending_commands and isinstance(self.pending_commands[0], IncantationCommand):
-                self.pending_commands.pop(0)
-            return
-
-        if message.startswith("Current level:"):
-            self.level = int(message.split(":")[1].strip())
-            self.state = State.FARMING
-            self.role = Role.Explorer
-            print(f"Succès ! Je suis niveau {self.level}")
-            return
-
-        if message == "ko" and self.state == State.WAITING_ELEVATION:
+    def _handle_command_response(self, raw_message: str):
+        """Associe la réponse à la commande en attente."""
+        if raw_message == "ko" and self.states.state == State.WAITING_ELEVATION:
             print("L'incantation a échoué (un joueur a bougé ou une pierre manque).")
-            self.state = State.FARMING
-            self.role = Role.Explorer
+            self.states.state = State.FARMING
+            self.states.role = Role.Explorer
             return
 
         if self.pending_commands:
             current_command = self.pending_commands.pop(0)
-            result = current_command.parse_response(message)
-            print(f"Commande {current_command.command_string} terminée. Résultat: {result}")
+            result = current_command.parse_response(raw_message)
             self._update_state_from_result(current_command, result)
         else:
-            print(f"Réponse inattendue (aucune commande en attente) : {message}")
+            print(f"Réponse inattendue (aucune commande en attente) : {raw_message}")
+
+
+    def _process_server_event(self, event: ServerEvent):
+        """Route les événements propres vers les bons organes de l'IA."""
+        if event.type == "DEAD":
+            print("L'IA est morte de faim.")
+            self.is_alive = False
+
+        elif event.type == "EJECT":
+            print(f"Je me suis fait éjecter depuis la direction {event.data['direction']} !")
+            self.pending_commands.clear()
+            self.states.vision_grid = None
+
+        elif event.type == "ELEVATION_START":
+            print("Début de l'incantation, je suis immobilisé !")
+            if self.pending_commands and isinstance(self.pending_commands[0], IncantationCommand):
+                self.pending_commands.pop(0)
+
+        elif event.type == "ELEVATION_SUCCESS":
+            self.states.level = event.data["level"]
+            self.states.state = State.FARMING
+            self.states.role = Role.Explorer
+            print(f"Succès ! Je suis niveau {self.states.level}")
+
+        elif event.type == "BROADCAST":
+            self._handle_broadcast(event.data["direction"], event.data["decoded"])
+
+        elif event.type == "RESPONSE":
+            self._handle_command_response(event.data["raw"])
 
     def _update_state_from_result(self, command, result):
         if isinstance(command, InventoryCommand) and isinstance(result, dict):
@@ -181,6 +190,8 @@ class ZappyAI:
                 print(self.previous_debug)
             return
 
+        self.bt.tick(self)
+
         self.display.save_dashboard_state(self.states.name, self.states.role, self.states.state, self.states.level, [0, 0], self.states.inventory)
 
     def queue_command(self, command):
@@ -192,37 +203,6 @@ class ZappyAI:
         """Vérifie si un type de commande précis est déjà dans la file d'attente."""
         return any(isinstance(cmd, command_class) for cmd in self.pending_commands)
 
-    def can_elevate(self) -> bool:
-        rules = self.elevation_rules[self.level]
-        for stone, required_qty in rules["stones"].items():
-            if self.inventory.get(stone, 0) < required_qty:
-                return False
-        return True
-
-    def _count_player_case(self):
-        if not self.vision_grid:
-            return 0
-        return self.vision_grid[0].get('player', 0)
-
-    def _is_floor_perfect(self) -> bool:
-        if not self.vision_grid: return False
-        floor = self.vision_grid[0]
-        rules = self.elevation_rules[self.level]
-
-        if floor.get("player", 0) != rules["players"]:
-            return False
-
-        for item, qty in floor.items():
-            if item == "player" or qty == 0:
-                continue
-            if qty != rules["stones"].get(item, 0):
-                return False
-
-        for stone, required_qty in rules["stones"].items():
-            if floor.get(stone, 0) != required_qty:
-                return False
-        return True
-
     def _clean_floor(self) -> bool:
         if not self.vision_grid: return False
         floor = self.vision_grid[0]
@@ -231,16 +211,6 @@ class ZappyAI:
         for item, qty in floor.items():
             if item != "player" and qty > 0:
                 for _ in range(qty):
-                    self._queue_command(TakeCommand(item))
+                    self.queue_command(TakeCommand(item))
                     cleaned_something = True
         return cleaned_something
-
-
-    def _get_needed_material(self) -> str | None:
-        if self.level >= 8:
-            return None
-        rule = self.elevation_rules[self.level]["stones"]
-        for stone, required_qty in rule.items():
-            if self.inventory.get(stone, 0) < required_qty:
-                return stone
-        return None

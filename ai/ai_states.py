@@ -20,6 +20,11 @@ class AIState:
         self.vision_grid = None
         self.target_direction = None
 
+        self.is_master = False
+        self.master_direction = None
+        self.last_master_id = None
+        self.ready_for_incantation = False
+
     def can_elevate(self) -> bool:
         rules = self.elevation_rules[self.level]
         for stone, required_qty in rules["stones"].items():
@@ -51,3 +56,9 @@ class AIState:
         for stone, required_qty in rules["stones"].items():
             if floor.get(stone, 0) != required_qty: return False
         return True
+
+    def clear_master_call(self):
+        """Réinitialise la mémoire des appels réseau pour revenir à l'état normal."""
+        self.master_direction = None
+        self.last_master_id = None
+        self.ready_for_incantation = False
