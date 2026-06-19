@@ -38,6 +38,16 @@ namespace Zappy::Networking {
             static std::pair<std::string_view, std::string_view> splitWord(std::string_view line);
             static std::string_view extractWord(std::string_view& line);
             static unsigned int toInteger(std::string_view repr);
+
             static inline unsigned int extractInteger(std::string_view& line) { return toInteger(extractWord(line)); }
+            static int extractId(std::string_view& line);
+            static float extractOrientation(std::string_view& line);
+
+            enum Orientation {
+                NORTH = 1,
+                EAST  = 2,
+                SOUTH = 3,
+                WEST  = 4,
+            };
     };
 }

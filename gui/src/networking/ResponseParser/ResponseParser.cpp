@@ -191,3 +191,33 @@ unsigned int Zappy::Networking::ResponseParser::toInteger(std::string_view repr)
 
     throw Exceptions::ServerException("invalid number from server: " + std::string(repr));
 }
+
+int Zappy::Networking::ResponseParser::extractId(std::string_view& line)
+{
+    std::string_view id = extractWord(line);
+
+    if (!id.starts_with('#'))
+        throw Exceptions::ServerException("invalid id from server: " + std::string(id));
+
+    id = id.substr(1);  // remove leading '#'
+
+    int idValue;
+    auto [ptr, errc] = std::from_chars(id.begin(), id.end(), idValue);
+    if (errc == std::errc())
+        return idValue;
+
+    throw Exceptions::ServerException("invalid id from server: " + std::string(id));
+}
+
+float Zappy::Networking::ResponseParser::extractOrientation(std::string_view& line)
+{
+    unsigned int orientation = extractInteger(line);
+
+    switch (orientation) {
+        case NORTH: return   0.f;
+        case WEST:  return  90.f;
+        case SOUTH: return 180.f;
+        case EAST:  return 270.f;
+        default: throw Exceptions::ServerException("invalid orientation from server: " + std::to_string(orientation));
+    }
+}
