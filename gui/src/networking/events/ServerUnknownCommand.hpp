@@ -3,7 +3,7 @@
 ** Project - Zappy
 ** File description:
 ** Header file for
-** ElapsedTimeRequent event struct
+** ServerUnknownCommand event struct
 */
 
 #pragma once
@@ -12,9 +12,7 @@
 namespace Zappy::Networking {
     /**
      * Related GUI protocol command:
-     * "sgt T\n"
+     * "suc\n"
      */
-    struct ElapsedTimeRequest {
-        unsigned int elapsedTime;
-    };
+    struct ServerUnknownCommand {};
 }

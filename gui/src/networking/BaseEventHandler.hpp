@@ -19,7 +19,6 @@ namespace Zappy::Networking {
             constexpr inline void operator()(const EggConnect& data) {}
             constexpr inline void operator()(const EggCreate& data) {}
             constexpr inline void operator()(const EggDie& data) {}
-            constexpr inline void operator()(const ElapsedTimeRequest& data) {}
             constexpr inline void operator()(const MapSize& data) {}
             constexpr inline void operator()(const NewPlayerConnect& data) {}
             constexpr inline void operator()(const PlayerBroadcast& data) {}
@@ -33,8 +32,13 @@ namespace Zappy::Networking {
             constexpr inline void operator()(const PlayerLayEgg& data) {}
             constexpr inline void operator()(const PlayerLevel& data) {}
             constexpr inline void operator()(const PlayerPosition& data) {}
+            constexpr inline void operator()(const ServerBadParameter& data) {}
+            constexpr inline void operator()(const ServerGameEnd& data) {}
+            constexpr inline void operator()(const ServerGetTime& data) {}
+            constexpr inline void operator()(const ServerMessage& data) {}
+            constexpr inline void operator()(const ServerSetTime& data) {}
+            constexpr inline void operator()(const ServerUnknownCommand& data) {}
             constexpr inline void operator()(const TeamName& data) {}
             constexpr inline void operator()(const TileContents& data) {}
-            constexpr inline void operator()(const UnknownCommand& data) {}
     };
 }

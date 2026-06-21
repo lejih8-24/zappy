@@ -14,7 +14,7 @@
 auto Zappy::Networking::ResponseParser::parse(std::string_view line) -> Event
 {
     if (line.empty())
-        return UnknownCommand();
+        return ServerUnknownCommand();
 
     switch (line[0]) {
         case 'b': return parseTileContents(line);
@@ -23,7 +23,7 @@ auto Zappy::Networking::ResponseParser::parse(std::string_view line) -> Event
         case 'p': return parsePlayerCommand(line);
         case 't': return parseTeamName(line);
         case 's': return parseServerCommand(line);
-        default:  return UnknownCommand();
+        default:  return ServerUnknownCommand();
     }
 }
 
@@ -31,14 +31,14 @@ auto Zappy::Networking::ResponseParser::parseEggCommand(std::string_view line) -
 {
     switch (line[1]) {
         // TODO: Implement
-        default: return UnknownCommand();
+        default: return ServerUnknownCommand();
     }
 }
 
 auto Zappy::Networking::ResponseParser::parsePlayerCommand(std::string_view line) -> Event
 {
     if (line.length() != 3)
-        return UnknownCommand();
+        return ServerUnknownCommand();
 
     switch (line[1]) {
         case 'b': return parsePlayerBroadcast(line);
@@ -51,13 +51,13 @@ auto Zappy::Networking::ResponseParser::parsePlayerCommand(std::string_view line
                 case 'c': return parsePlayerIncantationStart(line);
                 case 'e': return parsePlayerIncantationEnd(line);
                 case 'n': return parsePlayerInventory(line);
-                default:  return UnknownCommand();
+                default:  return ServerUnknownCommand();
             }
         }
         case 'l': return parsePlayerLevel(line);
         case 'n': return parseNewPlayerConnect(line);
         case 'p': return parsePlayerPosition(line);
-        default: return UnknownCommand();
+        default: return ServerUnknownCommand();
     }
 }
 
@@ -65,7 +65,7 @@ auto Zappy::Networking::ResponseParser::parseServerCommand(std::string_view line
 {
     switch (line[1]) {
         // TODO: Implement
-        default: return UnknownCommand();
+        default: return ServerUnknownCommand();
     }
 }
 

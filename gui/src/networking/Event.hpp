@@ -16,7 +16,6 @@ namespace Zappy::Networking {
     using Event = std::variant<EggConnect,
                                EggCreate,
                                EggDie,
-                               ElapsedTimeRequest,
                                MapSize,
                                NewPlayerConnect,
                                PlayerBroadcast,
@@ -30,7 +29,12 @@ namespace Zappy::Networking {
                                PlayerLayEgg,
                                PlayerLevel,
                                PlayerPosition,
+                               ServerBadParameter,
+                               ServerGameEnd,
+                               ServerGetTime,
+                               ServerMessage,
+                               ServerSetTime,
+                               ServerUnknownCommand,
                                TeamName,
-                               TileContents,
-                               UnknownCommand>;
+                               TileContents>;
 }

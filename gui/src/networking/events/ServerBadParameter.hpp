@@ -3,7 +3,7 @@
 ** Project - Zappy
 ** File description:
 ** Header file for
-** UnknownCommand event struct
+** ServerBadParameter event struct
 */
 
 #pragma once
@@ -12,7 +12,7 @@
 namespace Zappy::Networking {
     /**
      * Related GUI protocol command:
-     * "suc\n"
+     * "sbp\n"
      */
-    struct UnknownCommand {};
+    struct ServerBadParameter {};
 }
