@@ -20,9 +20,16 @@ namespace Zappy {
         public:
             Server(std::string_view ip, std::uint16_t port);
             Server(Server&& server);
-            ~Server();
+
+            inline void operator=(Server&& other) { swap(other); }
+            void swap(Server& other)
+            {
+                Lattice::Server<Client>::swap(other);
+            }
 
         private:
+            void onStart() override;
+            void onShutdown() override;
             void onClientAccepted(const Client& client) override;
             void onClientDisconnected(const Client& client) override;
             void updateClient(Client& client) override;

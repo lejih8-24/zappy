@@ -14,18 +14,23 @@
 Zappy::Server::Server(std::string_view ip, std::uint16_t port)
     : Lattice::Server<Client>(ip, port)
 {
-    std::clog << "starting server on " << ip << ":" << port << std::endl;
+
 }
 
 Zappy::Server::Server(Server&& other)
-    : Lattice::Server<Client>(other)
+    : Lattice::Server<Client>()
 {
-
+    swap(other);
 }
 
-Zappy::Server::~Server()
+void Zappy::Server::onStart()
 {
-    std::clog << "shutting down server..." << std::endl;
+    std::clog << "starting server on " << hostname() << ":" << port() << std::endl;
+}
+
+void Zappy::Server::onShutdown()
+{
+    std::clog << "server shutting down..." << std::endl;
 }
 
 void Zappy::Server::onClientAccepted(const Client& client)
@@ -92,8 +97,7 @@ auto Zappy::Server::Builder::setTeamNames(std::span<const char*> names) -> Build
 
 auto Zappy::Server::Builder::build() -> Server
 {
-    Server server(m_Hostname, m_Port);
-    return std::move(server);
+    return Server(m_Hostname, m_Port);
 }
 
 using std::string_literals::operator ""s;
