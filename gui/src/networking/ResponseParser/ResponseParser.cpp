@@ -150,7 +150,16 @@ auto Zappy::Networking::ResponseParser::parsePlayerBroadcast(std::string_view li
 
 auto Zappy::Networking::ResponseParser::parsePlayerCollectResource(std::string_view line) -> PlayerCollectResource
 {
+    std::string_view response = line;
 
+    std::string_view command = extractWord(response);
+    if (command != "pgt")
+        throw Exceptions::ServerException("invalid player collect resource response: '" + std::string(line) + "'");
+
+    return {
+        .playerId = extractId(response),
+        .resource = extractResourceType(response),
+    };
 }
 
 auto Zappy::Networking::ResponseParser::parsePlayerDie(std::string_view line) -> PlayerDie
@@ -338,6 +347,16 @@ unsigned int Zappy::Networking::ResponseParser::toInteger(std::string_view repr)
         return value;
 
     throw Exceptions::ServerException("invalid number from server: " + std::string(repr));
+}
+
+auto Zappy::Networking::ResponseParser::extractResourceType(std::string_view& line) -> Game::ResourceType
+{
+    unsigned int value = extractInteger(line);
+
+    if (value >= Game::Resources::RESOURCE_COUNT)
+        throw Exceptions::ServerException("invalid resource type from server: " + std::to_string(value));
+
+    return static_cast<Game::ResourceType>(value);
 }
 
 int Zappy::Networking::ResponseParser::extractId(std::string_view& line)

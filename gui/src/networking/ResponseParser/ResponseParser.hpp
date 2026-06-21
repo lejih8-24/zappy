@@ -53,6 +53,7 @@ namespace Zappy::Networking {
             static unsigned int toInteger(std::string_view repr);
 
             static inline unsigned int extractInteger(std::string_view& line) { return toInteger(extractWord(line)); }
+            static Game::ResourceType extractResourceType(std::string_view& line);
             static int extractId(std::string_view& line);
             static Game::Resources extractResources(std::string_view& line);
             static float extractOrientation(std::string_view& line);
