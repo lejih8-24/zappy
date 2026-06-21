@@ -13,7 +13,7 @@
 
 auto Zappy::Networking::ResponseParser::parse(std::string_view line) -> Event
 {
-    if (line.empty())
+    if (line.length() != 3)
         return ServerUnknownCommand();
 
     switch (line[0]) {
@@ -30,22 +30,25 @@ auto Zappy::Networking::ResponseParser::parse(std::string_view line) -> Event
 auto Zappy::Networking::ResponseParser::parseEggCommand(std::string_view line) -> Event
 {
     switch (line[1]) {
-        // TODO: Implement
+        case 'b': return parseEggConnect(line);
+        case 'd': return parseEggDie(line);
+        case 'n': return parseEggCreate(line);
         default: return ServerUnknownCommand();
     }
 }
 
 auto Zappy::Networking::ResponseParser::parsePlayerCommand(std::string_view line) -> Event
 {
-    if (line.length() != 3)
-        return ServerUnknownCommand();
-
     switch (line[1]) {
         case 'b': return parsePlayerBroadcast(line);
-        case 'd': // TODO
+        case 'd': switch (line[2]) {
+            case 'r': return parsePlayerDropResource(line);
+            case 'i': return parsePlayerDie(line);
+            default: return ServerUnknownCommand();
+        }
         case 'e': return parsePlayerExpulsion(line);
-        case 'f': // TODO
-        case 'g': // TODO
+        case 'f': return parsePlayerLayEgg(line);
+        case 'g': return parsePlayerCollectResource(line);
         case 'i': {
             switch (line[2]) {
                 case 'c': return parsePlayerIncantationStart(line);
@@ -64,7 +67,11 @@ auto Zappy::Networking::ResponseParser::parsePlayerCommand(std::string_view line
 auto Zappy::Networking::ResponseParser::parseServerCommand(std::string_view line) -> Event
 {
     switch (line[1]) {
-        // TODO: Implement
+        case 'b': if (line == "sbp") return ServerBadParameter(); else return ServerUnknownCommand();
+        case 'e': return parseServerGameEnd(line);
+        case 'g': return parseServerGetTime(line);
+        case 'm': return parseServerMessage(line);
+        case 's': return parseServerSetTime(line);
         default: return ServerUnknownCommand();
     }
 }
@@ -127,34 +134,83 @@ auto Zappy::Networking::ResponseParser::parseNewPlayerConnect(std::string_view l
     };
 }
 
-auto Zappy::Networking::ResponseParser::parsePlayerPosition(std::string_view line) -> PlayerPosition
+auto Zappy::Networking::ResponseParser::parsePlayerBroadcast(std::string_view line) -> PlayerBroadcast
 {
     std::string_view response = line;
 
     std::string_view command = extractWord(response);
-    if (command != "ppo")
-        throw Exceptions::ServerException("invalid player position response: '" + std::string(line) + "'");
+    if (command != "pbc")
+        throw Exceptions::ServerException("invalid player inventory response: '" + std::string(line) + "'");
 
     return {
-        .id          = extractId(response),
-        .x           = extractInteger(response),
-        .y           = extractInteger(response),
-        .rotationDeg = extractOrientation(response),
+        .id      = extractId(response),
+        .message = std::string(response),
     };
 }
 
-auto Zappy::Networking::ResponseParser::parsePlayerLevel(std::string_view line) -> PlayerLevel
+auto Zappy::Networking::ResponseParser::parsePlayerCollectResource(std::string_view line) -> PlayerCollectResource
+{
+
+}
+
+auto Zappy::Networking::ResponseParser::parsePlayerDie(std::string_view line) -> PlayerDie
+{
+
+}
+
+auto Zappy::Networking::ResponseParser::parsePlayerDropResource(std::string_view line) -> PlayerDropResource
+{
+
+}
+
+auto Zappy::Networking::ResponseParser::parsePlayerExpulsion(std::string_view line) -> PlayerExpulsion
 {
     std::string_view response = line;
 
     std::string_view command = extractWord(response);
-    if (command != "plv")
-        throw Exceptions::ServerException("invalid player level response: '" + std::string(line) + "'");
+    if (command != "pex")
+        throw Exceptions::ServerException("invalid player expulsion response: '" + std::string(line) + "'");
 
     return {
-        .id    = extractId(response),
-        .level = extractInteger(response),
+        .id = extractId(response),
     };
+}
+
+auto Zappy::Networking::ResponseParser::parsePlayerIncantationEnd(std::string_view line) -> PlayerIncantationEnd
+{
+    std::string_view response = line;
+
+    std::string_view command = extractWord(response);
+    if (command != "pie")
+        throw Exceptions::ServerException("invalid player incantation end response: '" + std::string(line) + "'");
+
+    return {
+        .x      = extractInteger(response),
+        .y      = extractInteger(response),
+        .result = std::string(response),
+    };
+}
+
+auto Zappy::Networking::ResponseParser::parsePlayerIncantationStart(std::string_view line) -> PlayerIncantationStart
+{
+    std::string_view response = line;
+
+    std::string_view command = extractWord(response);
+    if (command != "pic")
+        throw Exceptions::ServerException("invalid player incantation start response: '" + std::string(line) + "'");
+
+    PlayerIncantationStart result = {
+        .x         = extractInteger(response),
+        .y         = extractInteger(response),
+        .level     = extractInteger(response),
+        .playerIds = {},
+    };
+
+    while (response.starts_with('#')) {
+        result.playerIds.push_back(extractId(response));
+    }
+
+    return result;
 }
 
 auto Zappy::Networking::ResponseParser::parsePlayerInventory(std::string_view line) -> PlayerInventory
@@ -173,69 +229,82 @@ auto Zappy::Networking::ResponseParser::parsePlayerInventory(std::string_view li
     };
 }
 
-auto Zappy::Networking::ResponseParser::parsePlayerBroadcast(std::string_view line) -> PlayerBroadcast
+auto Zappy::Networking::ResponseParser::parsePlayerLayEgg(std::string_view line) -> PlayerLayEgg
+{
+
+}
+
+auto Zappy::Networking::ResponseParser::parsePlayerLevel(std::string_view line) -> PlayerLevel
 {
     std::string_view response = line;
 
     std::string_view command = extractWord(response);
-    if (command != "pbc")
-        throw Exceptions::ServerException("invalid player inventory response: '" + std::string(line) + "'");
+    if (command != "plv")
+        throw Exceptions::ServerException("invalid player level response: '" + std::string(line) + "'");
 
     return {
-        .id      = extractId(response),
-        .message = std::string(response),
+        .id    = extractId(response),
+        .level = extractInteger(response),
     };
 }
 
-auto Zappy::Networking::ResponseParser::parsePlayerExpulsion(std::string_view line) -> PlayerExpulsion
+auto Zappy::Networking::ResponseParser::parsePlayerPosition(std::string_view line) -> PlayerPosition
 {
     std::string_view response = line;
 
     std::string_view command = extractWord(response);
-    if (command != "pbc")
-        throw Exceptions::ServerException("invalid player inventory response: '" + std::string(line) + "'");
+    if (command != "ppo")
+        throw Exceptions::ServerException("invalid player position response: '" + std::string(line) + "'");
 
     return {
-        .id = extractId(response),
+        .id          = extractId(response),
+        .x           = extractInteger(response),
+        .y           = extractInteger(response),
+        .rotationDeg = extractOrientation(response),
     };
 }
 
-auto Zappy::Networking::ResponseParser::parsePlayerIncantationStart(std::string_view line) -> PlayerIncantationStart
+auto Zappy::Networking::ResponseParser::parseEggConnect(std::string_view line) -> EggConnect
 {
-    std::string_view response = line;
 
-    std::string_view command = extractWord(response);
-    if (command != "pbc")
-        throw Exceptions::ServerException("invalid player inventory response: '" + std::string(line) + "'");
-
-    PlayerIncantationStart result = {
-        .x         = extractInteger(response),
-        .y         = extractInteger(response),
-        .level     = extractInteger(response),
-        .playerIds = {},
-    };
-
-    while (response.starts_with('#')) {
-        result.playerIds.push_back(extractId(response));
-    }
-
-    return result;
 }
 
-auto Zappy::Networking::ResponseParser::parsePlayerIncantationEnd(std::string_view line) -> PlayerIncantationEnd
+auto Zappy::Networking::ResponseParser::parseEggCreate(std::string_view line) -> EggCreate
 {
-    std::string_view response = line;
 
-    std::string_view command = extractWord(response);
-    if (command != "pbc")
-        throw Exceptions::ServerException("invalid player inventory response: '" + std::string(line) + "'");
-
-    return {
-        .x      = extractInteger(response),
-        .y      = extractInteger(response),
-        .result = std::string(response),
-    };
 }
+
+auto Zappy::Networking::ResponseParser::parseEggDie(std::string_view line) -> EggDie
+{
+
+}
+
+auto Zappy::Networking::ResponseParser::parseServerGameEnd(std::string_view line) -> ServerGameEnd
+{
+
+}
+
+auto Zappy::Networking::ResponseParser::parseServerGetTime(std::string_view line) -> ServerGetTime
+{
+
+}
+
+auto Zappy::Networking::ResponseParser::parseServerMessage(std::string_view line) -> ServerMessage
+{
+
+}
+
+auto Zappy::Networking::ResponseParser::parseServerSetTime(std::string_view line) -> ServerSetTime
+{
+
+}
+
+
+/////////////////////////////////////////////////////////
+//                                                     //
+//                  Parsing Utilities                  //
+//                                                     //
+/////////////////////////////////////////////////////////
 
 std::pair<std::string_view, std::string_view> Zappy::Networking::ResponseParser::splitWord(std::string_view line)
 {
