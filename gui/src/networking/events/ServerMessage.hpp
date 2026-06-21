@@ -17,6 +17,6 @@ namespace Zappy::Networking {
      * "smg N\n"
      */
     struct ServerMessage {
-        std::string winnerTeam;
+        std::string message;
     };
 }
