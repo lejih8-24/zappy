@@ -14,6 +14,8 @@
 
 namespace Zappy::Networking {
     class ResponseParser {
+        static constexpr std::size_t COMMAND_LENGTH = 3;
+
         public:
             static Event parse(std::string_view response);
 

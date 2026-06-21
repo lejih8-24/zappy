@@ -13,7 +13,7 @@
 
 auto Zappy::Networking::ResponseParser::parse(std::string_view line) -> Event
 {
-    if (line.length() != 3)
+    if (line.find(' ') != COMMAND_LENGTH)
         return ServerUnknownCommand();
 
     switch (line[0]) {

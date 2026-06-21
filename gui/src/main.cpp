@@ -70,13 +70,12 @@ int main(int argc, char *argv[])
 
         std::vector<std::string> teams;
         client.teamNames(teams);
-        for (const auto& name : teams) {
-            std::cout << "team: " << std::quoted(name) << std::endl;
-        }
 
         auto event = client.pollEvent();
         while (event) {
-            std::visit(EventHandler(), *event);
+            std::visit([](auto& value) {
+                std::cout << typeid(value).name() << std::endl;
+            }, *event);
             event = client.pollEvent();
         }
 
