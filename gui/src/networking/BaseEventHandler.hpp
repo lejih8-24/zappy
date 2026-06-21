@@ -20,10 +20,14 @@ namespace Zappy::Networking {
             constexpr inline void operator()(const MapSize& data) {}
             constexpr inline void operator()(const NewPlayerConnect& data) {}
             constexpr inline void operator()(const PlayerBroadcast& data) {}
+            constexpr inline void operator()(const PlayerCollectResource& data) {}
+            constexpr inline void operator()(const PlayerDie& data) {}
+            constexpr inline void operator()(const PlayerDropResource& data) {}
             constexpr inline void operator()(const PlayerExpulsion& data) {}
             constexpr inline void operator()(const PlayerIncantationEnd& data) {}
             constexpr inline void operator()(const PlayerIncantationStart& data) {}
             constexpr inline void operator()(const PlayerInventory& data) {}
+            constexpr inline void operator()(const PlayerLayEgg& data) {}
             constexpr inline void operator()(const PlayerLevel& data) {}
             constexpr inline void operator()(const PlayerPosition& data) {}
             constexpr inline void operator()(const TeamName& data) {}
