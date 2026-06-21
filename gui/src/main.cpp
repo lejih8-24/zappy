@@ -18,26 +18,43 @@
 #include <iostream>
 
 
-namespace {
+// namespace {
 
-//? Fonction temporaire où on peut hardcoder le GameState pour pouvoir tester et développer le render
-//? Plus tard, on pourra créer directement le GameState par rapport à ce que nous enverra le serv
-GUI::GameState createDemoState()
-{
-    GUI::GameState state(10, 10, 100);
-    GUI::ResourceStock resources = {};
+// //? Fonction temporaire où on peut hardcoder le GameState pour pouvoir tester et développer le render
+// //? Plus tard, on pourra créer directement le GameState par rapport à ce que nous enverra le serv
+// GUI::GameState createDemoState()
+// {
+//     GUI::GameState state(10, 10, 100);
+//     GUI::ResourceStock resources = {};
 
-    resources[static_cast<std::size_t>(GUI::Resource::Food)] = 3;
-    resources[static_cast<std::size_t>(GUI::Resource::Linemate)] = 1;
-    state.tiles.emplace_back(4, 2, resources);
-    state.tiles.emplace_back(7, 7, resources);
-    state.players.emplace(1, GUI::Player(1, 4, 2, 1, "TeamA"));
-    state.eggs.emplace(1, GUI::Egg(1, 1, 6, 5));
-    state.teams.emplace_back("TeamA");
-    return state;
-}
+//     resources[static_cast<std::size_t>(GUI::Resource::Food)] = 3;
+//     resources[static_cast<std::size_t>(GUI::Resource::Linemate)] = 1;
+//     state.tiles.emplace_back(4, 2, resources);
+//     state.tiles.emplace_back(7, 7, resources);
+//     state.players.emplace(1, GUI::Player(1, 4, 2, 1, "TeamA"));
+//     state.eggs.emplace(1, GUI::Egg(1, 1, 6, 5));
+//     state.teams.emplace_back("TeamA");
+//     return state;
+// }
 
-}
+// }
+
+// int main(int argc, char **argv)
+// {
+//     try {
+//         const GUI::GuiArgs args = GUI::GuiArgs::parseArgs(argc, argv);
+//         GUI::GameState state = createDemoState();
+//         GUI::Render render(args.getHost(), args.getPort(), state);
+
+//         args.connect();
+//         render.renderLoop();
+//         return 0;
+//     } catch (const Zappy::Exceptions::ArgsException &error) {
+//         std::cerr << "zappy_gui: " << error.what() << '\n';
+//         GUI::GuiArgs::printUsage(std::cerr);
+//         return 84;
+//     }
+// }
 
 class EventHandler : public Zappy::Networking::BaseEventHandler {
     public:
@@ -54,7 +71,6 @@ class EventHandler : public Zappy::Networking::BaseEventHandler {
         }
 };
 
-#include <iomanip>
 int main(int argc, char *argv[])
 {
     #ifdef NDEBUG
@@ -63,21 +79,29 @@ int main(int argc, char *argv[])
 
     try {
         const GUI::GuiArgs args = GUI::GuiArgs::parseArgs(argc, argv);
-        GUI::GameState state = createDemoState();
-        GUI::Render render(args.getHost(), args.getPort(), state);
+        GUI::GameState state;
 
-        Zappy::Networking::GraphicsClient client("127.0.0.1", 5000);
+        Zappy::Networking::GraphicsClient client(args.getHost(), args.getPort());
 
-        std::vector<std::string> teams;
-        client.teamNames(teams);
-
-        auto event = client.pollEvent();
-        while (event) {
-            std::visit([](auto& value) {
-                std::cout << typeid(value).name() << std::endl;
-            }, *event);
-            event = client.pollEvent();
+        if (!client.isConnected()) {
+            std::cerr << argv[0] << ": failed to connect to server\n";
+            return 84;
         }
+
+        // Note: the lines below are debug lines
+        // that allow you to test if
+        // std::vector<std::string> teams;
+        // client.teamNames(teams);
+
+        // auto event = client.pollEvent();
+        // while (event) {
+        //     std::visit([](auto& value) {
+        //         std::cout << typeid(value).name() << std::endl;
+        //     }, *event);
+        //     event = client.pollEvent();
+        // }
+
+        GUI::Render render(args.getHost(), args.getPort(), state);
 
         render.renderLoop();
     } catch (const Zappy::Exceptions::ArgsException &error) {
