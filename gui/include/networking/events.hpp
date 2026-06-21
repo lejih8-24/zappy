@@ -8,6 +8,9 @@
 
 #pragma once
 
+#include "../../src/networking/events/EggConnect.hpp"
+#include "../../src/networking/events/EggCreate.hpp"
+#include "../../src/networking/events/EggDie.hpp"
 #include "../../src/networking/events/ElapsedTimeRequest.hpp"
 #include "../../src/networking/events/MapSize.hpp"
 #include "../../src/networking/events/NewPlayerConnect.hpp"

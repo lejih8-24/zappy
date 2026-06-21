@@ -16,6 +16,9 @@ namespace Zappy::Networking {
         public:
             constexpr BaseEventHandler() noexcept = default;
 
+            constexpr inline void operator()(const EggConnect& data) {}
+            constexpr inline void operator()(const EggCreate& data) {}
+            constexpr inline void operator()(const EggDie& data) {}
             constexpr inline void operator()(const ElapsedTimeRequest& data) {}
             constexpr inline void operator()(const MapSize& data) {}
             constexpr inline void operator()(const NewPlayerConnect& data) {}

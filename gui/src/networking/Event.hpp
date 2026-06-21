@@ -13,7 +13,10 @@
 
 
 namespace Zappy::Networking {
-    using Event = std::variant<ElapsedTimeRequest,
+    using Event = std::variant<EggConnect,
+                               EggCreate,
+                               EggDie,
+                               ElapsedTimeRequest,
                                MapSize,
                                NewPlayerConnect,
                                PlayerBroadcast,
