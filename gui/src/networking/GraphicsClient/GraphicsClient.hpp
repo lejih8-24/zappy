@@ -43,7 +43,7 @@ namespace Zappy::Networking {
             Game::Resources playerInventory(int playerId);
 
             unsigned int getTime();
-            void setTime(unsigned int units);
+            bool setTime(unsigned int units);
 
             std::optional<Event> pollEvent();
 

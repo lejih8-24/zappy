@@ -124,17 +124,20 @@ auto Zappy::Networking::GraphicsClient::playerInventory(int playerId) -> Game::R
 
 unsigned int Zappy::Networking::GraphicsClient::getTime()
 {
-    // send("sgt\n");
+    send("sgt\n");
 
-    // std::string_view response = getResponse("sgt");
-    // auto server = ResponseParser::parseElapsedTimeRequest(response);
-    // return server.elapsed_time;
-    return 0;
+    std::string_view response = getResponse("sgt");
+    auto server = ResponseParser::parseServerGetTime(response);
+    return server.time;
 }
 
-void Zappy::Networking::GraphicsClient::setTime(unsigned int units)
+bool Zappy::Networking::GraphicsClient::setTime(unsigned int time)
 {
-    return;
+    send("sst " + std::to_string(time) + "\n");
+
+    std::string_view response = getResponse("sst");
+    auto server = ResponseParser::parseServerSetTime(response);
+    return time == server.time;
 }
 
 auto Zappy::Networking::GraphicsClient::pollEvent() -> std::optional<Event>
