@@ -164,12 +164,29 @@ auto Zappy::Networking::ResponseParser::parsePlayerCollectResource(std::string_v
 
 auto Zappy::Networking::ResponseParser::parsePlayerDie(std::string_view line) -> PlayerDie
 {
+    std::string_view response = line;
 
+    std::string_view command = extractWord(response);
+    if (command != "pdi")
+        throw Exceptions::ServerException("invalid player die response: '" + std::string(line) + "'");
+
+    return {
+        .playerId = extractId(response),
+    };
 }
 
 auto Zappy::Networking::ResponseParser::parsePlayerDropResource(std::string_view line) -> PlayerDropResource
 {
+    std::string_view response = line;
 
+    std::string_view command = extractWord(response);
+    if (command != "pdr")
+        throw Exceptions::ServerException("invalid player drop resource response: '" + std::string(line) + "'");
+
+    return {
+        .playerId = extractId(response),
+        .resource = extractResourceType(response),
+    };
 }
 
 auto Zappy::Networking::ResponseParser::parsePlayerExpulsion(std::string_view line) -> PlayerExpulsion
@@ -240,7 +257,15 @@ auto Zappy::Networking::ResponseParser::parsePlayerInventory(std::string_view li
 
 auto Zappy::Networking::ResponseParser::parsePlayerLayEgg(std::string_view line) -> PlayerLayEgg
 {
+    std::string_view response = line;
 
+    std::string_view command = extractWord(response);
+    if (command != "pfk")
+        throw Exceptions::ServerException("invalid player lay egg response: '" + std::string(line) + "'");
+
+    return {
+        .playerId = extractId(response),
+    };
 }
 
 auto Zappy::Networking::ResponseParser::parsePlayerLevel(std::string_view line) -> PlayerLevel
@@ -275,37 +300,96 @@ auto Zappy::Networking::ResponseParser::parsePlayerPosition(std::string_view lin
 
 auto Zappy::Networking::ResponseParser::parseEggConnect(std::string_view line) -> EggConnect
 {
+    std::string_view response = line;
 
+    std::string_view command = extractWord(response);
+    if (command != "ebo")
+        throw Exceptions::ServerException("invalid egg connection response: '" + std::string(line) + "'");
+
+    return {
+        .eggId = extractId(response),
+    };
 }
 
 auto Zappy::Networking::ResponseParser::parseEggCreate(std::string_view line) -> EggCreate
 {
+    std::string_view response = line;
 
+    std::string_view command = extractWord(response);
+    if (command != "enw")
+        throw Exceptions::ServerException("invalid egg create response: '" + std::string(line) + "'");
+
+    return {
+        .eggId    = extractId(response),
+        .playerId = extractId(response),
+        .x        = extractInteger(response),
+        .y        = extractInteger(response),
+    };
 }
 
 auto Zappy::Networking::ResponseParser::parseEggDie(std::string_view line) -> EggDie
 {
+    std::string_view response = line;
 
+    std::string_view command = extractWord(response);
+    if (command != "edi")
+        throw Exceptions::ServerException("invalid egg die response: '" + std::string(line) + "'");
+
+    return {
+        .eggId = extractId(response),
+    };
 }
 
 auto Zappy::Networking::ResponseParser::parseServerGameEnd(std::string_view line) -> ServerGameEnd
 {
+    std::string_view response = line;
 
+    std::string_view command = extractWord(response);
+    if (command != "seg")
+        throw Exceptions::ServerException("invalid server game end response: '" + std::string(line) + "'");
+
+    return {
+        .winnerTeam = std::string(response),
+    };
 }
 
 auto Zappy::Networking::ResponseParser::parseServerGetTime(std::string_view line) -> ServerGetTime
 {
+    std::string_view response = line;
 
+    std::string_view command = extractWord(response);
+    if (command != "sgt")
+        throw Exceptions::ServerException("invalid server get time response: '" + std::string(line) + "'");
+
+    return {
+        .time = extractInteger(response),
+    };
 }
 
 auto Zappy::Networking::ResponseParser::parseServerMessage(std::string_view line) -> ServerMessage
 {
+    std::string_view response = line;
 
+    std::string_view command = extractWord(response);
+    if (command != "smg")
+        throw Exceptions::ServerException("invalid server message response: '" + std::string(line) + "'");
+
+    return {
+        .message = std::string(response),
+    };
 }
 
 auto Zappy::Networking::ResponseParser::parseServerSetTime(std::string_view line) -> ServerSetTime
 {
+    std::string_view response = line;
 
+    std::string_view command = extractWord(response);
+    if (command != "sst")
+        throw Exceptions::ServerException("invalid server set time response: '" + std::string(line) + "'");
+
+    return {
+        .time = extractInteger(line),
+    };
 }
 
 
