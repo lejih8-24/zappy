@@ -40,9 +40,9 @@ void Map::draw(const GameState &state) const
 
     // Draw one marker on tiles that contain at least one resource.
     for (const Tile &tile : state.tiles) {
-        int resourceCount = 0;
+        unsigned int resourceCount = 0;
 
-        for (int quantity : tile.resources)
+        for (unsigned int quantity : tile.resources)
             resourceCount += quantity;
         if (resourceCount > 0) {
             Vector3 pos = getTilePosition(tile.x, tile.y, state, 0.35f);

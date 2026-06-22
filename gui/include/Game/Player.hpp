@@ -8,7 +8,7 @@
 #pragma once
 
 #include "Game/Entity.hpp"
-#include "Game/Resource.hpp"
+#include <game.hpp>
 
 #include <string>
 
@@ -41,7 +41,7 @@ class Player : public Entity {
         Orientation orientation;
         std::size_t level = 1;
         std::string teamName;
-        ResourceStock inventory = {};
+        Zappy::Game::Resources inventory = {};
         bool alive = true;
         bool isBroadcasting = false;
         bool isIncantating = false;

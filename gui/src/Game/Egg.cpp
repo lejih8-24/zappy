@@ -11,7 +11,7 @@ namespace GUI {
 
 Egg::Egg(int id, int parentId, int x, int y)
     : Entity(id, x, y)
-    , parentPlayerId(parentPlayerId)
+    , parentPlayerId(parentId)
 {
 }
 

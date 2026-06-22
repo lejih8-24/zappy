@@ -17,6 +17,7 @@ add_executable(zappy_gui
                src/Game/Egg.cpp
                src/Game/Entity.cpp
                src/Game/GameState.cpp
+               src/Game/GameStateEventHandler.cpp
                src/Game/Incantation.cpp
                src/Game/Player.cpp
                src/Game/ServerMessage.cpp

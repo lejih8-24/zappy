@@ -8,7 +8,7 @@
 #pragma once
 
 #include "Game/Entity.hpp"
-#include "Game/Resource.hpp"
+#include <game.hpp>
 
 #include <vector>
 
@@ -20,14 +20,14 @@ namespace GUI {
 */
 class Tile : public Position {
     public:
-        ResourceStock resources = {};
+        Zappy::Game::Resources resources = {};
         //* TODO: voir si ça serait pas mieux d'avoir des références aux objets??
         std::vector<int> playerIds;
         std::vector<int> eggIds;
         std::vector<int> incantationIds;
 
     public:
-        Tile(int x = 0, int y = 0, const ResourceStock &resources = {});
+        Tile(int x = 0, int y = 0, const Zappy::Game::Resources &resources = {});
         ~Tile() = default;
 };
 

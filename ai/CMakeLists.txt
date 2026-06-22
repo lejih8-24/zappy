@@ -10,8 +10,8 @@ cmake_minimum_required(VERSION 3.15)
 set(AI_ENTRY
 "\"#!/usr/bin/env" "python3\\n"
 "\\nimport" "sys\\n"
-"\\nsys.path.append(\\\"${CMAKE_SOURCE_DIR}\\\")\\n"
-"\\nimport" "ai.main" "as" "ai\\n"
+"\\nsys.path.append(\\\"${CMAKE_SOURCE_DIR}/ai\\\")\\n"
+"\\nimport" "main" "as" "ai\\n"
 "\\ndef" "main()" "->" "None:\\n\\tai.main()\\n"
 "\\nif" "__name__" "==" "'__main__':"
 "\\n\\tmain()\\n\""

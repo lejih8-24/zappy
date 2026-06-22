@@ -14,12 +14,16 @@
 
 #include <string_view>
 
+namespace Zappy::Networking {
+    class GraphicsClient;
+}
+
 namespace GUI {
 
 class Render {
     public:
         Render(std::string_view host, int port, GameState &state);
-        void renderLoop();
+        void renderLoop(Zappy::Networking::GraphicsClient &client);
 
     private:
         GameState &_state;

@@ -35,7 +35,7 @@ class GameState {
         std::size_t mapHeight = 0;
         int timeUnit = 0;
         bool gameEnded = false;
-        std::string_view winningTeam;
+        std::string winningTeam;
 
         std::vector<Tile> tiles;
         std::unordered_map<int, Player> players;
