@@ -50,6 +50,7 @@ void Zappy::Server::updateClient(Client& client)
     if (!client.readUntil(input, '\n'))
         return;
 
+    input.erase(input.rfind('\n'));
     std::clog << std::string(client) << ": " << input << std::endl;
 }
 
