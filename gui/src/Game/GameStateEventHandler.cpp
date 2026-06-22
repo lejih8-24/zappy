@@ -10,18 +10,6 @@
 #include <algorithm>
 #include <utility>
 
-// retirer enum d'orientation pcq raylib gère déjà les degrés d'orientation?
-static GUI::Orientation toOrientation(float rotation)
-{
-    if (rotation == 90.0F)
-        return GUI::Orientation::West;
-    if (rotation == 180.0F)
-        return GUI::Orientation::South;
-    if (rotation == 270.0F)
-        return GUI::Orientation::East;
-    return GUI::Orientation::North;
-}
-
 static GUI::Tile &getTile(GUI::GameState &state, int x, int y)
 {
     auto tile = std::find_if(state.tiles.begin(), state.tiles.end(), [x, y](const GUI::Tile &value) {
@@ -65,7 +53,7 @@ void GameStateEventHandler::operator()(const Zappy::Networking::NewPlayerConnect
 {
     Player player(event.id, event.x, event.y, event.level, event.teamName);
 
-    player.orientation = toOrientation(event.rotationDeg);
+    player.rotationDeg = event.rotationDeg;
     _state.players.insert_or_assign(event.id, std::move(player));
 }
 
@@ -77,7 +65,7 @@ void GameStateEventHandler::operator()(const Zappy::Networking::PlayerPosition &
         return;
     player->second.x = event.x;
     player->second.y = event.y;
-    player->second.orientation = toOrientation(event.rotationDeg);
+    player->second.rotationDeg = event.rotationDeg;
 }
 
 void GameStateEventHandler::operator()(const Zappy::Networking::PlayerLevel &event)
