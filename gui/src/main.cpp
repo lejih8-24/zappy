@@ -9,10 +9,14 @@
 #include "Game/GameState.hpp"
 #include "Render.hpp"
 #include "exceptions/ArgsException.hpp"
-#include "Network/NetworkClient.hpp"
-#include "Protocol/Parser.hpp"
-
+#include "game/Resources/Resources.hpp"
+#include <networking.hpp>
+#include "networking/BaseEventHandler.hpp"
+#include "networking/events/TileContents.hpp"
+#include "raylib.h"
+#include <game.hpp>
 #include <iostream>
+
 
 // namespace {
 
@@ -52,36 +56,62 @@
 //     }
 // }
 
-int main(int argc, char **argv)
+class EventHandler : public Zappy::Networking::BaseEventHandler {
+    public:
+        using Zappy::Networking::BaseEventHandler::BaseEventHandler;
+        using Zappy::Networking::BaseEventHandler::operator();
+
+        void operator()(const Zappy::Networking::TileContents& tile)
+        {
+            std::cout << "tile["
+                      << tile.x << ", "
+                      << tile.y << "]: "
+                      << tile.resources
+                      << std::endl;
+        }
+};
+
+int main(int argc, char *argv[])
 {
+    #ifdef NDEBUG
+    ::SetTraceLogLevel(LOG_NONE);
+    #endif
+
     try {
         const GUI::GuiArgs args = GUI::GuiArgs::parseArgs(argc, argv);
         GUI::GameState state;
 
-        GUI::NetworkClient network(args.getHost(), args.getPort());
-        if (!network.connect()) {
-            std::cerr << "zappy_gui: failed to connect to server\n";
+        Zappy::Networking::GraphicsClient client(args.getHost(), args.getPort());
+
+        if (!client.isConnected()) {
+            std::cerr << argv[0] << ": failed to connect to server\n";
             return 84;
         }
 
-        std::string welcome = network.readLine();
-        std::cout << "Server: " << welcome << "\n";
+        // Note: the lines below are debug lines
+        // that allow you to test if
+        // std::vector<std::string> teams;
+        // client.teamNames(teams);
 
-        network.sendMessage("GRAPHIC\n");
-        std::cout << "Sent: GRAPHIC\n";
-
-        GUI::Parser parser(state);
-        std::string line;
-        while (!(line = network.readLine()).empty()) {
-            parser.parseLine(line);
-        }
+        // auto event = client.pollEvent();
+        // while (event) {
+        //     std::visit([](auto& value) {
+        //         std::cout << typeid(value).name() << std::endl;
+        //     }, *event);
+        //     event = client.pollEvent();
+        // }
 
         GUI::Render render(args.getHost(), args.getPort(), state);
+
         render.renderLoop();
-        return 0;
     } catch (const Zappy::Exceptions::ArgsException &error) {
-        std::cerr << "zappy_gui: " << error.what() << "\n";
+        std::cerr << argv[0] << ": " << error.what() << '\n';
         GUI::GuiArgs::printUsage(std::cerr);
+        return 84;
+    } catch (const std::exception& error) {
+        std::cerr << error.what() << std::endl;
+        return 84;
+    } catch (...) {
         return 84;
     }
 }
