@@ -22,7 +22,6 @@ int main(int argc, char *argv[])
 
     try {
         const GUI::GuiArgs args = GUI::GuiArgs::parseArgs(argc, argv);
-        GUI::GameState state;
 
         Zappy::Networking::GraphicsClient client(args.getHost(), args.getPort());
 
@@ -31,7 +30,7 @@ int main(int argc, char *argv[])
             return 84;
         }
 
-        GUI::Render render(args.getHost(), args.getPort(), state);
+        GUI::Render render(args.getHost(), args.getPort());
 
         render.renderLoop(client);
     } catch (const Zappy::Exceptions::ArgsException &error) {

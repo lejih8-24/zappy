@@ -22,11 +22,11 @@ namespace GUI {
 
 class Render {
     public:
-        Render(std::string_view host, int port, GameState &state);
+        Render(std::string_view host, int port);
         void renderLoop(Zappy::Networking::GraphicsClient &client);
 
     private:
-        GameState &_state;
+        GameState _state;
         Window _window;
         Map _map;
         GameCamera _camera;

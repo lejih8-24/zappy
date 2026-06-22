@@ -16,8 +16,8 @@
 
 namespace GUI {
 
-Render::Render(std::string_view host, int port, GameState &state)
-    : _state(state)
+Render::Render(std::string_view host, int port)
+    : _state()
     , _window(1280, 720,
           std::string("Zappy GUI - ").append(host).append(":").append(std::to_string(port)), 60)
     , _map()
