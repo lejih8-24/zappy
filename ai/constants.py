@@ -13,6 +13,7 @@ class State(Enum):
     SURVIVAL = 3
     WAITING_ELEVATION = 4
     CONTRIBUTING = 5
+    FORKING = 6
 
 ELEVATION_RULES = {
     1: {"players": 1, "stones": {"linemate": 1, "deraumere": 0, "sibur": 0, "mendiane": 0, "phiras": 0, "thystame": 0}},
