@@ -28,8 +28,6 @@ Render::Render(std::string_view host, int port, GameState &state)
 void Render::renderLoop(Zappy::Networking::GraphicsClient &client)
 {
     GameStateEventHandler handler(_state);
-    // May delete
-    // double lastMove = GetTime();
 
     while (!_window.shouldClose()) {
         while (auto event = client.pollEvent())
@@ -37,14 +35,6 @@ void Render::renderLoop(Zappy::Networking::GraphicsClient &client)
         if (IsKeyPressed(KEY_F11))
             _window.toggleFullscreen();
 
-        // May delete
-        // if (GetTime() - lastMove >= 1.0) {
-        //     if (!_state.players.empty()) {
-        //         auto &player = _state.players.begin()->second;
-        //         player.x = (player.x + 1) % static_cast<int>(_state.mapWidth);
-        //     }
-        //     lastMove = GetTime();
-        // }
         _camera.update();
 
         _window.beginFrame();
