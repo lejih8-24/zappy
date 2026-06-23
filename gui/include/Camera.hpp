@@ -26,6 +26,9 @@ class GameCamera {
         // Reset to initial position/target
         void reset();
 
+        // Returns true when cursor is captured (camera actively controlled)
+        bool isCursorLocked() const;
+
         // Access underlying raylib camera if needed
         const Camera3D &get() const { return _camera; }
 

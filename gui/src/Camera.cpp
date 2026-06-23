@@ -24,10 +24,14 @@ GameCamera::GameCamera(Vector3 position, Vector3 target, float fovy)
 
 void GameCamera::update()
 {
-    // CAMERA_FREE: WASD move, mouse right-drag rotate, scroll zoom
-    ::UpdateCamera(&_camera, CAMERA_FREE);
+    if (::IsKeyPressed(KEY_ESCAPE) && ::IsCursorHidden())
+        ::EnableCursor();
+    else if (::IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !::IsCursorHidden())
+        ::DisableCursor();
 
-    // Reset on R
+    if (::IsCursorHidden())
+        ::UpdateCamera(&_camera, CAMERA_FREE);
+
     if (::IsKeyPressed(KEY_R))
         reset();
 }
@@ -47,6 +51,11 @@ void GameCamera::reset()
     _camera.position = _initPosition;
     _camera.target   = _initTarget;
     _camera.up       = { 0.0f, 1.0f, 0.0f };
+}
+
+bool GameCamera::isCursorLocked() const
+{
+    return ::IsCursorHidden();
 }
 
 }
