@@ -28,6 +28,10 @@ def pipe_output(proc: Popen, index: int) -> None:
             break
 
 
+def print_header(args: argparse.Namespace) -> None:
+    print(f"[spawn] {args.host}:{args.port}  team={args.name}  count={args.count}")
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Spawn multiple Zappy AIs", add_help=False)
     parser.add_argument("-n", dest="name", required=True, help="Team name")
@@ -40,6 +44,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+    print_header(args)
 
     script = Path(__file__).parent / "main.py"
     cmd = [sys.executable, str(script), "-n", args.name, "-p", str(args.port), "-h", args.host]
