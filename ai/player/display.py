@@ -5,6 +5,13 @@
 ## display
 ##
 
+import sys
+
+
+def rprint(text: str = "") -> None:
+    sys.stdout.write(text.replace("\n", "\r\n") + "\r\n")
+    sys.stdout.flush()
+
 
 def fmt_look(raw: str) -> str:
     raw = raw.strip().strip("[]")
@@ -20,24 +27,24 @@ def fmt_inventory(raw: str) -> str:
 
 def handle_event(msg: str) -> bool:
     if msg.startswith("message "):
-        print(f"\r[broadcast] {msg[8:]}")
+        rprint(f"[broadcast] {msg[8:]}")
         return True
     if msg.startswith("eject:"):
-        print(f"\r[ejected from dir {msg[6:].strip()}]")
+        rprint(f"[ejected from dir {msg[6:].strip()}]")
         return True
     if msg.startswith("Current level:"):
-        print(f"\r[elevation] Level {msg.split(':')[1].strip()}!")
+        rprint(f"[elevation] Level {msg.split(':')[1].strip()}!")
         return True
     if msg == "dead":
-        print("\r[dead] You starved.")
+        rprint("[dead] You starved.")
         return True
     return False
 
 
 def handle_response(cmd: str, msg: str) -> None:
     if cmd == "Look":
-        print(f"\rLook:\n{fmt_look(msg)}")
+        rprint(f"Look:\n{fmt_look(msg)}")
     elif cmd == "Inventory":
-        print(f"\rInventory:\n{fmt_inventory(msg)}")
+        rprint(f"Inventory:\n{fmt_inventory(msg)}")
     else:
-        print(f"\r{cmd}: {msg}")
+        rprint(f"{cmd}: {msg}")
