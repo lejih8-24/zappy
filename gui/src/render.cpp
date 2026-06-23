@@ -51,6 +51,13 @@ void Render::renderLoop(Zappy::Networking::GraphicsClient &client)
             DrawLine(cx, cy - 12, cx, cy + 12, RAYWHITE);
         }
 
+        if (!_camera.isCursorLocked()) {
+            DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), {0, 0, 0, 100});
+            const char *msg = "Click to focus";
+            int tw = MeasureText(msg, 32);
+            DrawText(msg, (GetScreenWidth() - tw) / 2, GetScreenHeight() / 2 - 16, 32, RAYWHITE);
+        }
+
         DrawText("Zappy GUI - 3D Map  |  [WASD] deplacer  [R] reset  [F11] fullscreen", 10, 34, 18,
             RAYWHITE);
         _window.endFrame();
