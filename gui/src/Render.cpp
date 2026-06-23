@@ -117,7 +117,7 @@ void Render::renderLoop(Zappy::Networking::GraphicsClient &client)
         const char *lockLabel = _camera.isCursorLocked() ? "[UNLOCKED]" : "[LOCKED] Click to unlock";
         DrawText(lockLabel, scaleSize(10), scaleSize(62), scaleSize(18), _camera.isCursorLocked() ? GREEN : YELLOW);
 
-        DrawText("Zappy GUI - 3D Map  |  [WASD] move  [R] reset  [F11] fullscreen  [H] HUD  |  [ESC] lock camera ",
+        DrawText("Zappy GUI - 3D Map  |  [WASD] move  [R] reset  [F11] fullscreen  [H] HUD  [X] quit  |  [ESC] lock camera ",
             scaleSize(10), scaleSize(34), scaleSize(20), RAYWHITE);
         _window.endFrame();
     }
