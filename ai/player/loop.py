@@ -10,7 +10,7 @@ import sys
 
 from network import NetworkClient
 from player.commands import HELP, KEY_MAP, PROMPT_CMDS
-from player.display import handle_event, handle_response
+from player.display import handle_event, handle_response, rprint
 from player.terminal import RawTerminal
 
 
@@ -20,7 +20,7 @@ def _drain_server(client: NetworkClient, pending: list[str]) -> bool:
     except BlockingIOError:
         return True
     if not chunk:
-        print("\r[server closed]")
+        rprint("[server closed]")
         return False
 
     client._read_buffer += chunk
@@ -37,7 +37,7 @@ def _drain_server(client: NetworkClient, pending: list[str]) -> bool:
             client.max_requests = max(0, client.max_requests - 1)
             handle_response(pending.pop(0), msg)
         else:
-            print(f"\r[server] {msg}")
+            rprint(f"[server] {msg}")
     return True
 
 
@@ -48,7 +48,7 @@ def _handle_key(client: NetworkClient, pending: list[str], term: RawTerminal) ->
         return False
 
     if key in ("?", "h"):
-        print(f"\r{HELP}")
+        rprint(HELP)
         return True
 
     cmd = KEY_MAP.get(key)
@@ -62,19 +62,20 @@ def _handle_key(client: NetworkClient, pending: list[str], term: RawTerminal) ->
     if cmd:
         client.send_command(cmd)
         pending.append(cmd.split()[0])
-        print(f"\r> {cmd}", flush=True)
+        rprint(f"> {cmd}")
 
     return True
 
 
 def run(client: NetworkClient, term: RawTerminal) -> None:
     pending: list[str] = []
-    print(HELP)
+    stdin_fd = sys.stdin.fileno()
+    rprint(HELP)
 
     while True:
-        r, _, _ = select.select([sys.stdin, client.socket], [], [], 0.05)
+        r, _, _ = select.select([stdin_fd, client.socket], [], [], 0.05)
 
         if client.socket in r and not _drain_server(client, pending):
             break
-        if sys.stdin in r and not _handle_key(client, pending, term):
+        if stdin_fd in r and not _handle_key(client, pending, term):
             break
