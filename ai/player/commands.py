@@ -6,9 +6,9 @@
 ##
 
 HELP = """
-  Arrow Up / Z   Forward
-  Arrow Left / Q Turn Left
-  Arrow Right    Turn Right
+  Arrow Up / W / Z   Forward
+  Arrow Left / A / Q Turn Left
+  Arrow Right / D    Turn Right
 
   u  Incantation     i  Inventory   l   Look
   b  Broadcast       t  Take        s   Set
@@ -20,9 +20,9 @@ HELP = """
 OBJECTS = ["food", "linemate", "deraumere", "sibur", "mendiane", "phiras", "thystame"]
 
 KEY_MAP: dict[str, str] = {
-    "\x1b[A": "Forward",  "z": "Forward",
-    "\x1b[D": "Left",     "q": "Left",
-    "\x1b[C": "Right",
+    "\x1b[A": "Forward",  "w": "Forward",  "z": "Forward",
+    "\x1b[D": "Left",     "a": "Left",     "q": "Left",
+    "\x1b[C": "Right",    "d": "Right",
     "l": "Look",
     "i": "Inventory",
     "u": "Incantation",
