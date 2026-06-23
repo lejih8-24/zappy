@@ -20,9 +20,9 @@ HELP = """
 OBJECTS = ["food", "linemate", "deraumere", "sibur", "mendiane", "phiras", "thystame"]
 
 KEY_MAP: dict[str, str] = {
-    "\x1b[A": "Forward",  "w": "Forward",  "z": "Forward",
-    "\x1b[D": "Left",     "a": "Left",     "q": "Left",
-    "\x1b[C": "Right",    "d": "Right",
+    "\x1b[A": "Forward",  "\x1bOA": "Forward",  "w": "Forward",  "z": "Forward",
+    "\x1b[D": "Left",     "\x1bOD": "Left",      "a": "Left",     "q": "Left",
+    "\x1b[C": "Right",    "\x1bOC": "Right",     "d": "Right",
     "l": "Look",
     "i": "Inventory",
     "u": "Incantation",
