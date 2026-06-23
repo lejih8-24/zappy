@@ -53,4 +53,9 @@ void GameCamera::reset()
     _camera.up       = { 0.0f, 1.0f, 0.0f };
 }
 
+bool GameCamera::isCursorLocked() const
+{
+    return ::IsCursorHidden();
+}
+
 }
