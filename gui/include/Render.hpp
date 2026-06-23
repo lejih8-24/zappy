@@ -26,10 +26,13 @@ class Render {
         void renderLoop(Zappy::Networking::GraphicsClient &client);
 
     private:
+        void drawHud() const;
+
         GameState _state;
         Window _window;
         Map _map;
         GameCamera _camera;
+        bool _showHud = true;
 };
 
 }
