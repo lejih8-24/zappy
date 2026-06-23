@@ -7,6 +7,7 @@ Usage: python3 ai/spawn.py -n TeamA -p 4242 [-h localhost] [-c 3]
 import argparse
 import signal
 import sys
+import time
 import threading
 from pathlib import Path
 from subprocess import Popen, PIPE, STDOUT
@@ -34,7 +35,7 @@ def pipe_output(proc: Popen, index: int) -> None:
 
 
 def print_header(args: argparse.Namespace) -> None:
-    print(f"[spawn] {args.host}:{args.port}  team={args.name}  count={args.count}")
+    print(f"[spawn] {args.host}:{args.port}  team={args.name}  count={args.count}  delay={args.delay}s")
 
 
 def parse_args() -> argparse.Namespace:
@@ -43,6 +44,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("-p", dest="port", required=True, type=int, help="Server port")
     parser.add_argument("-h", dest="host", default="localhost", help="Server host")
     parser.add_argument("-c", dest="count", default=1, type=int, help="Number of AIs to spawn")
+    parser.add_argument("-d", dest="delay", default=0.0, type=float, help="Delay in seconds between each spawn")
     parser.add_argument("--help", action="help")
     return parser.parse_args()
 
@@ -69,7 +71,9 @@ def main() -> None:
         proc = Popen(cmd, stdout=PIPE, stderr=STDOUT, text=True)
         procs.append(proc)
         threading.Thread(target=pipe_output, args=(proc, i + 1), daemon=True).start()
-        print(f"[spawn] AI {i + 1}/{args.count} started (PID {proc.pid})")
+        print(f"{_color(i + 1)}[spawn]{RESET} AI {i + 1}/{args.count} started (PID {proc.pid})")
+        if args.delay > 0 and i < args.count - 1:
+            time.sleep(args.delay)
 
     for proc in procs:
         proc.wait()
