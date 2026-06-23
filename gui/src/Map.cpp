@@ -9,6 +9,7 @@
 #include "Map.hpp"
 
 #include <array>
+#include <cmath>
 
 static constexpr float getResourceHeight(unsigned int quantity)
 {
@@ -95,8 +96,9 @@ void Map::draw(const GameState &state) const
     // Draw players from the GameState instead of hardcoded render data.
     for (const auto &[id, player] : state.players) {
         (void)id;
-        Vector3 pos = getTilePosition(player.x, player.y, state, 0.65f);
-        DrawCubeV(pos, { 0.75f, 1.1f, 0.75f }, BLUE);
+        Vector3 pos = getTilePosition(player.x, player.y, state, 0.0f);
+        float frame = std::fmod(GetTime() * 24.0f, _character.getAnimationFrameCount(2));
+        _character.draw(pos, player.rotationDeg, 2, frame);
     }
 
     // Draw eggs from the GameState.
