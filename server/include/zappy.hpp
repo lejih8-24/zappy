@@ -9,4 +9,6 @@
 #pragma once
 
 #include "zappy/exceptions.hpp"
+#include "zappy/game.hpp"
+#include "zappy/utils.hpp"
 #include "../src/Server/Server.hpp"
