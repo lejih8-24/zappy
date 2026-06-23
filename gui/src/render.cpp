@@ -61,8 +61,7 @@ void Render::renderLoop(Zappy::Networking::GraphicsClient &client)
         const char *lockLabel = _camera.isCursorLocked() ? "[LOCKED]  [ESC] to release" : "[FREE]  [Click] to grab";
         DrawText(lockLabel, 10, 58, 16, _camera.isCursorLocked() ? GREEN : YELLOW);
 
-        DrawText("Zappy GUI - 3D Map  |  [WASD] deplacer  [R] reset  [F11] fullscreen", 10, 34, 18,
-            RAYWHITE);
+        DrawText("Zappy GUI - 3D Map  |  [WASD] move  [R] reset  [F11] fullscreen  |  [ESC] release  [Click] grab", 10, 34, 18, RAYWHITE);
         _window.endFrame();
     }
 }
