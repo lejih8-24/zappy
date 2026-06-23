@@ -26,6 +26,11 @@ def pipe_output(proc: Popen, index: int) -> None:
             print(f"{prefix} {line}", end="", flush=True)
         except Exception:
             break
+    code = proc.wait()
+    try:
+        print(f"{prefix} exited (code {code})", flush=True)
+    except Exception:
+        pass
 
 
 def print_header(args: argparse.Namespace) -> None:
