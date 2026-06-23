@@ -13,7 +13,7 @@ Window::Window(int width, int height, const std::string &title, int fps)
 {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(width, height, title.c_str());
-    SetExitKey(KEY_NULL);
+    SetExitKey(KEY_X);
     SetTargetFPS(fps);
 }
 
