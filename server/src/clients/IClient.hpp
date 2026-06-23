@@ -22,5 +22,6 @@ namespace Zappy {
             virtual short requiredEvents() const = 0;
             virtual void registerEvents(short revents) = 0;
             virtual int fileno() const = 0;
+            virtual bool isOpen() const = 0;
     };
 }
