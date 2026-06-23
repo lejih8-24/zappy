@@ -12,19 +12,17 @@
 Zappy::PlayerClient::PlayerClient(Lattice::Socket&& socket)
     : BaseClient(std::move(socket))
     , m_PlayerData()
+    , m_ClientState(std::make_unique<HandshakeState>(*this))
 {
 
 }
 
 void Zappy::PlayerClient::update(Tick elapsedTicks)
 {
-    if (!m_PlayerData) {
-        completeHandshake();
-        return;
-    }
+    m_ClientState->update(elapsedTicks);
 }
 
-void Zappy::PlayerClient::completeHandshake()
+void Zappy::PlayerClient::HandshakeState::update(Tick elapsedTicks)
 {
 
 }
