@@ -11,7 +11,6 @@ namespace GUI {
 
 Player::Player(int id, int x, int y, std::size_t level, const std::string &teamName)
     : Entity(id, x, y)
-    , orientation(Orientation::North)
     , level(level)
     , teamName(teamName)
 {

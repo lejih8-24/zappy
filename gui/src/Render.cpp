@@ -7,14 +7,17 @@
 
 #include "Render.hpp"
 
+#include "Game/GameStateEventHandler.hpp"
+#include <networking.hpp>
 #include "raylib.h"
 
 #include <string>
+#include <variant>
 
 namespace GUI {
 
-Render::Render(std::string_view host, int port, GameState &state)
-    : _state(state)
+Render::Render(std::string_view host, int port)
+    : _state()
     , _window(1280, 720,
           std::string("Zappy GUI - ").append(host).append(":").append(std::to_string(port)), 60)
     , _map()
@@ -22,23 +25,16 @@ Render::Render(std::string_view host, int port, GameState &state)
 {
 }
 
-void Render::renderLoop()
+void Render::renderLoop(Zappy::Networking::GraphicsClient &client)
 {
-    double lastMove = GetTime(); // pour faire bouger perso
+    GameStateEventHandler handler(_state);
 
     while (!_window.shouldClose()) {
+        while (auto event = client.pollEvent())
+            std::visit(handler, *event);
         if (IsKeyPressed(KEY_F11))
             _window.toggleFullscreen();
 
-        // tentative de déplacements du joueur toutes les secondes
-        if (GetTime() - lastMove >= 1.0) {
-            if (!_state.players.empty()) {
-                auto &player = _state.players.begin()->second;
-                player.x = (player.x + 1) % static_cast<int>(_state.mapWidth);
-            }
-            lastMove = GetTime();
-        }
-        // fin
         _camera.update();
 
         _window.beginFrame();

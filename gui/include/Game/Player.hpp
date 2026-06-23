@@ -8,20 +8,11 @@
 #pragma once
 
 #include "Game/Entity.hpp"
-#include "Game/Resource.hpp"
+#include <game.hpp>
 
 #include <string>
 
 namespace GUI {
-
-//* Chris comment: Consider using an angle instead of fixed orientations :
-//* (it might make implementation easier and more flexible)
-enum Orientation {
-    North = 1,
-    East = 2,
-    South = 3,
-    West = 4,
-};
 
 /*
 ** Related server commands:
@@ -38,10 +29,10 @@ enum Orientation {
 */
 class Player : public Entity {
     public:
-        Orientation orientation;
+        float rotationDeg = 0.0F;
         std::size_t level = 1;
         std::string teamName;
-        ResourceStock inventory = {};
+        Zappy::Game::Resources inventory = {};
         bool alive = true;
         bool isBroadcasting = false;
         bool isIncantating = false;

@@ -9,7 +9,7 @@
 
 namespace GUI {
 
-Tile::Tile(int x, int y, const ResourceStock &resources)
+Tile::Tile(int x, int y, const Zappy::Game::Resources &resources)
     : Position{x, y}
     , resources(resources)
 {
