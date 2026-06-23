@@ -29,12 +29,18 @@ def handshake(client: NetworkClient, team: str) -> None:
                 client.send_command(team)
                 step = 1
             elif step == 1:
+                if msg == "ko":
+                    print("Server rejected connection (no slots or unknown team).")
+                    sys.exit(1)
                 try:
-                    int(msg)
+                    slots = int(msg)
+                    print(f"Slots remaining: {slots}")
                     step = 2
                 except ValueError:
                     pass
             elif step == 2 and len(msg.split()) >= 2:
+                w, h = msg.split()[:2]
+                print(f"Map: {w}x{h}")
                 step = 3
 
 
