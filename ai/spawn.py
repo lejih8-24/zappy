@@ -11,9 +11,16 @@ import threading
 from pathlib import Path
 from subprocess import Popen, PIPE, STDOUT
 
+COLORS = ["\033[92m", "\033[93m", "\033[94m", "\033[95m", "\033[96m", "\033[91m"]
+RESET  = "\033[0m"
+
+
+def _color(index: int) -> str:
+    return COLORS[(index - 1) % len(COLORS)]
+
 
 def pipe_output(proc: Popen, index: int) -> None:
-    prefix = f"[AI-{index}]"
+    prefix = f"{_color(index)}[AI-{index}]{RESET}"
     for line in proc.stdout:
         try:
             print(f"{prefix} {line}", end="", flush=True)
