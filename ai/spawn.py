@@ -20,9 +20,11 @@ def _color(index: int) -> str:
     return COLORS[(index - 1) % len(COLORS)]
 
 
-def pipe_output(proc: Popen, index: int) -> None:
+def pipe_output(proc: Popen, index: int, quiet: bool = False) -> None:
     prefix = f"{_color(index)}[AI-{index}]{RESET}"
     for line in proc.stdout:
+        if quiet:
+            continue
         try:
             print(f"{prefix} {line}", end="", flush=True)
         except Exception:
@@ -45,6 +47,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("-h", dest="host", default="localhost", help="Server host")
     parser.add_argument("-c", dest="count", default=1, type=int, help="Number of AIs to spawn")
     parser.add_argument("-d", dest="delay", default=0.0, type=float, help="Delay in seconds between each spawn")
+    parser.add_argument("-q", dest="quiet", action="store_true", help="Suppress AI output, show spawn events only")
     parser.add_argument("--help", action="help")
     return parser.parse_args()
 
@@ -70,7 +73,7 @@ def main() -> None:
     for i in range(args.count):
         proc = Popen(cmd, stdout=PIPE, stderr=STDOUT, text=True)
         procs.append(proc)
-        threading.Thread(target=pipe_output, args=(proc, i + 1), daemon=True).start()
+        threading.Thread(target=pipe_output, args=(proc, i + 1, args.quiet), daemon=True).start()
         print(f"{_color(i + 1)}[spawn]{RESET} AI {i + 1}/{args.count} started (PID {proc.pid})")
         if args.delay > 0 and i < args.count - 1:
             time.sleep(args.delay)
