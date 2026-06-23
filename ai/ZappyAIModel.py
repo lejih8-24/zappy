@@ -3,6 +3,7 @@
 import time
 from CommandModel import *
 from BroadcastManager import BroadcastManager
+from ai.btree.bt_nodes import ShouldReproduce, ActionFork
 from ai_movement import AINavigator
 from ai_states import AIState
 from dashboard import Display
@@ -37,9 +38,7 @@ class ZappyAI:
 
         survival_branch = Sequence([IsHungry(), ActionSearchFood()])
 
-        # Branche 2 : Fork
-        # SI je suis riche en food ET que je lance le Fork
-        # fork_branch = Sequence([HasEnoughFood(), ActionFork()])
+        fork_branch = Sequence([ShouldReproduce(), ActionFork()])
 
         elevation_branch = Sequence([CanElevate(), ActionGroupAndIncant()])
 

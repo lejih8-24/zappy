@@ -3,6 +3,8 @@ from CommandModel import LookCommand, ForwardCommand, TurnLeftCommand, TurnRight
     IncantationCommand, TakeCommand
 from pathfinding import find_path_to_closest
 
+from ..CommandModel import ForkCommand
+
 
 class IsHungry(Node):
     """Vérifie si le drone est en danger de mort par famine."""
@@ -177,5 +179,24 @@ class ActionGroupAndIncant(Node):
                 ai.states.inventory[stone] -= 1
                 ai.states.vision_grid = None
                 return NodeStatus.RUNNING
+
+        return NodeStatus.RUNNING
+
+
+class ShouldReproduce(Node):
+    """Vérifie si le drone a accumulé assez de réserves pour pondre en toute sécurité."""
+
+    def tick(self, ai) -> NodeStatus:
+        if ai.drone_state.inventory.get("food", 0) > 40:
+            return NodeStatus.SUCCESS
+        return NodeStatus.FAILURE
+
+class ActionFork(Node):
+    def tick(self, ai) -> NodeStatus:
+        if len(ai.pending_commands) > 0:
+            return NodeStatus.RUNNING
+
+        ai.logger.Info("Réserves optimales atteintes ! Début de la ponte...")
+        ai.queue_command(ForkCommand())
 
         return NodeStatus.RUNNING
