@@ -31,5 +31,6 @@ namespace Zappy {
             inline short requiredEvents() const override { return m_Reference->requiredEvents(); }
             inline void registerEvents(short revents) override { return m_Reference->registerEvents(revents); }
             inline int fileno() const override { return m_Reference->fileno(); }
+            inline bool isOpen() const override { return m_Reference->isOpen(); }
     };
 }
