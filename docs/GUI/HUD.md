@@ -1,25 +1,21 @@
 # HUD du GUI
 
-Le HUD actuel est une première version simple, affichée dans un pannel transparent à droite de l'écran.
+Le HUD est un panneau transparent à droite de l'écran.
 
-- `H` :  toggle l'affichage du HUD.
+- `H` : affiche/cache le HUD.
+- `flèche gauche/droite` : change de page.
+- `flèche haut/bas` : scroll la page courante.
 
-- Le pannel affiche :
-  - taille de la map ;
-  - unité de temps serveur ;
-  - nombre de joueurs ;
-  - nombre d'œufs ;
-  - nombre d'équipes ;
-  - incantations actives / total ;
-  - état de la partie ou équipe gagnante ;
-  - chaque équipe avec son nombre de joueurs et la répartition des niveaux.
+## Pages
 
-Exemple de répartition des niveaux :
+- `Overview` : map, temps, joueurs, œufs, équipes, incantations et gagnant.
+- `Teams` : joueurs par équipe, niveaux et min/max.
+- `Players` : joueurs groupés par équipe avec id, niveau, position, orientation et flags.
+- `Resources` : ressources sur la map, dans les inventaires joueurs et total global.
+
+Exemple niveaux :
 
 ```text
 TeamA: 3 players
-  L1:2 L3:1
+  levels: L1:2 L3:1
 ```
-
-Cette v1 n'affiche pas encore les inventaires détaillés ou les joueurs
-individuellement.

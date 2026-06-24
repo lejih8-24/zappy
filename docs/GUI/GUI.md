@@ -25,8 +25,9 @@
 
 - Le HUD est un panneau à droite.
 - `H` cache ou affiche le HUD.
-- Il affiche la taille de map, le temps, les joueurs, les œufs, les équipes, les incantations et le gagnant.
-- Pour chaque équipe, il affiche le nombre de joueurs et la répartition des niveaux.
+- Flèches gauche/droite : changer de page HUD.
+- Flèches haut/bas : scroll dans la page HUD.
+- Il contient les pages `Overview`, `Teams`, `Players` et `Resources`.
 - Détails : [HUD.md](HUD.md).
 
 ## Textes et scale
@@ -44,5 +45,7 @@
 - `R` : reset caméra.
 - `F11` : fullscreen.
 - `H` : afficher/cacher le HUD.
+- `flèches gauche/droite` : changer de page HUD.
+- `flèches haut/bas` : scroll dans la page HUD.
 - `X` : fermer le GUI.
 - `ESC` : lock caméra (permet d'avoir sa souris libre).
