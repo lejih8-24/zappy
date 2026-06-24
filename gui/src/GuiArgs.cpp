@@ -20,7 +20,7 @@ using ArgsException = Zappy::Exceptions::ArgsException;
 
 void GuiArgs::printUsage(std::ostream &stream)
 {
-    stream << "USAGE: ./zappy_gui -p port [-h machine]\n";
+    stream << "USAGE: ./zappy_gui -p port [-h machine] [--pack name]\n";
 }
 
 int GuiArgs::parsePort(std::string_view value)
@@ -64,6 +64,10 @@ GuiArgs GuiArgs::parseArgs(int argc, char **argv)
             args._host = requireValue(argc, argv, i);
             continue;
         }
+        if (option == "--pack") {
+            args._pack = std::string(requireValue(argc, argv, i));
+            continue;
+        }
         throw ArgsException(std::string("unknown argument: ").append(option));
     }
     if (args._port == -1)
@@ -79,6 +83,11 @@ const std::string &GuiArgs::getHost() const
 int GuiArgs::getPort() const
 {
     return _port;
+}
+
+const std::string &GuiArgs::getPack() const
+{
+    return _pack;
 }
 
 void GuiArgs::connect() const
