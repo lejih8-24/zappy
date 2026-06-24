@@ -18,14 +18,10 @@ namespace Zappy::Utils {
      * 2D array class.
      *
      * Note:
-     * The reason we use vectors
-     * instead of arrays to allow for
-     * vectors with sizes only known
-     * at runtime.
-     * Despite the array's dynamic
-     * storage, dynamically resizing
-     * the array is disallowed for
-     * simplicity.
+     * Despite the name, the
+     * underlying storage is
+     * a std::vector to allow
+     * for dynamic sizes.
      */
     template <typename T>
     requires (std::is_copy_constructible_v<T>)
@@ -52,6 +48,21 @@ namespace Zappy::Utils {
             {}
 
             constexpr std::pair<std::size_t, std::size_t> size() const noexcept { return { m_SizeX, m_SizeY }; }
+
+            void resize(std::size_t width, std::size_t height)
+                requires (std::is_default_constructible_v<Element>)
+            {
+                m_SizeX = width;
+                m_SizeY = height;
+                m_Data.resize(width * height);
+            }
+
+            void resize(std::size_t width, std::size_t height, const Element& fill)
+            {
+                m_SizeX = width;
+                m_SizeY = height;
+                m_Data.resize(width * height, fill);
+            }
 
             Element& operator[](std::pair<std::size_t, std::size_t> index) noexcept
             {
