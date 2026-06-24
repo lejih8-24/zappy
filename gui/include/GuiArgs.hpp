@@ -30,7 +30,7 @@ class GuiArgs {
 
         std::string _host = "127.0.0.1";
         int _port = -1;
-        std::string _pack = "green_man";
+        std::string _pack = "default";
 };
 
 }

@@ -23,7 +23,7 @@ namespace GUI {
 
 class Render {
     public:
-        Render(std::string_view host, int port, std::string_view pack = "green_man");
+        Render(std::string_view host, int port, std::string_view pack = "default");
         void renderLoop(Zappy::Networking::GraphicsClient &client);
 
     private:
