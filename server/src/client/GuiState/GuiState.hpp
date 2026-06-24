@@ -13,8 +13,6 @@
 
 namespace Zappy::Client {
     class GuiState : public IState {
-        Client& m_Client;
-
         public:
             GuiState();
 

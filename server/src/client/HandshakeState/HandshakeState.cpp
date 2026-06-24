@@ -10,27 +10,26 @@
 #include <zappy/client.hpp>
 
 
-Zappy::Client::HandshakeState::HandshakeState(Client& client)
-    : m_Client(client)
-    , m_TeamName()
+Zappy::Client::HandshakeState::HandshakeState()
+    : m_TeamName()
     , m_WelcomeSent(false)
 {
 
 }
 
-void Zappy::Client::HandshakeState::update(std::chrono::nanoseconds)
+void Zappy::Client::HandshakeState::update(Client& client, std::chrono::nanoseconds)
 {
     if (!m_WelcomeSent) {
-        auto amnt = m_Client.socket().write(WELCOME_MESSAGE);
+        auto amnt = client.socket().write(WELCOME_MESSAGE);
         m_WelcomeSent = amnt == WELCOME_MESSAGE.length();
         return;
     }
 
-    if (!m_Client.socket().readUntil(m_TeamName, '\n'))
+    if (!client.socket().readUntil(m_TeamName, '\n'))
         return;
 
     if (m_TeamName == "GRAPHIC")
-        m_Client.setState(std::make_unique<GuiState>(m_Client));
+        client.setState(std::make_unique<GuiState>());
     else
-        m_Client.setState(std::make_unique<PlayerRunState>(m_Client));
+        client.setState(std::make_unique<PlayerRunState>());
 }
