@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include "../IState.hpp"
+#include "../BaseState.hpp"
 
 
 namespace Zappy::Client {
-    class PlayerRunState : public IState {
+    class PlayerRunState : public BaseState {
         public:
             PlayerRunState();
 

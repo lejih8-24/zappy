@@ -10,6 +10,7 @@
 
 
 Zappy::Client::PlayerRunState::PlayerRunState()
+    : BaseState()
 {
 
 }

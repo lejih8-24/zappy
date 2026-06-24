@@ -8,13 +8,13 @@
 
 #pragma once
 
-#include "../IState.hpp"
+#include "../BaseState.hpp"
 #include <string_view>
 #include <string>
 
 
 namespace Zappy::Client {
-    class HandshakeState : public IState {
+    class HandshakeState : public BaseState {
         static constexpr std::string_view WELCOME_MESSAGE = "WELCOME\n";
 
         std::string m_TeamName;

@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include "../IState.hpp"
+#include "../BaseState.hpp"
 
 
 namespace Zappy::Client {
-    class GuiState : public IState {
+    class GuiState : public BaseState {
         public:
             GuiState();
 

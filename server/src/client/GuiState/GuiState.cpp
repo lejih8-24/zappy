@@ -10,6 +10,7 @@
 
 
 Zappy::Client::GuiState::GuiState()
+    : BaseState()
 {
 
 }

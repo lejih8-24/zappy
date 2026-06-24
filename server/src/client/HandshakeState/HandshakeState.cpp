@@ -11,7 +11,8 @@
 
 
 Zappy::Client::HandshakeState::HandshakeState()
-    : m_TeamName()
+    : BaseState()
+    , m_TeamName()
     , m_WelcomeSent(false)
 {
 

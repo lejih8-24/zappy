@@ -12,6 +12,10 @@
 #include <chrono>
 
 
+namespace Zappy::Game {
+    class Game;
+}
+
 namespace Zappy::Client {
     class Client;
 
@@ -19,8 +23,8 @@ namespace Zappy::Client {
         public:
             virtual ~IState() = default;
 
+            virtual void setGame(Game::Game& game) = 0;
             virtual void update(Client& client, std::chrono::nanoseconds dt) = 0;
-            // virtual void registerEvent() = 0;
     };
 
     template <typename T>
