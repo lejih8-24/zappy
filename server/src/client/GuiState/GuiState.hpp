@@ -1,0 +1,25 @@
+/*
+** EPITECH PROJECT, 2026
+** Project - Zappy
+** File description:
+** Header file for
+** GuiState class
+*/
+
+#pragma once
+
+#include "../IState.hpp"
+
+
+namespace Zappy::Client {
+    class Client;
+
+    class GuiState : public IState {
+        Client& m_Client;
+
+        public:
+            GuiState(Client& client);
+
+            void update(Tick elapsedTicks) override;
+    };
+}
