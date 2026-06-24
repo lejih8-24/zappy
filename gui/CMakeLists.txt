@@ -37,4 +37,5 @@ target_include_directories(zappy_gui
 target_link_libraries(zappy_gui PRIVATE raylib
                                 PRIVATE lattice)
 
-target_compile_definitions(zappy_gui PRIVATE ASSETS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets/")
+target_compile_definitions(zappy_gui PRIVATE ASSETS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets/"
+                                           PACKS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/packs/")

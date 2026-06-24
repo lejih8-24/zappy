@@ -8,7 +8,7 @@
 #include "Game/CharacterModel.hpp"
 #include <stdexcept>
 
-static constexpr const char *MODEL_PATH = ASSETS_DIR "character.glb";
+static constexpr const char *MODEL_PATH = PACKS_DIR "green_man/player.glb";
 
 GUI::CharacterModel::CharacterModel() : _model(LoadModel(MODEL_PATH)), _animations(LoadModelAnimations(MODEL_PATH, &_animationCount))
 {
