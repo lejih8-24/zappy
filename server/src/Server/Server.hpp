@@ -70,7 +70,7 @@ namespace Zappy {
                     inline Builder& setMapSize(std::uint32_t width, std::uint32_t height) { m_MapSize = { width, height };  return *this; }
                     inline Builder& setTickSpeed(std::uint32_t speed)                     { m_TickSpeed = speed;            return *this; }
                     inline Builder& setMaxClientsPerTeam(std::uint32_t clients)           { m_ClientsPerTeam = clients;     return *this; }
-                    inline Builder& addTeamName(std::string_view name)                    { m_TeamNames.emplace_back(name); return *this; }
+                    Builder& addTeamName(std::string_view name);
                     Builder& setTeamNames(std::span<std::string_view> names);
                     Builder& setTeamNames(std::span<const char*> names);
 

@@ -91,7 +91,16 @@ auto Zappy::Server::Builder::fromArguments(std::span<const char*> args) -> Build
         args = parseOption(progName, args);
     }
 
-    // TODO: ensure values are in correct range
+    if (m_Port == 0)
+        throw Exceptions::ParseException(std::string(progName) + ": missing required argument -p (port)");
+    if (m_MapSize.first == 0)
+        throw Exceptions::ParseException(std::string(progName) + ": missing required argument -x (map width)");
+    if (m_MapSize.second == 0)
+        throw Exceptions::ParseException(std::string(progName) + ": missing required argument -y (map height)");
+    if (m_ClientsPerTeam == 0)
+        throw Exceptions::ParseException(std::string(progName) + ": missing required argument -c (clients per team)");
+    if (m_TeamNames.empty())
+        throw Exceptions::ParseException(std::string(progName) + ": missing required argument -n (team names)");
 
     return *this;
 }
@@ -109,6 +118,15 @@ auto Zappy::Server::Builder::setTeamNames(std::span<const char*> names) -> Build
     for (auto& name : names)
         addTeamName(name);
 
+    return *this;
+}
+
+auto Zappy::Server::Builder::addTeamName(std::string_view name) -> Builder&
+{
+    if (name == "GRAPHIC")
+        throw Exceptions::ParseException("team name may not be reserved name \"GRAPHIC\"");
+
+    m_TeamNames.emplace_back(name);
     return *this;
 }
 
