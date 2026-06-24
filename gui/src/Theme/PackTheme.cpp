@@ -7,6 +7,7 @@
 
 #include "Theme/PackTheme.hpp"
 
+#include <array>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
@@ -16,6 +17,11 @@
 
 static constexpr float ANIM_FPS = 24.0f;
 static constexpr const char *BASE_PACK = "green_man";
+
+static constexpr std::array<const char *, 7> RESOURCE_FILES = {
+    "food.glb", "linemate.glb", "deraumere.glb", "sibur.glb",
+    "mendiane.glb", "phiras.glb", "thystame.glb"
+};
 
 static std::string resolvePath(std::string_view packName, const char *filename)
 {
@@ -80,12 +86,27 @@ PackTheme::PackTheme(std::string_view packName)
     std::string eggPath = resolvePath(packName, "egg.glb");
     if (!eggPath.empty())
         _egg = LoadModel(eggPath.c_str());
+
+    std::string tilePath = resolvePath(packName, "tile.glb");
+    if (!tilePath.empty())
+        _tile = LoadModel(tilePath.c_str());
+
+    for (std::size_t i = 0; i < RESOURCE_FILES.size(); ++i) {
+        std::string rPath = resolvePath(packName, RESOURCE_FILES[i]);
+        if (!rPath.empty())
+            _resources[i] = LoadModel(rPath.c_str());
+    }
 }
 
 PackTheme::~PackTheme()
 {
     if (_egg.has_value())
         UnloadModel(*_egg);
+    if (_tile.has_value())
+        UnloadModel(*_tile);
+    for (auto &r : _resources)
+        if (r.has_value())
+            UnloadModel(*r);
 }
 
 int PackTheme::getAnimIndex(const std::string &name, int defaultIndex) const
@@ -96,11 +117,19 @@ int PackTheme::getAnimIndex(const std::string &name, int defaultIndex) const
 
 void PackTheme::drawTile(Vector3 pos, Vector3 size, bool isLight) const
 {
+    if (_tile.has_value()) {
+        DrawModel(*_tile, pos, 1.0f, WHITE);
+        return;
+    }
     _fallback.drawTile(pos, size, isLight);
 }
 
 void PackTheme::drawResource(std::size_t resourceIndex, Vector3 pos, float height) const
 {
+    if (resourceIndex < _resources.size() && _resources[resourceIndex].has_value()) {
+        DrawModel(*_resources[resourceIndex], pos, 1.0f, WHITE);
+        return;
+    }
     _fallback.drawResource(resourceIndex, pos, height);
 }
 
