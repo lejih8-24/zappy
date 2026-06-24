@@ -13,6 +13,7 @@
 
 #include "raylib.h"
 
+#include <array>
 #include <memory>
 #include <optional>
 #include <string>
@@ -38,6 +39,8 @@ class PackTheme : public ITheme {
         DefaultTheme _fallback;
         std::unique_ptr<CharacterModel> _player;
         std::optional<Model> _egg;
+        std::optional<Model> _tile;
+        std::array<std::optional<Model>, 7> _resources;
 };
 
 }
