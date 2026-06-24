@@ -10,4 +10,5 @@
 
 #include "../../src/exceptions/ArgumentParseException/ArgumentParseException.hpp"
 #include "../../src/exceptions/BaseException.hpp"
+#include "../../src/exceptions/OutOfRange.hpp"
 #include "../../src/exceptions/ParseException.hpp"
