@@ -16,9 +16,9 @@ static class : public std::ostream {} VOID_STREAM;
 std::ostream& Zappy::Utils::Logger::s_VoidStream = VOID_STREAM;
 
 
-Zappy::Utils::Logger::Logger(std::string name, std::ostream& output)
+Zappy::Utils::Logger::Logger(std::string name, Level level, std::ostream& output)
     : m_Output(&output)
-    , m_LogLevel(ROOT)
+    , m_LogLevel(level)
     , m_Colors(true)
     , m_Name(std::move(name))
 {
@@ -27,7 +27,7 @@ Zappy::Utils::Logger::Logger(std::string name, std::ostream& output)
 
 auto Zappy::Utils::Logger::getRootLogger() -> Logger&
 {
-    static Logger root("");
+    static Logger root("", DEBUG);
 
     return root;
 }

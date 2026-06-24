@@ -32,7 +32,7 @@ namespace Zappy::Utils {
             std::string m_Name;
 
         public:
-            Logger(std::string name, std::ostream& output = std::clog);
+            Logger(std::string name, Level logLevel = ROOT, std::ostream& output = std::clog);
 
             static Logger& getRootLogger();
 
