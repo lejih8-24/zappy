@@ -9,6 +9,7 @@
 
 #include "Game/GameState.hpp"
 #include "Game/CharacterModel.hpp"
+#include "Game/EggModel.hpp"
 
 #include "raylib.h"
 
@@ -27,6 +28,7 @@ class Map {
         float _squareSize;
 
         CharacterModel _character;
+        EggModel _eggModel;
 };
 
 }

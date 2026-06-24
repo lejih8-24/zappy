@@ -23,6 +23,7 @@ add_executable(zappy_gui
                src/Game/ServerMessage.cpp
                src/Game/Tile.cpp
                src/Game/CharacterModel.cpp
+               src/Game/EggModel.cpp
                src/Camera.cpp
                src/GuiArgs.cpp
                src/Map.cpp

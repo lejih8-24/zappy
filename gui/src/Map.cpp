@@ -104,8 +104,8 @@ void Map::draw(const GameState &state) const
     // Draw eggs from the GameState.
     for (const auto &[id, egg] : state.eggs) {
         (void)id;
-        Vector3 pos = getTilePosition(egg.x, egg.y, state, 0.35f);
-        DrawSphere(pos, 0.35f, RAYWHITE);
+        Vector3 pos = getTilePosition(egg.x, egg.y, state, 0.0f);
+        _eggModel.draw(pos);
     }
 }
 
