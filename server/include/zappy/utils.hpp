@@ -9,5 +9,6 @@
 #pragma once
 
 #include "../../src/utils/Logger/Logger.hpp"
+#include "../../src/utils/Array2D.hpp"
 #include "../../src/utils/Zip.hpp"
 #include "../../src/utils/ZipIterator.hpp"
