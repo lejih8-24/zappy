@@ -7,7 +7,7 @@
 */
 
 #include "Resources.hpp"
-#include <utils.hpp>
+#include <zappy/utils.hpp>
 #include <sstream>
 
 
