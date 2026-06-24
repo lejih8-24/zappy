@@ -8,22 +8,36 @@
 
 #pragma once
 
-#include <lattice/networking.hpp>
+#include <zappy/client.hpp>
 #include <zappy/exceptions.hpp>
+#include <lattice/networking.hpp>
 #include <charconv>
+#include <string>
+#include <chrono>
+#include <deque>
 
 
 namespace Zappy {
-    class Server : public Lattice::Server<Lattice::CachingSocket<>> {
-        using Client = Lattice::CachingSocket<>;
+    class Server : public Lattice::Server<Client::Client> {
+        using Client = Client::Client;
+
+        std::chrono::nanoseconds m_UpdateStart;
+        std::chrono::nanoseconds m_DeltaTime;
+        std::deque<std::string> m_EventQueue;
 
         public:
             Server(std::string_view ip, std::uint16_t port);
             Server(Server&& server);
 
+            void pushEvent(std::string&& evt) { m_EventQueue.push_front(std::move(evt)); }
+            std::optional<std::string> popEvent();
+
             inline void operator=(Server&& other) { swap(other); }
             void swap(Server& other)
             {
+                std::swap(m_UpdateStart, other.m_UpdateStart);
+                std::swap(m_DeltaTime, other.m_DeltaTime);
+                std::swap(m_EventQueue, other.m_EventQueue);
                 Lattice::Server<Client>::swap(other);
             }
 
@@ -32,6 +46,8 @@ namespace Zappy {
             void onShutdown() override;
             void onClientAccepted(const Client& client) override;
             void onClientDisconnected(const Client& client) override;
+
+            void updateServer() override;
             void updateClient(Client& client) override;
 
         public:

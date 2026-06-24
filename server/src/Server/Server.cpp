@@ -8,6 +8,7 @@
 
 #include "Server.hpp"
 #include <zappy/exceptions.hpp>
+#include <zappy/utils.hpp>
 #include <iostream>
 
 
@@ -23,43 +24,56 @@ Zappy::Server::Server(Server&& other)
     swap(other);
 }
 
+std::optional<std::string> Zappy::Server::popEvent()
+{
+    if (m_EventQueue.empty())
+        return {};
+
+    std::optional<std::string> event = std::string();
+
+    event->swap(m_EventQueue.back());
+    m_EventQueue.pop_back();
+
+    return event;
+}
+
 void Zappy::Server::onStart()
 {
-    std::clog << "starting server on " << hostname() << ":" << port() << std::endl;
+    Zappy::logger.info() << "starting server on " << hostname() << ":" << port() << std::endl;
 }
 
 void Zappy::Server::onShutdown()
 {
-    std::clog << "server shutting down..." << std::endl;
+    Zappy::logger.info() << "server shutting down..." << std::endl;
 }
 
 void Zappy::Server::onClientAccepted(const Client& client)
 {
-    std::clog << std::string(client) << ": connected" << std::endl;
+    Zappy::logger.info() << client.name() << ": connected" << std::endl;
 }
 
 void Zappy::Server::onClientDisconnected(const Client& client)
 {
-    std::clog << "client disconnected" << std::endl;
+    Zappy::logger.info() << client.name() << ": disconnected" << std::endl;
+}
+
+void Zappy::Server::updateServer()
+{
+    Zappy::logger.debug() << "updating server" << std::endl;
 }
 
 void Zappy::Server::updateClient(Client& client)
 {
-    static std::string input;
-
-    if (!client.readUntil(input, '\n'))
-        return;
-
-    input.erase(input.rfind('\n'));
-    std::clog << std::string(client) << ": " << input << std::endl;
+    Zappy::logger.debug() << "updating " << client.name() << std::endl;
+    client.update(m_DeltaTime);
 }
 
 Zappy::Server::Builder::Builder()
     : m_Hostname("127.0.0.1")
-    , m_Port(5000)
-    , m_MapSize{ 10, 10 }
+    , m_Port(0)
+    , m_MapSize{ 0, 0 }
     , m_TickSpeed(100)
-    , m_ClientsPerTeam(5)
+    , m_ClientsPerTeam(0)
     , m_TeamNames()
 {
 
@@ -76,6 +90,8 @@ auto Zappy::Server::Builder::fromArguments(std::span<const char*> args) -> Build
     while (!args.empty()) {
         args = parseOption(progName, args);
     }
+
+    // TODO: ensure values are in correct range
 
     return *this;
 }
