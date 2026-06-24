@@ -8,5 +8,7 @@
 
 #pragma once
 
+#include "../../src/game/Event/Event.hpp"
+#include "../../src/game/Game/Game.hpp"
 #include "../../src/game/Player/Player.hpp"
 #include "../../src/game/Resources/Resources.hpp"
