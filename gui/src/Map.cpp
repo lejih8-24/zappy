@@ -8,6 +8,8 @@
 
 #include "Map.hpp"
 
+#include "Game/ResourceColors.hpp"
+
 #include <array>
 
 static constexpr float getResourceHeight(unsigned int quantity)
@@ -43,15 +45,6 @@ Vector3 Map::getTilePosition(int x, int y, const GameState &state, float height)
 void Map::draw(const GameState &state) const
 {
     static constexpr float resourceOffset = 0.28F;
-    static constexpr std::array<Color, Zappy::Game::Resources::RESOURCE_COUNT> resourceColors = {
-        BROWN,     //? Food
-        LIGHTGRAY, //? Linemate
-        VIOLET,    //? Deraumere
-        YELLOW,    //? Sibur
-        ORANGE,    //? Mendiane
-        SKYBLUE,   //? Phiras
-        MAGENTA,   //? Thystame
-    };
 
     static constexpr std::array<Vector2, Zappy::Game::Resources::RESOURCE_COUNT> resourceSlots = {
         Vector2{-1.0F, -1.0F}, //? Food
@@ -86,7 +79,7 @@ void Map::draw(const GameState &state) const
 
                 pos.x += resourceSlots[resourceIndex].x * _squareSize * resourceOffset;
                 pos.z += resourceSlots[resourceIndex].y * _squareSize * resourceOffset;
-                DrawCubeV(pos, { 0.32F, height, 0.32F }, resourceColors[resourceIndex]);
+                DrawCubeV(pos, { 0.32F, height, 0.32F }, ResourceColors[resourceIndex]);
             }
             ++resourceIndex;
         }

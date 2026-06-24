@@ -8,6 +8,7 @@
 #include "Render.hpp"
 
 #include "Game/GameStateEventHandler.hpp"
+#include "Game/ResourceColors.hpp"
 #include <networking.hpp>
 #include "raylib.h"
 
@@ -26,6 +27,24 @@ static constexpr std::array<std::string_view, 4> hudPageNames = {
     "Teams",
     "Players",
     "Resources",
+};
+
+struct HudSegment {
+    std::string text;
+    Color color;
+};
+
+using HudLine = std::vector<HudSegment>;
+using HudLines = std::vector<HudLine>;
+
+static constexpr std::array<Color, 7> hudTeamColors = {
+    BLUE,
+    RED,
+    GREEN,
+    ORANGE,
+    PURPLE,
+    SKYBLUE,
+    PINK,
 };
 
 // Count only incantations that are currently running (status activated)
@@ -90,87 +109,119 @@ static std::string getTeamLevelMinMax(const GUI::GameState &state, std::string_v
     return std::to_string(minLevel) + "-" + std::to_string(maxLevel);
 }
 
-static std::string getPlayerFlags(const GUI::Player &player)
+static Color getTeamColor(const GUI::GameState &state, std::string_view teamName)
 {
-    std::string flags;
+    auto team = std::find(state.teams.begin(), state.teams.end(), teamName);
 
+    if (team == state.teams.end())
+        return LIGHTGRAY;
+
+    const std::size_t teamIndex = static_cast<std::size_t>(std::distance(state.teams.begin(), team));
+    const std::size_t colorIndex = teamIndex % hudTeamColors.size();
+
+    return hudTeamColors[colorIndex];
+}
+
+static void addPlayerFlagSegments(HudLine &line, const GUI::Player &player)
+{
+    if (!player.isIncantating && !player.isLayingEgg && !player.isBroadcasting)
+        return;
+    line.push_back({"  ", RAYWHITE});
     if (player.isIncantating)
-        flags += "I";
+        line.push_back({"I", VIOLET});
     if (player.isLayingEgg)
-        flags += "E";
+        line.push_back({"E", ORANGE});
     if (player.isBroadcasting)
-        flags += "B";
-    return flags.empty() ? "-" : flags;
+        line.push_back({"B", SKYBLUE});
 }
 
-static void addOverviewLines(const GUI::GameState &state, std::vector<std::string> &lines)
+static void addOverviewLines(const GUI::GameState &state, HudLines &lines)
 {
-    lines.push_back("Map: " + std::to_string(state.mapWidth) + "x" + std::to_string(state.mapHeight));
-    lines.push_back("Time: " + std::to_string(state.timeUnit));
-    lines.push_back("Players: " + std::to_string(state.players.size()));
-    lines.push_back("Eggs: " + std::to_string(state.eggs.size()));
-    lines.push_back("Teams: " + std::to_string(state.teams.size()));
-    lines.push_back("Incantations: " + std::to_string(getActiveIncantationCount(state)) + "/"
-        + std::to_string(state.incantations.size()));
-    lines.push_back(state.gameEnded ? std::string("Winner: ") + state.winningTeam : "State: Running");
+    lines.push_back({{"Map: ", SKYBLUE}, {std::to_string(state.mapWidth) + "x" + std::to_string(state.mapHeight), RAYWHITE}});
+    lines.push_back({{"Time: ", ORANGE}, {std::to_string(state.timeUnit), RAYWHITE}});
+    lines.push_back({{"Players: ", BLUE}, {std::to_string(state.players.size()), RAYWHITE}});
+    lines.push_back({{"Eggs: ", LIGHTGRAY}, {std::to_string(state.eggs.size()), RAYWHITE}});
+    lines.push_back({{"Teams: ", YELLOW}, {std::to_string(state.teams.size()), RAYWHITE}});
+    lines.push_back({{"Incantations: ", VIOLET}, {std::to_string(getActiveIncantationCount(state)) + "/"
+        + std::to_string(state.incantations.size()), RAYWHITE}});
+    if (state.gameEnded)
+        lines.push_back({{"Winner: ", YELLOW}, {state.winningTeam, YELLOW}});
+    else
+        lines.push_back({{"State: ", SKYBLUE}, {"Running", GREEN}});
 }
 
-static void addTeamsLines(const GUI::GameState &state, std::vector<std::string> &lines)
+static void addTeamsLines(const GUI::GameState &state, HudLines &lines)
 {
     for (const std::string &team : state.teams) {
         const std::size_t playerCount = getTeamPlayerCount(state, team);
+        const Color teamColor = getTeamColor(state, team);
 
-        lines.push_back(team + ": " + std::to_string(playerCount) + " player" + (playerCount > 1 ? "s" : ""));
-        lines.push_back("  levels: " + getTeamLevels(state, team));
-        lines.push_back("  min/max: " + getTeamLevelMinMax(state, team));
+        lines.push_back({{team, teamColor}, {": " + std::to_string(playerCount) + " player"
+            + (playerCount > 1 ? "s" : ""), RAYWHITE}});
+        lines.push_back({{"  levels: ", RAYWHITE}, {getTeamLevels(state, team), RAYWHITE}});
+        lines.push_back({{"  min/max: ", RAYWHITE}, {getTeamLevelMinMax(state, team), RAYWHITE}});
     }
     if (state.teams.empty())
-        lines.push_back("No team");
+        lines.push_back({{"No team", LIGHTGRAY}});
 }
 
-static void addPlayersForTeam(const GUI::GameState &state, std::vector<std::string> &lines, std::string_view teamName)
+static void addPlayersForTeam(const GUI::GameState &state, HudLines &lines, std::string_view teamName)
 {
     bool found = false;
+    const Color teamColor = getTeamColor(state, teamName);
 
     for (const auto &[id, player] : state.players) {
         if (player.teamName != teamName)
             continue;
         found = true;
-        lines.push_back("  #" + std::to_string(id) + " L" + std::to_string(player.level) + " ("
-            + std::to_string(player.x) + "," + std::to_string(player.y) + ") "
-            + std::to_string(static_cast<int>(player.rotationDeg)) + "deg " + getPlayerFlags(player));
+        HudLine line = {
+            {"  #" + std::to_string(id), teamColor},
+            {" L" + std::to_string(player.level) + " (" + std::to_string(player.x) + ","
+                + std::to_string(player.y) + ") " + std::to_string(static_cast<int>(player.rotationDeg))
+                + "deg", RAYWHITE},
+        };
+
+        addPlayerFlagSegments(line, player);
+        lines.push_back(line);
     }
     if (!found)
-        lines.push_back("  no player");
+        lines.push_back({{"  no player", LIGHTGRAY}});
 }
 
-static void addPlayersLines(const GUI::GameState &state, std::vector<std::string> &lines)
+static void addPlayersLines(const GUI::GameState &state, HudLines &lines)
 {
     for (const std::string &team : state.teams) {
-        lines.push_back(team);
+        lines.push_back({{team, getTeamColor(state, team)}});
         addPlayersForTeam(state, lines, team);
     }
     for (const auto &[id, player] : state.players) {
         if (std::find(state.teams.begin(), state.teams.end(), player.teamName) != state.teams.end())
             continue;
-        lines.push_back(player.teamName.empty() ? "No team" : player.teamName);
-        lines.push_back("  #" + std::to_string(id) + " L" + std::to_string(player.level) + " ("
-            + std::to_string(player.x) + "," + std::to_string(player.y) + ") "
-            + std::to_string(static_cast<int>(player.rotationDeg)) + "deg " + getPlayerFlags(player));
+        const std::string teamName = player.teamName.empty() ? "No team" : player.teamName;
+        HudLine line = {
+            {teamName + " #" + std::to_string(id), LIGHTGRAY},
+            {" L" + std::to_string(player.level) + " (" + std::to_string(player.x) + ","
+                + std::to_string(player.y) + ") " + std::to_string(static_cast<int>(player.rotationDeg))
+                + "deg", RAYWHITE},
+        };
+
+        addPlayerFlagSegments(line, player);
+        lines.push_back(line);
     }
     if (state.players.empty())
-        lines.push_back("No player");
+        lines.push_back({{"No player", LIGHTGRAY}});
 }
 
-static void addResourceLine(std::vector<std::string> &lines, std::string_view name,
-    unsigned int mapQuantity, unsigned int playerQuantity)
+static void addResourceLine(HudLines &lines, std::string_view name, Color color, unsigned int mapQuantity,
+    unsigned int playerQuantity)
 {
-    lines.push_back(std::string(name) + ": map=" + std::to_string(mapQuantity)
+    lines.push_back({{std::string(name), color}});
+    lines.push_back({{"  map=" + std::to_string(mapQuantity)
         + " players=" + std::to_string(playerQuantity)
-        + " total=" + std::to_string(mapQuantity + playerQuantity));
+        + " total=" + std::to_string(mapQuantity + playerQuantity), RAYWHITE}});
 }
 
-static void addResourcesLines(const GUI::GameState &state, std::vector<std::string> &lines)
+static void addResourcesLines(const GUI::GameState &state, HudLines &lines)
 {
     Zappy::Game::Resources mapResources = {};
     Zappy::Game::Resources playerResources = {};
@@ -181,18 +232,18 @@ static void addResourcesLines(const GUI::GameState &state, std::vector<std::stri
         (void)id;
         playerResources += player.inventory;
     }
-    addResourceLine(lines, "Food", mapResources.food, playerResources.food);
-    addResourceLine(lines, "Linemate", mapResources.linemate, playerResources.linemate);
-    addResourceLine(lines, "Deraumere", mapResources.deraumere, playerResources.deraumere);
-    addResourceLine(lines, "Sibur", mapResources.sibur, playerResources.sibur);
-    addResourceLine(lines, "Mendiane", mapResources.mendiane, playerResources.mendiane);
-    addResourceLine(lines, "Phiras", mapResources.phiras, playerResources.phiras);
-    addResourceLine(lines, "Thystame", mapResources.thystame, playerResources.thystame);
+    addResourceLine(lines, "Food", GUI::ResourceColors[0], mapResources.food, playerResources.food);
+    addResourceLine(lines, "Linemate", GUI::ResourceColors[1], mapResources.linemate, playerResources.linemate);
+    addResourceLine(lines, "Deraumere", GUI::ResourceColors[2], mapResources.deraumere, playerResources.deraumere);
+    addResourceLine(lines, "Sibur", GUI::ResourceColors[3], mapResources.sibur, playerResources.sibur);
+    addResourceLine(lines, "Mendiane", GUI::ResourceColors[4], mapResources.mendiane, playerResources.mendiane);
+    addResourceLine(lines, "Phiras", GUI::ResourceColors[5], mapResources.phiras, playerResources.phiras);
+    addResourceLine(lines, "Thystame", GUI::ResourceColors[6], mapResources.thystame, playerResources.thystame);
 }
 
-static std::vector<std::string> getHudLines(const GUI::GameState &state, std::size_t page)
+static HudLines getHudLines(const GUI::GameState &state, std::size_t page)
 {
-    std::vector<std::string> lines;
+    HudLines lines;
 
     if (page == 0)
         addOverviewLines(state, lines);
@@ -298,7 +349,7 @@ void Render::drawHud()
     const int contentY = titleY + lineHeight + lineHeight / 2;
     const int footerY = y + height - padding - lineHeight;
     const int visibleLines = std::max(1, (footerY - contentY - lineHeight / 2) / lineHeight);
-    std::vector<std::string> lines = getHudLines(_state, _hudPage);
+    HudLines lines = getHudLines(_state, _hudPage);
     int textY = contentY;
     const std::size_t maxScroll = lines.size() > static_cast<std::size_t>(visibleLines)
         ? lines.size() - static_cast<std::size_t>(visibleLines)
@@ -319,7 +370,12 @@ void Render::drawHud()
 
     // Draw visible lines from the current page on the HUD
     for (std::size_t i = _hudScroll; i < end; ++i) {
-        DrawText(lines[i].c_str(), x + padding, textY, fontSize, RAYWHITE);
+        int textX = x + padding;
+
+        for (const HudSegment &segment : lines[i]) {
+            DrawText(segment.text.c_str(), textX, textY, fontSize, segment.color);
+            textX += MeasureText(segment.text.c_str(), fontSize);
+        }
         textY += lineHeight;
     }
 
