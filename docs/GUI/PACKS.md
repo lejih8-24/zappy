@@ -52,7 +52,10 @@ Every pack must have a `manifest.json` at its root. This is what identifies a fo
   "name": "pack-name",
   "version": "1.0.0",
   "description": "Short description of the pack",
-  "author": "Your Name"
+  "author": "Your Name",
+  "animations": {
+    "walk": 2
+  }
 }
 ```
 
@@ -62,6 +65,7 @@ Every pack must have a `manifest.json` at its root. This is what identifies a fo
 | `version` | yes | Semantic version string |
 | `description` | yes | Short human-readable description |
 | `author` | yes | Author or team name |
+| `animations.walk` | no | Animation slot index for the walk cycle (default: 2) |
 
 ## Asset Files
 
