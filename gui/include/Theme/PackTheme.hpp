@@ -15,7 +15,9 @@
 
 #include <memory>
 #include <optional>
+#include <string>
 #include <string_view>
+#include <unordered_map>
 
 namespace GUI {
 
@@ -29,7 +31,10 @@ class PackTheme : public ITheme {
         void drawPlayer(Vector3 pos, float rotationDeg) const override;
         void drawEgg(Vector3 pos) const override;
 
+        int getAnimIndex(const std::string &name, int defaultIndex = 0) const;
+
     private:
+        std::unordered_map<std::string, int> _animations;
         DefaultTheme _fallback;
         std::unique_ptr<CharacterModel> _player;
         std::optional<Model> _egg;
