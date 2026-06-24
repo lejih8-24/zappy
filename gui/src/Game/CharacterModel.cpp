@@ -7,14 +7,20 @@
 
 #include "Game/CharacterModel.hpp"
 #include <stdexcept>
+#include <string>
 
-static constexpr const char *MODEL_PATH = PACKS_DIR "green_man/player.glb";
+static constexpr const char *DEFAULT_MODEL_PATH = PACKS_DIR "green_man/player.glb";
 
-GUI::CharacterModel::CharacterModel() : _model(LoadModel(MODEL_PATH)), _animations(LoadModelAnimations(MODEL_PATH, &_animationCount))
+GUI::CharacterModel::CharacterModel() : CharacterModel(DEFAULT_MODEL_PATH)
 {
-    if (_animationCount <= 0) {
+}
+
+GUI::CharacterModel::CharacterModel(std::string_view path)
+    : _model(LoadModel(std::string(path).c_str()))
+    , _animations(LoadModelAnimations(std::string(path).c_str(), &_animationCount))
+{
+    if (_animationCount <= 0)
         throw std::runtime_error("character model has no animations");
-    }
 }
 
 GUI::CharacterModel::~CharacterModel()
