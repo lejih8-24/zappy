@@ -18,7 +18,7 @@ Zappy::Client::HandshakeState::HandshakeState(Client& client)
 
 }
 
-void Zappy::Client::HandshakeState::update(Tick)
+void Zappy::Client::HandshakeState::update(std::chrono::nanoseconds)
 {
     if (!m_WelcomeSent) {
         auto amnt = m_Client.socket().write(WELCOME_MESSAGE);

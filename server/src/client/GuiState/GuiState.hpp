@@ -12,14 +12,12 @@
 
 
 namespace Zappy::Client {
-    class Client;
-
     class GuiState : public IState {
         Client& m_Client;
 
         public:
-            GuiState(Client& client);
+            GuiState();
 
-            void update(std::chrono::nanoseconds dt) override;
+            void update(Client& client, std::chrono::nanoseconds dt) override;
     };
 }

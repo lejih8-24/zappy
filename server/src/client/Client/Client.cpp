@@ -12,10 +12,20 @@
 
 Zappy::Client::Client::Client(Lattice::Socket&& socket)
     : m_Socket(std::move(socket))
-    , m_State(std::make_unique<HandshakeState>(*this))
+    , m_State(std::make_unique<HandshakeState>())
     , m_NextState()
+    , m_ClientName(m_Socket)
 {
 
+}
+
+Zappy::Client::Client::Client(Client&& other)
+    : m_Socket()
+    , m_State()
+    , m_NextState()
+    , m_ClientName()
+{
+    swap(other);
 }
 
 void Zappy::Client::Client::update(std::chrono::nanoseconds dt)
@@ -25,5 +35,13 @@ void Zappy::Client::Client::update(std::chrono::nanoseconds dt)
         m_NextState = nullptr;
     }
 
-    m_State->update(dt);
+    m_State->update(*this, dt);
+}
+
+void Zappy::Client::Client::swap(Client& other)
+{
+    m_Socket.swap(other.m_Socket);
+    m_State.swap(other.m_State);
+    m_NextState.swap(other.m_NextState);
+    m_ClientName.swap(other.m_ClientName);
 }

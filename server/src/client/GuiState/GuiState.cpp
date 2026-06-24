@@ -9,13 +9,12 @@
 #include "GuiState.hpp"
 
 
-Zappy::Client::GuiState::GuiState(Client& client)
-    : m_Client(client)
+Zappy::Client::GuiState::GuiState()
 {
 
 }
 
-void Zappy::Client::GuiState::update(Tick)
+void Zappy::Client::GuiState::update(Client&, std::chrono::nanoseconds)
 {
 
 }

@@ -13,11 +13,13 @@
 
 
 namespace Zappy::Client {
+    class Client;
+
     class IState {
         public:
             virtual ~IState() = default;
 
-            virtual void update(std::chrono::nanoseconds dt) = 0;
+            virtual void update(Client& client, std::chrono::nanoseconds dt) = 0;
             // virtual void registerEvent() = 0;
     };
 

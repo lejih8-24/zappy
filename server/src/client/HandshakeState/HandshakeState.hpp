@@ -14,18 +14,15 @@
 
 
 namespace Zappy::Client {
-    class Client;
-
     class HandshakeState : public IState {
         static constexpr std::string_view WELCOME_MESSAGE = "WELCOME\n";
 
-        Client& m_Client;
         std::string m_TeamName;
         bool m_WelcomeSent;
 
         public:
-            HandshakeState(Client& client);
+            HandshakeState();
 
-            void update(std::chrono::nanoseconds dt) override;
+            void update(Client& client, std::chrono::nanoseconds dt) override;
     };
 }

@@ -9,13 +9,12 @@
 #include "PlayerRunState.hpp"
 
 
-Zappy::Client::PlayerRunState::PlayerRunState(Client& client)
-    : m_Client(client)
+Zappy::Client::PlayerRunState::PlayerRunState()
 {
 
 }
 
-void Zappy::Client::PlayerRunState::update(Tick)
+void Zappy::Client::PlayerRunState::update(Client&, std::chrono::nanoseconds)
 {
 
 }
