@@ -8,11 +8,13 @@
 #pragma once
 
 #include "raylib.h"
+#include <string_view>
 
 namespace GUI {
 class CharacterModel {
     public:
         CharacterModel();
+        explicit CharacterModel(std::string_view path);
         ~CharacterModel();
 
         CharacterModel(const CharacterModel &) = delete; // on interdit copie de l'objet sinon 2 copies pointent vers meme mémoire gpu/ram allouée par raylib et destructeur libère 2 fois = crash
