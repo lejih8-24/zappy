@@ -293,7 +293,7 @@ void Render::drawHud()
     const int lineHeight = scaleSize(27);
     const int x = _window.getWidth() - panelWidth - margin;
     const int y = margin;
-    const int height = _window.getHeight() - margin * 2;
+    const int height = std::min(_window.getHeight() - margin * 2, scaleSize(650));
     const int titleY = y + padding;
     const int contentY = titleY + lineHeight + lineHeight / 2;
     const int footerY = y + height - padding - lineHeight;
