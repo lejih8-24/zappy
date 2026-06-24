@@ -20,12 +20,12 @@ Zappy::Client::HandshakeState::HandshakeState()
 void Zappy::Client::HandshakeState::update(Client& client, std::chrono::nanoseconds)
 {
     if (!m_WelcomeSent) {
-        auto amnt = client.socket().write(WELCOME_MESSAGE);
+        auto amnt = client.send(WELCOME_MESSAGE);
         m_WelcomeSent = amnt == WELCOME_MESSAGE.length();
         return;
     }
 
-    if (!client.socket().readUntil(m_TeamName, '\n'))
+    if (!client.readline(m_TeamName))
         return;
 
     if (m_TeamName == "GRAPHIC")
