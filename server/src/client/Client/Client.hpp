@@ -9,6 +9,7 @@
 #pragma once
 
 #include "../IState.hpp"
+#include <zappy/game.hpp>
 #include <lattice.hpp>
 #include <memory>
 
@@ -24,8 +25,9 @@ namespace Zappy::Client {
 
             void update(Tick elapsedTicks);
 
-            template <StateType T>
-            void setState() { m_NextState = std::make_unique<T>(*this); }
+            void setState(std::unique_ptr<IState>&& state) { m_NextState = std::move(state); }
+
+            inline Lattice::CachingSocket<>& socket() { return m_Socket; }
 
             // Functions to satisfy ClientSocketType constraint
             inline short requiredEvents() const { return m_Socket.requiredEvents(); }
