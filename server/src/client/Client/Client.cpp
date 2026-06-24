@@ -18,12 +18,12 @@ Zappy::Client::Client::Client(Lattice::Socket&& socket)
 
 }
 
-void Zappy::Client::Client::update(Tick elapsedTicks)
+void Zappy::Client::Client::update(std::chrono::nanoseconds dt)
 {
     if (m_NextState) {
         m_State.swap(m_NextState);
         m_NextState = nullptr;
     }
 
-    m_State->update(elapsedTicks);
+    m_State->update(dt);
 }

@@ -26,6 +26,6 @@ namespace Zappy::Client {
         public:
             HandshakeState(Client& client);
 
-            void update(Tick elapsedTicks) override;
+            void update(std::chrono::nanoseconds dt) override;
     };
 }

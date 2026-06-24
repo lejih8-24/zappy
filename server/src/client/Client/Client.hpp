@@ -12,6 +12,7 @@
 #include <zappy/game.hpp>
 #include <lattice.hpp>
 #include <memory>
+#include <chrono>
 
 
 namespace Zappy::Client {
@@ -23,7 +24,7 @@ namespace Zappy::Client {
         public:
             Client(Lattice::Socket&& socket);
 
-            void update(Tick elapsedTicks);
+            void update(std::chrono::nanoseconds dt);
 
             void setState(std::unique_ptr<IState>&& state) { m_NextState = std::move(state); }
 

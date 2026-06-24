@@ -9,16 +9,15 @@
 #pragma once
 
 #include <type_traits>
+#include <chrono>
 
 
 namespace Zappy::Client {
-    using Tick = unsigned int;
-
     class IState {
         public:
             virtual ~IState() = default;
 
-            virtual void update(Tick elapsedTicks) = 0;
+            virtual void update(std::chrono::nanoseconds dt) = 0;
             // virtual void registerEvent() = 0;
     };
 

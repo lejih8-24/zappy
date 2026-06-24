@@ -20,6 +20,6 @@ namespace Zappy::Client {
         public:
             GuiState(Client& client);
 
-            void update(Tick elapsedTicks) override;
+            void update(std::chrono::nanoseconds dt) override;
     };
 }
