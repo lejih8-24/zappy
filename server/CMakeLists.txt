@@ -18,6 +18,7 @@ add_executable(zappy_server
                src/game/Player/Player.cpp
                src/game/Resources/Resources.cpp
                src/Server/Server.cpp
+               src/utils/Logger/Logger.cpp
                src/main.cpp)
 
 target_include_directories(zappy_server
