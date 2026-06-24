@@ -24,7 +24,7 @@ add_executable(zappy_gui
                src/Game/Tile.cpp
                src/Game/CharacterModel.cpp
                src/Theme/DefaultTheme.cpp
-               src/Theme/GlbTheme.cpp
+               src/Theme/PackTheme.cpp
                src/Theme/ThemeManager.cpp
                src/Camera.cpp
                src/GuiArgs.cpp
