@@ -24,6 +24,10 @@ static constexpr std::array<const char *, 7> RESOURCE_FILES = {
     "mendiane.glb", "phiras.glb", "thystame.glb"
 };
 
+// raylib converts u32 (UNSIGNED_INT) mesh indices to u16, corrupting any index > 65535.
+// Calling LoadModel on such a file causes a segfault inside raylib's skin processor.
+// We pre-check the GLB JSON chunk for componentType 5125 (UNSIGNED_INT) and refuse to
+// load the file if found, falling back to primitives instead of crashing.
 static bool glbHasU32Indices(const std::string &path)
 {
     std::ifstream file(path, std::ios::binary);
