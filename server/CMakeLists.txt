@@ -15,10 +15,12 @@ add_executable(zappy_server
                src/client/HandshakeState/HandshakeState.cpp
                src/client/PlayerRunState/PlayerRunState.cpp
                src/exceptions/ArgumentParseException/ArgumentParseException.cpp
+               src/game/Egg/Egg.cpp
                src/game/Event/Event.cpp
                src/game/Game/Game.cpp
                src/game/Player/Player.cpp
                src/game/Resources/Resources.cpp
+               src/game/Team/Team.cpp
                src/Server/Server.cpp
                src/utils/Logger/Logger.cpp
                src/main.cpp)
