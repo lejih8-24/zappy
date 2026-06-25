@@ -6,5 +6,5 @@
   "animations": {
     "walk": 0
   },
-  "playerRotation": { "x": 180 }
+  "playerRotation": { "x": 90 }
 }
