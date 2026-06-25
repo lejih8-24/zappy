@@ -15,6 +15,7 @@
 #include <zappy/utils.hpp>
 #include <unordered_map>
 #include <random>
+#include <chrono>
 #include <span>
 
 
@@ -33,7 +34,20 @@ namespace Zappy::Game {
         public:
             Game() noexcept;
 
+            // Game runtime
+            void update(std::chrono::nanoseconds dt);
+
+            // Game resources
+            const Utils::Array2D<Resources>& tiles() const noexcept { return m_Map; }
+            std::span<const Player> players() const noexcept { return m_Players; }
+            std::span<const Egg> eggs() const noexcept { return m_Eggs; }
+            const std::unordered_map<std::string, Team>& teams() const noexcept { return m_Teams; }
+            inline std::span<const std::string> graphicsEvents() const noexcept { return m_GraphicsEvents; }
+
+            // Game config and events
             inline void setMapSize(std::pair<unsigned int, unsigned int> size) { m_Map.resize(size.first, size.second); }
+            inline std::pair<unsigned int, unsigned int> mapSize() noexcept { return m_Map.size(); }
+
             void setTeams(std::span<std::string> names, std::size_t maxMembers);
 
             void playerLayEgg(int playerId) { return playerLayEgg(m_Players[playerId]); }

@@ -23,6 +23,11 @@ Zappy::Game::Game::Game() noexcept
 
 }
 
+void Zappy::Game::Game::update(std::chrono::nanoseconds dt)
+{
+    m_GraphicsEvents.clear();
+}
+
 void Zappy::Game::Game::setTeams(std::span<std::string> names, std::size_t maxMembers)
 {
     m_Teams.clear();
@@ -30,8 +35,10 @@ void Zappy::Game::Game::setTeams(std::span<std::string> names, std::size_t maxMe
     for (auto& name : names) {
         Team team(name, maxMembers);
 
-        auto [randX, randY] = randomPosition();
-        m_Eggs.emplace_back(-1, name, randX, randY);
+        for (std::size_t i = 0; i < maxMembers; i++) {
+            auto [randX, randY] = randomPosition();
+            m_Eggs.emplace_back(-1, name, randX, randY);
+        }
 
         m_Teams[std::move(name)] = std::move(team);
     }
