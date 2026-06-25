@@ -24,7 +24,7 @@ namespace Zappy::Game {
 
             inline int id() const noexcept { return m_Id; }
             inline int parentId() const noexcept { return m_PlayerId; }
-            inline void setPosition(unsigned int x, unsigned int y) { m_Position = { x, y }; }
+            inline void moveTo(unsigned int x, unsigned int y) { m_Position = { x, y }; }
             inline std::pair<unsigned int, unsigned int> getPosition() const noexcept { return m_Position; }
     };
 }

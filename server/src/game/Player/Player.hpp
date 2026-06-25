@@ -14,9 +14,9 @@
 
 namespace Zappy::Game {
     class Player {
-        static unsigned int s_NextId;
+        static int s_NextId;
 
-        unsigned int m_Id;
+        int m_Id;
         std::string m_TeamName;
         std::pair<unsigned int, unsigned int> m_Position;
 
@@ -24,7 +24,7 @@ namespace Zappy::Game {
             Player(std::string_view team);
 
             std::string_view team() const noexcept { return m_TeamName; }
-            constexpr unsigned int id() const noexcept { return m_Id; }
+            constexpr int id() const noexcept { return m_Id; }
             constexpr void moveTo(unsigned int x, unsigned int y) { m_Position = { x, y }; }
     };
 }

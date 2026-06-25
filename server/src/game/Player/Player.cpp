@@ -9,7 +9,7 @@
 #include "Player.hpp"
 
 
-unsigned int Zappy::Game::Player::s_NextId = 0;
+int Zappy::Game::Player::s_NextId = 0;
 
 
 Zappy::Game::Player::Player(std::string_view team)
