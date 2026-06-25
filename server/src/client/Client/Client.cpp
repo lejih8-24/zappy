@@ -13,8 +13,8 @@
 
 Zappy::Client::Client::Client(Lattice::Socket&& socket)
     : m_Socket(std::move(socket))
-    , m_State(std::make_unique<HandshakeState>())
-    , m_NextState()
+    , m_State()
+    , m_NextState(std::make_unique<HandshakeState>())
     , m_ClientName(m_Socket)
 {
 
