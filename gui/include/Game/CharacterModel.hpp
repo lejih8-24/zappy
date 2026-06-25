@@ -17,7 +17,7 @@ class CharacterModel {
         explicit CharacterModel(std::string_view path, bool loadAnimations = true);
         ~CharacterModel();
 
-        CharacterModel(const CharacterModel &) = delete; // two copies sharing the same raylib GPU handle would double-free on destruction
+        CharacterModel(const CharacterModel &) = delete; // two copies sharing the same raylib GPU handle would double-free on destruction = crash
         CharacterModel &operator=(const CharacterModel &) = delete;
 
         void draw(Vector3 position, float rotationDeg, int animationIndex, float frame) const;
