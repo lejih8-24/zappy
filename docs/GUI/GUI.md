@@ -53,4 +53,4 @@
 - `flèches gauche/droite` : changer de page HUD uniquement.
 - `flèches haut/bas` : scroll dans la page HUD uniquement.
 - `X` : fermer le GUI.
-- `ESC` : lock caméra (permet d'avoir sa souris libre).
+- `ESC` : lock caméra / settings.

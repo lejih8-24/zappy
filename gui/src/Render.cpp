@@ -29,13 +29,34 @@ Render::Render(std::string_view host, int port)
 
 void Render::drawHelpText() const
 {
-    DrawText("Zappy GUI - 3D Map  |  [WASD] move  [R] reset  [F11] fullscreen  [H] HUD  [Arrows] HUD pages/scroll  [X] quit  |  [ESC] lock camera ",
-        UI::scaleSize(10), UI::scaleSize(34), UI::scaleSize(20), RAYWHITE);
+    if (_camera.isCursorLocked())
+        return;
+
+    static constexpr const char *helpLines[] = {
+        "Zappy GUI - 3D Map",
+        "[WASD] move",
+        "[Shift] sprint",
+        "[R] reset camera",
+        "[F11] fullscreen",
+        "[H] HUD",
+        "[Arrows] HUD pages/scroll",
+        "[X] quit",
+        "[ESC] lock camera/settings",
+    };
+    const int fontSize = UI::scaleSize(20);
+    const int lineSpacing = UI::scaleSize(28);
+    const int startY = GetScreenHeight() / 2 + UI::scaleSize(55);
+
+    for (std::size_t i = 0; i < sizeof(helpLines) / sizeof(helpLines[0]); ++i) {
+        const int textWidth = MeasureText(helpLines[i], fontSize);
+        DrawText(helpLines[i], (GetScreenWidth() - textWidth) / 2, startY + static_cast<int>(i) * lineSpacing,
+            fontSize, RAYWHITE);
+    }
 }
 
 void Render::drawCameraLockLabel() const
 {
-    const char *lockLabel = _camera.isCursorLocked() ? "[UNLOCKED]" : "[LOCKED] Click to unlock";
+    const char *lockLabel = _camera.isCursorLocked() ? "[ESC] lock camera/settings" : "[LOCKED] Click to unlock";
 
     DrawText(lockLabel, UI::scaleSize(10), UI::scaleSize(62), UI::scaleSize(18),
         _camera.isCursorLocked() ? GREEN : YELLOW);
