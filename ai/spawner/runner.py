@@ -35,13 +35,19 @@ def run(args: argparse.Namespace) -> None:
     signal.signal(signal.SIGINT, shutdown)
     signal.signal(signal.SIGTERM, shutdown)
 
+    threads: list[threading.Thread] = []
     for i in range(args.count):
         proc = Popen(cmd, stdout=PIPE, stderr=STDOUT, text=True)
         procs.append(proc)
-        threading.Thread(target=pipe_output, args=(proc, i + 1, args.quiet), daemon=True).start()
+        t = threading.Thread(target=pipe_output, args=(proc, i + 1, args.quiet), daemon=True)
+        t.start()
+        threads.append(t)
         print(f"{ai_color(i + 1)}[spawn]{RESET} AI {i + 1}/{args.count} started (PID {proc.pid})")
         if args.delay > 0 and i < args.count - 1:
             time.sleep(args.delay)
 
     for proc in procs:
         proc.wait()
+
+    for t in threads:
+        t.join(timeout=1.0)

@@ -13,16 +13,19 @@ from spawner.colors import RESET, ai_color
 
 def pipe_output(proc: Popen, index: int, quiet: bool = False) -> None:
     prefix = f"{ai_color(index)}[AI-{index}]{RESET}"
-    for line in proc.stdout:
-        if quiet:
-            continue
-        try:
-            print(f"{prefix} {line}", end="", flush=True)
-        except Exception:
-            break
-    code = proc.wait()
     try:
-        print(f"{prefix} exited (code {code})", flush=True)
+        for line in proc.stdout:
+            if quiet:
+                continue
+            try:
+                print(f"{prefix} {line}", end="", flush=True)
+            except Exception:
+                break
+        code = proc.wait()
+        try:
+            print(f"{prefix} exited (code {code})", flush=True)
+        except Exception:
+            pass
     except Exception:
         pass
 

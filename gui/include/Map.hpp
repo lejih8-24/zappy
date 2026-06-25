@@ -8,8 +8,7 @@
 #pragma once
 
 #include "Game/GameState.hpp"
-#include "Game/CharacterModel.hpp"
-#include "Game/EggModel.hpp"
+#include "Theme/ITheme.hpp"
 
 #include "raylib.h"
 
@@ -17,7 +16,7 @@ namespace GUI {
 
 class Map {
     public:
-        Map(float squareSize = 2.0f);
+        Map(ITheme &theme, float squareSize = 2.0f);
         ~Map() = default;
 
         void draw(const GameState &state) const;
@@ -25,10 +24,8 @@ class Map {
     private:
         Vector3 getTilePosition(int x, int y, const GameState &state, float height = 0.0f) const;
 
+        ITheme &_theme;
         float _squareSize;
-
-        CharacterModel _character;
-        EggModel _eggModel;
 };
 
 }
