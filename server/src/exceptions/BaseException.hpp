@@ -21,5 +21,6 @@ namespace Zappy::Exceptions {
             BaseException(std::string_view msg) : m_Message(msg) {}
 
             inline const char* what() const noexcept { return m_Message.c_str(); }
+            virtual inline unsigned char status() const noexcept { return 84; }
     };
 }
