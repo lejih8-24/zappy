@@ -15,6 +15,7 @@
 #include <regex>
 #include <sstream>
 #include <string>
+#include "raymath.h"
 
 static constexpr float ANIM_FPS = 24.0f;
 static constexpr const char *BASE_PACK = "green_man";
@@ -61,7 +62,8 @@ static std::string resolvePath(std::string_view packName, const char *filename)
     return {};
 }
 
-static Vector3 parsePlayerRotation(std::string_view packName)
+// generic rotation parser reused by both player and egg
+static Vector3 parseRotation(std::string_view packName, const char *blockName)
 {
     std::string manifestPath = std::string(PACKS_DIR) + std::string(packName) + "/manifest.json";
     if (!std::filesystem::exists(manifestPath))
@@ -72,14 +74,14 @@ static Vector3 parsePlayerRotation(std::string_view packName)
     buf << file.rdbuf();
     std::string json = buf.str();
 
-    auto blockStart = json.find("\"playerRotation\"");
+    auto blockStart = json.find(std::string("\"") + blockName + "\"");
     if (blockStart == std::string::npos)
         return {0, 0, 0};
 
     Vector3 rot = {0, 0, 0};
     // matches `"x": 180` or `"z": -90.5`; group 1 = axis letter, group 2 = signed float
     std::regex axis("\"([xyz])\"\\s*:\\s*(-?\\d+(?:\\.\\d+)?)");
-    // start search at the playerRotation block to avoid matching xyz keys elsewhere in the JSON
+    // start search at the named block to avoid matching xyz keys elsewhere in the JSON
     std::sregex_iterator it(json.cbegin() + blockStart, json.cend(), axis);
     std::sregex_iterator end;
     for (; it != end; ++it) {
@@ -90,6 +92,24 @@ static Vector3 parsePlayerRotation(std::string_view packName)
         else if (a == 'z') rot.z = v;
     }
     return rot;
+}
+
+static float parseEggScale(std::string_view packName)
+{
+    std::string manifestPath = std::string(PACKS_DIR) + std::string(packName) + "/manifest.json";
+    if (!std::filesystem::exists(manifestPath))
+        return 1.0f;
+
+    std::ifstream file(manifestPath);
+    std::ostringstream buf;
+    buf << file.rdbuf();
+    std::string json = buf.str();
+
+    std::regex r("\"eggScale\"\\s*:\\s*(\\d+(?:\\.\\d+)?)");
+    std::smatch m;
+    if (std::regex_search(json, m, r))
+        return std::stof(m[1].str());
+    return 1.0f;
 }
 
 static std::unordered_map<std::string, int> parseAnimations(std::string_view packName)
