@@ -11,6 +11,7 @@
 
 static constexpr float cameraMoveSpeed = 5.4F;
 static constexpr float cameraPanSpeed = 2.0F;
+static constexpr float cameraSprintMultiplier = 2.5F;
 static constexpr float cameraMouseSensitivity = 0.003F * RAD2DEG;
 
 namespace GUI {
@@ -43,8 +44,10 @@ void GameCamera::update()
 
 void GameCamera::updateFreeCamera()
 {
-    const float frameMoveSpeed = cameraMoveSpeed * ::GetFrameTime();
-    const float framePanSpeed = cameraPanSpeed * ::GetFrameTime();
+    const bool isSprinting = ::IsKeyDown(KEY_LEFT_SHIFT) || ::IsKeyDown(KEY_RIGHT_SHIFT);
+    const float speedMultiplier = isSprinting ? cameraSprintMultiplier : 1.0F;
+    const float frameMoveSpeed = cameraMoveSpeed * speedMultiplier * ::GetFrameTime();
+    const float framePanSpeed = cameraPanSpeed * speedMultiplier * ::GetFrameTime();
     const Vector2 mouseDelta = ::GetMouseDelta();
 
     // Rotation and zoom still use raylib's custom camera update
