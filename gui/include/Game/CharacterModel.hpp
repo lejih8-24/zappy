@@ -20,8 +20,8 @@ class CharacterModel {
         CharacterModel(const CharacterModel &) = delete; // on interdit copie de l'objet sinon 2 copies pointent vers meme mémoire gpu/ram allouée par raylib et destructeur libère 2 fois = crash
         CharacterModel &operator=(const CharacterModel &) = delete;
 
-        void draw(Vector3 position, float rotationDeg, int animationIndex, float frame) const; //animationIndex 0 = marche, 1 = mort etc
-
+        void draw(Vector3 position, float rotationDeg, int animationIndex, float frame) const;
+        void applyRotation(float xDeg, float yDeg, float zDeg);
         int getAnimationFrameCount(int animationIndex) const;
 
     private:
