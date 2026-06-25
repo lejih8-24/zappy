@@ -32,7 +32,7 @@ namespace Zappy::Client {
             Client(Lattice::Socket&& socket);
             Client(Client&& other);
 
-            void update(std::chrono::nanoseconds dt);
+            void update(Game::Game& game, std::chrono::nanoseconds dt);
             void setState(std::unique_ptr<IState>&& state) { m_NextState = std::move(state); }
             bool readline(std::string& output);
             inline auto send(std::span<const char> data) { return m_Socket.write(data); }

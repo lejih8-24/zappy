@@ -29,7 +29,7 @@ Zappy::Client::Client::Client(Client&& other)
     swap(other);
 }
 
-void Zappy::Client::Client::update(std::chrono::nanoseconds dt)
+void Zappy::Client::Client::update(Game::Game& game, std::chrono::nanoseconds dt)
 {
     if (m_NextState) {
         m_State.swap(m_NextState);
@@ -37,6 +37,7 @@ void Zappy::Client::Client::update(std::chrono::nanoseconds dt)
     }
 
     pushCommand();
+    m_State->setGame(game);
     m_State->update(*this, dt);
 }
 
