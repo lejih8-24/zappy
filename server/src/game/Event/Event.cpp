@@ -28,6 +28,11 @@ std::string Zappy::Game::Event::tileContents(unsigned int x, unsigned int y, con
                   + std::to_string(contents.thystame)  + "\n";
 }
 
+std::string Zappy::Game::Event::teamName(std::string_view name)
+{
+    return "tna " + std::string(name) + "\n";
+}
+
 std::string Zappy::Game::Event::eggNew(int eggId, int playerId, std::pair<unsigned int, unsigned int> pos)
 {
     return
