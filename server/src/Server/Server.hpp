@@ -60,6 +60,7 @@ namespace Zappy {
                 std::pair<std::uint32_t, std::uint32_t> m_MapSize;
                 std::uint32_t m_TickSpeed;
                 std::uint32_t m_ClientsPerTeam;
+                bool m_WaitPoll;
                 std::vector<std::string> m_TeamNames;
 
                 public:
@@ -73,6 +74,7 @@ namespace Zappy {
                     inline Builder&& setMapSize(std::uint32_t width, std::uint32_t height) { m_MapSize = { width, height };  return std::move(*this); }
                     inline Builder&& setTickSpeed(std::uint32_t speed)                     { m_TickSpeed = speed;            return std::move(*this); }
                     inline Builder&& setMaxClientsPerTeam(std::uint32_t clients)           { m_ClientsPerTeam = clients;     return std::move(*this); }
+                    inline Builder&& setWaitPoll(bool waitPoll)                            { m_WaitPoll = waitPoll;          return std::move(*this); }
                     Builder&& addTeamName(std::string_view name);
                     Builder&& setTeamNames(std::span<std::string_view> names);
                     Builder&& setTeamNames(std::span<const char*> names);

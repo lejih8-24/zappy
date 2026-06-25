@@ -15,7 +15,6 @@
 Zappy::Server::Server(std::string_view ip, std::uint16_t port)
     : Lattice::Server<Client>(ip, port)
     , m_Game()
-
 {
 
 }
@@ -84,6 +83,7 @@ Zappy::Server::Builder::Builder()
     , m_MapSize{ 0, 0 }
     , m_TickSpeed(100)
     , m_ClientsPerTeam(0)
+    , m_WaitPoll(false)
     , m_TeamNames()
 {
 
@@ -144,6 +144,7 @@ auto Zappy::Server::Builder::build() && -> Server
 {
     Server server(m_Hostname, m_Port);
 
+    server.waitPoll(m_WaitPoll);
     server.m_Game.setMapSize(m_MapSize);
     server.m_Game.setTeams(m_TeamNames, m_ClientsPerTeam);
 
@@ -175,6 +176,8 @@ std::span<const char*> Zappy::Server::Builder::parseOption(std::string_view prog
         case 'n': return parseTeamNamesOption(progName, args);
         case 'f': return parseTickSpeedOption(progName, args);
         case 'c': return parseMaxClientsOption(progName, args);
+        case 'h': throw Exceptions::ArgumentParseException(progName);
+        case 'w': setWaitPoll(true); return args;
 
         default: throw Exceptions::ArgumentParseException(progName, "invalid option -- '"s + option[1] + "'");
     }
