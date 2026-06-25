@@ -29,7 +29,10 @@ void GameCamera::update()
     else if (::IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !::IsCursorHidden())
         ::DisableCursor();
 
-    if (::IsCursorHidden())
+    const bool hudArrowUsed = ::IsKeyDown(KEY_LEFT) || ::IsKeyDown(KEY_RIGHT)
+        || ::IsKeyDown(KEY_UP) || ::IsKeyDown(KEY_DOWN);
+
+    if (::IsCursorHidden() && !hudArrowUsed)
         ::UpdateCamera(&_camera, CAMERA_FREE);
 
     if (::IsKeyPressed(KEY_R))
