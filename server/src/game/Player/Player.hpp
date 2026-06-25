@@ -25,6 +25,7 @@ namespace Zappy::Game {
 
             std::string_view team() const noexcept { return m_TeamName; }
             constexpr int id() const noexcept { return m_Id; }
+            constexpr std::pair<unsigned int, unsigned int> position() const noexcept { return m_Position; }
             constexpr void moveTo(unsigned int x, unsigned int y) { m_Position = { x, y }; }
     };
 }
