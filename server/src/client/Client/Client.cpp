@@ -50,8 +50,9 @@ bool Zappy::Client::Client::readline(std::string& output)
         return false;
 
     output.swap(m_QueuedCommands.back());
-    output.pop_back();
+    output.pop_back();  // remove terminating '\n'
 
+    m_QueuedCommands.pop_back();
     return true;
 }
 
