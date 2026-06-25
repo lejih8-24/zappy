@@ -34,10 +34,11 @@ void Zappy::Client::Client::update(Game::Game& game, std::chrono::nanoseconds dt
     if (m_NextState) {
         m_State.swap(m_NextState);
         m_NextState = nullptr;
+        m_State->setGame(game);
+        m_State->init();
     }
 
     pushCommand();
-    m_State->setGame(game);
     m_State->update(*this, dt);
 }
 
