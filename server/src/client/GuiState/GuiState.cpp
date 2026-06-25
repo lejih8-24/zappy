@@ -22,7 +22,7 @@ void Zappy::Client::GuiState::init()
     auto [mapX, mapY] = game().mapSize();
 
     m_QueuedEvents.emplace_back(Game::Event::mapSize(mapX, mapY));
-    // TODO: queue sgt event
+    m_QueuedEvents.emplace_back(Game::Event::serverGameSpeed(game().gameSpeed()));
 
     for (std::size_t y = 0; y < mapY; y++) {
         for (std::size_t x = 0; x < mapX; x++) {
