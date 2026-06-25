@@ -27,7 +27,15 @@ class Render {
         void renderLoop(Zappy::Networking::GraphicsClient &client);
 
     private:
+        void update(Zappy::Networking::GraphicsClient &client);
+        void pollServerEvents(Zappy::Networking::GraphicsClient &client);
         void handleGameInput();
+        void drawFrame();
+        void draw3DScene();
+        void drawCrosshair() const;
+        void drawFocusOverlay() const;
+        void drawCameraLockLabel() const;
+        void drawHelpText() const;
 
         GameState _state;
         Window _window;

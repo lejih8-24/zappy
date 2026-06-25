@@ -27,6 +27,68 @@ Render::Render(std::string_view host, int port)
 {
 }
 
+void Render::drawHelpText() const
+{
+    DrawText("Zappy GUI - 3D Map  |  [WASD] move  [R] reset  [F11] fullscreen  [H] HUD  [Arrows] HUD pages/scroll  [X] quit  |  [ESC] lock camera ",
+        UI::scaleSize(10), UI::scaleSize(34), UI::scaleSize(20), RAYWHITE);
+}
+
+void Render::drawCameraLockLabel() const
+{
+    const char *lockLabel = _camera.isCursorLocked() ? "[UNLOCKED]" : "[LOCKED] Click to unlock";
+
+    DrawText(lockLabel, UI::scaleSize(10), UI::scaleSize(62), UI::scaleSize(18),
+        _camera.isCursorLocked() ? GREEN : YELLOW);
+}
+
+void Render::drawFocusOverlay() const
+{
+    if (_camera.isCursorLocked())
+        return;
+
+    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), {0, 0, 0, 100});
+    const char *msg = "Click to unlock";
+    int fontSize = UI::scaleSize(36);
+    int tw = MeasureText(msg, fontSize);
+
+    DrawText(msg, (GetScreenWidth() - tw) / 2, GetScreenHeight() / 2 - fontSize / 2, fontSize, RAYWHITE);
+}
+
+void Render::drawCrosshair() const
+{
+    if (!_camera.isCursorLocked())
+        return;
+
+    int cx = GetScreenWidth() / 2;
+    int cy = GetScreenHeight() / 2;
+    int crosshairSize = UI::scaleSize(12);
+
+    DrawLine(cx - crosshairSize, cy, cx + crosshairSize, cy, RAYWHITE);
+    DrawLine(cx, cy - crosshairSize, cx, cy + crosshairSize, RAYWHITE);
+}
+
+void Render::draw3DScene()
+{
+    _camera.begin3D();
+    _map.draw(_state);
+    _camera.end3D();
+}
+
+void Render::drawFrame()
+{
+    _window.beginFrame();
+    DrawFPS(10, 10);
+
+    draw3DScene();
+    _hud.draw(_state, _window);
+    drawCrosshair();
+    drawFocusOverlay();
+    drawCameraLockLabel();
+    drawHelpText();
+
+    _window.endFrame();
+}
+
 void Render::handleGameInput()
 {
     if (IsKeyPressed(KEY_F11))
@@ -43,48 +105,26 @@ void Render::handleGameInput()
         _hud.update(HudAction::ScrollUp);
 }
 
-void Render::renderLoop(Zappy::Networking::GraphicsClient &client)
+void Render::pollServerEvents(Zappy::Networking::GraphicsClient &client)
 {
     GameStateEventHandler handler(_state);
 
+    while (auto event = client.pollEvent())
+        std::visit(handler, *event);
+}
+
+void Render::update(Zappy::Networking::GraphicsClient &client)
+{
+    pollServerEvents(client);
+    handleGameInput();
+    _camera.update();
+}
+
+void Render::renderLoop(Zappy::Networking::GraphicsClient &client)
+{
     while (!_window.shouldClose()) {
-        while (auto event = client.pollEvent())
-            std::visit(handler, *event);
-
-        handleGameInput();
-        _camera.update();
-
-        _window.beginFrame();
-        DrawFPS(10, 10);
-
-        _camera.begin3D();
-        _map.draw(_state);
-        _camera.end3D();
-
-        _hud.draw(_state, _window);
-        if (_camera.isCursorLocked()) {
-            int cx = GetScreenWidth() / 2;
-            int cy = GetScreenHeight() / 2;
-            int crosshairSize = UI::scaleSize(12);
-            DrawLine(cx - crosshairSize, cy, cx + crosshairSize, cy, RAYWHITE);
-            DrawLine(cx, cy - crosshairSize, cx, cy + crosshairSize, RAYWHITE);
-        }
-
-        if (!_camera.isCursorLocked()) {
-            DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), {0, 0, 0, 100});
-            const char *msg = "Click to unlock";
-            int fontSize = UI::scaleSize(36);
-            int tw = MeasureText(msg, fontSize);
-            DrawText(msg, (GetScreenWidth() - tw) / 2, GetScreenHeight() / 2 - fontSize / 2, fontSize, RAYWHITE);
-        }
-
-        const char *lockLabel = _camera.isCursorLocked() ? "[UNLOCKED]" : "[LOCKED] Click to unlock";
-        DrawText(lockLabel, UI::scaleSize(10), UI::scaleSize(62), UI::scaleSize(18),
-            _camera.isCursorLocked() ? GREEN : YELLOW);
-
-        DrawText("Zappy GUI - 3D Map  |  [WASD] move  [R] reset  [F11] fullscreen  [H] HUD  [Arrows] HUD pages/scroll  [X] quit  |  [ESC] lock camera ",
-            UI::scaleSize(10), UI::scaleSize(34), UI::scaleSize(20), RAYWHITE);
-        _window.endFrame();
+        update(client);
+        drawFrame();
     }
 }
 
