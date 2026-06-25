@@ -30,6 +30,7 @@ namespace Zappy::Game {
             std::unordered_map<std::string, Team> m_Teams;
 
             std::vector<std::string> m_GraphicsEvents;
+            unsigned int m_GameSpeed;
 
         public:
             Game() noexcept;
@@ -43,6 +44,8 @@ namespace Zappy::Game {
             std::span<const Egg> eggs() const noexcept { return m_Eggs; }
             const std::unordered_map<std::string, Team>& teams() const noexcept { return m_Teams; }
             inline std::span<const std::string> graphicsEvents() const noexcept { return m_GraphicsEvents; }
+            unsigned int gameSpeed() const noexcept { return m_GameSpeed; }
+            void setGameSpeed(unsigned int speed) noexcept { m_GameSpeed = speed; }
 
             // Game config and events
             inline void setMapSize(std::pair<unsigned int, unsigned int> size) { m_Map.resize(size.first, size.second); }

@@ -19,6 +19,8 @@ Zappy::Game::Game::Game() noexcept
     , m_Players()
     , m_Eggs()
     , m_Teams()
+    , m_GraphicsEvents()
+    , m_GameSpeed(1)
 {
 
 }
