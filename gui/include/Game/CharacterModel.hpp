@@ -14,7 +14,7 @@ namespace GUI {
 class CharacterModel {
     public:
         CharacterModel();
-        explicit CharacterModel(std::string_view path);
+        explicit CharacterModel(std::string_view path, bool loadAnimations = true);
         ~CharacterModel();
 
         CharacterModel(const CharacterModel &) = delete; // on interdit copie de l'objet sinon 2 copies pointent vers meme mémoire gpu/ram allouée par raylib et destructeur libère 2 fois = crash
@@ -28,5 +28,6 @@ class CharacterModel {
         Model _model;
         ModelAnimation *_animations;
         int _animationCount;
+        Matrix _correction;
 };
 }
