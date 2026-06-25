@@ -40,7 +40,7 @@ class PackTheme : public ITheme {
         std::unique_ptr<CharacterModel> _player;
         std::optional<Model> _egg;
         std::optional<Model> _tile;
-        std::array<std::optional<Model>, 7> _resources;
+        std::array<std::optional<Model>, 7> _resources; // one slot per resource type: food, linemate, deraumere, sibur, mendiane, phiras, thystame
 };
 
 }
