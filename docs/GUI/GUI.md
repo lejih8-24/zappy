@@ -12,6 +12,7 @@
 - Il contient la map, les tuiles, ressources, joueurs, œufs, équipes, temps et fin de partie.
 - Les events réseau mettent à jour ce state.
 - Le render lit seulement ce state.
+- Le rendu est séparé entre `Window`, `GameCamera`, `Map` et `Hud`.
 
 ## Rendu 3D
 
@@ -33,7 +34,7 @@
 ## Textes et scale
 
 - Les textes UI changent de taille selon la hauteur de la fenêtre.
-- La base est `900px` de haut.
+- La taille de base est de `900px` de haut.
 - En dessous, la taille ne diminue pas.
 - Au-dessus ou en fullscreen, les textes grossissent.
 - Le HUD, ses textes et le crosshair utilisent aussi ce scale.

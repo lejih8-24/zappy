@@ -1,6 +1,6 @@
 # HUD du GUI
 
-Le HUD est un panneau transparent à droite de l'écran.
+Le HUD est un composant UI dédié, affiché dans un panneau transparent à droite de l'écran.
 
 - `H` : affiche/cache le HUD.
 - `flèche gauche/droite` : change de page.
