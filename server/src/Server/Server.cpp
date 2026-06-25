@@ -14,12 +14,15 @@
 
 Zappy::Server::Server(std::string_view ip, std::uint16_t port)
     : Lattice::Server<Client>(ip, port)
+    , m_Game()
+
 {
 
 }
 
 Zappy::Server::Server(Server&& other)
     : Lattice::Server<Client>()
+    , m_Game()
 {
     swap(other);
 }
@@ -65,7 +68,7 @@ void Zappy::Server::updateServer()
 void Zappy::Server::updateClient(Client& client)
 {
     Zappy::logger.debug() << "updating " << client.name() << std::endl;
-    client.update(m_DeltaTime);
+    client.update(m_Game, m_DeltaTime);
 }
 
 Zappy::Server::Builder::Builder()
@@ -79,10 +82,10 @@ Zappy::Server::Builder::Builder()
 
 }
 
-auto Zappy::Server::Builder::fromArguments(std::span<const char*> args) -> Builder&
+auto Zappy::Server::Builder::fromArguments(std::span<const char*> args) -> Builder&&
 {
     if (args.empty())
-        return *this;
+        return std::move(*this);
 
     std::string_view progName = args[0];
     args = args.subspan(1);
@@ -102,37 +105,42 @@ auto Zappy::Server::Builder::fromArguments(std::span<const char*> args) -> Build
     if (m_TeamNames.empty())
         throw Exceptions::ParseException(std::string(progName) + ": missing required argument -n (team names)");
 
-    return *this;
+    return std::move(*this);
 }
 
-auto Zappy::Server::Builder::setTeamNames(std::span<std::string_view> names) -> Builder&
+auto Zappy::Server::Builder::setTeamNames(std::span<std::string_view> names) -> Builder&&
 {
     for (auto& name : names)
         addTeamName(name);
 
-    return *this;
+    return std::move(*this);
 }
 
-auto Zappy::Server::Builder::setTeamNames(std::span<const char*> names) -> Builder&
+auto Zappy::Server::Builder::setTeamNames(std::span<const char*> names) -> Builder&&
 {
     for (auto& name : names)
         addTeamName(name);
 
-    return *this;
+    return std::move(*this);
 }
 
-auto Zappy::Server::Builder::addTeamName(std::string_view name) -> Builder&
+auto Zappy::Server::Builder::addTeamName(std::string_view name) -> Builder&&
 {
     if (name == "GRAPHIC")
         throw Exceptions::ParseException("team name may not be reserved name \"GRAPHIC\"");
 
     m_TeamNames.emplace_back(name);
-    return *this;
+    return std::move(*this);
 }
 
-auto Zappy::Server::Builder::build() -> Server
+auto Zappy::Server::Builder::build() && -> Server
 {
-    return Server(m_Hostname, m_Port);
+    Server server(m_Hostname, m_Port);
+
+    server.m_Game.setMapSize(m_MapSize);
+    server.m_Game.setTeams(m_TeamNames, m_ClientsPerTeam);
+
+    return server;
 }
 
 using std::string_literals::operator ""s;
