@@ -150,6 +150,7 @@ namespace GUI {
 
 PackTheme::PackTheme(std::string_view packName)
     : _animations(parseAnimations(packName))
+    , _eggCorrection(MatrixIdentity())
 {
     std::string playerPath = resolvePath(packName, "player.glb");
     if (!playerPath.empty() && !glbHasU32Indices(playerPath)) {
@@ -157,7 +158,7 @@ PackTheme::PackTheme(std::string_view packName)
             // pass loadAnimations=false when manifest has no animations block;
             // models without embedded animation data crash inside LoadModelAnimations
             _player = std::make_unique<CharacterModel>(playerPath, !_animations.empty());
-            Vector3 rot = parsePlayerRotation(packName);
+            Vector3 rot = parseRotation(packName, "playerRotation");
             if (rot.x != 0 || rot.y != 0 || rot.z != 0)
                 _player->applyRotation(rot.x, rot.y, rot.z);
         } catch (...) {
@@ -166,8 +167,15 @@ PackTheme::PackTheme(std::string_view packName)
     }
 
     std::string eggPath = resolvePath(packName, "egg.glb");
-    if (!eggPath.empty())
+    if (!eggPath.empty()) {
         _egg = LoadModel(eggPath.c_str());
+        _eggScale = parseEggScale(packName);
+        Vector3 rot = parseRotation(packName, "eggRotation");
+        Matrix rx = MatrixRotateX(DEG2RAD * rot.x);
+        Matrix ry = MatrixRotateY(DEG2RAD * rot.y);
+        Matrix rz = MatrixRotateZ(DEG2RAD * rot.z);
+        _eggCorrection = MatrixMultiply(MatrixMultiply(rx, ry), rz);
+    }
 
     std::string tilePath = resolvePath(packName, "tile.glb");
     if (!tilePath.empty())
@@ -229,7 +237,12 @@ void PackTheme::drawPlayer(Vector3 pos, float rotationDeg) const
 void PackTheme::drawEgg(Vector3 pos) const
 {
     if (_egg.has_value()) {
-        DrawModel(*_egg, pos, 1.0f, WHITE);
+        // same matrix composition as CharacterModel::draw: scale * correction * translation
+        Matrix scale = MatrixScale(_eggScale, _eggScale, _eggScale);
+        Matrix translation = MatrixTranslate(pos.x, pos.y, pos.z);
+        Matrix transform = MatrixMultiply(MatrixMultiply(scale, _eggCorrection), translation);
+        for (int i = 0; i < _egg->meshCount; i++)
+            DrawMesh(_egg->meshes[i], _egg->materials[_egg->meshMaterial[i]], transform);
         return;
     }
     _fallback.drawEgg(pos);
