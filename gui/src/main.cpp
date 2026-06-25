@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
             return 84;
         }
 
-        GUI::Render render(args.getHost(), args.getPort());
+        GUI::Render render(args.getHost(), args.getPort(), args.getPack());
 
         render.renderLoop(client);
     } catch (const Zappy::Exceptions::ArgsException &error) {

@@ -21,6 +21,7 @@ class GuiArgs {
 
         const std::string &getHost() const;
         int getPort() const;
+        const std::string &getPack() const;
         void connect() const;
 
     private:
@@ -29,6 +30,7 @@ class GuiArgs {
 
         std::string _host = "127.0.0.1";
         int _port = -1;
+        std::string _pack = "default";
 };
 
 }

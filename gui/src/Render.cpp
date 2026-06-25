@@ -66,11 +66,12 @@ static int scaleSize(int value)
 
 namespace GUI {
 
-Render::Render(std::string_view host, int port)
+Render::Render(std::string_view host, int port, std::string_view pack)
     : _state()
     , _window(1440, 900,
           std::string("Zappy GUI - ").append(host).append(":").append(std::to_string(port)), 60)
-    , _map()
+    , _themeManager(pack)
+    , _map(_themeManager.active())
     , _camera({ 0.0f, 20.0f, 20.0f }, { 0.0f, 0.0f, 0.0f })
 {
 }
