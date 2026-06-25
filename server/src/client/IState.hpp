@@ -23,6 +23,8 @@ namespace Zappy::Client {
         public:
             virtual ~IState() = default;
 
+            virtual void init() = 0;
+
             virtual void setGame(Game::Game& game) = 0;
             virtual void update(Client& client, std::chrono::nanoseconds dt) = 0;
     };

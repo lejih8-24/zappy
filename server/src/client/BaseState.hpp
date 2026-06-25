@@ -18,6 +18,7 @@ namespace Zappy::Client {
         public:
             constexpr BaseState() noexcept : m_Game(nullptr) {}
 
+            inline void init() override {}
             inline void setGame(Game::Game& game) override { m_Game = &game; }
 
         protected:
