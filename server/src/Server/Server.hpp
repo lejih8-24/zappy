@@ -23,7 +23,7 @@ namespace Zappy {
         using Client = Client::Client;
 
         Game::Game m_Game;
-        std::chrono::nanoseconds m_UpdateStart;
+        std::chrono::steady_clock::time_point m_UpdateStart;
         std::chrono::nanoseconds m_DeltaTime;
         std::deque<std::string> m_EventQueue;
 

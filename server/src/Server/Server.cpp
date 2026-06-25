@@ -63,11 +63,18 @@ void Zappy::Server::onClientDisconnected(const Client& client)
 void Zappy::Server::updateServer()
 {
     Zappy::logger.debug() << "updating server" << std::endl;
+
+    auto currentTime = std::chrono::steady_clock::now();
+    m_DeltaTime = currentTime - m_UpdateStart;
+    m_UpdateStart = currentTime;
+
+    m_Game.update(m_DeltaTime);
 }
 
 void Zappy::Server::updateClient(Client& client)
 {
     Zappy::logger.debug() << "updating " << client.name() << std::endl;
+
     client.update(m_Game, m_DeltaTime);
 }
 
@@ -100,10 +107,10 @@ auto Zappy::Server::Builder::fromArguments(std::span<const char*> args) -> Build
         throw Exceptions::ParseException(std::string(progName) + ": missing required argument -x (map width)");
     if (m_MapSize.second == 0)
         throw Exceptions::ParseException(std::string(progName) + ": missing required argument -y (map height)");
-    if (m_ClientsPerTeam == 0)
-        throw Exceptions::ParseException(std::string(progName) + ": missing required argument -c (clients per team)");
     if (m_TeamNames.empty())
         throw Exceptions::ParseException(std::string(progName) + ": missing required argument -n (team names)");
+    if (m_ClientsPerTeam == 0)
+        throw Exceptions::ParseException(std::string(progName) + ": missing required argument -c (clients per team)");
 
     return std::move(*this);
 }
