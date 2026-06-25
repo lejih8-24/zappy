@@ -19,9 +19,25 @@ Zappy::Client::GuiState::GuiState()
 
 void Zappy::Client::GuiState::init()
 {
-    m_QueuedEvents.emplace_back(Game::Event::mapSize(game().mapSize()));
+    auto [mapX, mapY] = game().mapSize();
 
-    for (game().tiles())
+    m_QueuedEvents.emplace_back(Game::Event::mapSize(mapX, mapY));
+    // TODO: queue sgt event
+
+    for (std::size_t y = 0; y < mapY; y++) {
+        for (std::size_t x = 0; x < mapX; x++) {
+            const auto& tile = game().tiles()[{ x, y }];
+            m_QueuedEvents.emplace_back(Game::Event::tileContents(x, y, tile));
+        }
+    }
+
+    for (const auto& [teamName, _] : game().teams()) {
+        m_QueuedEvents.emplace_back(Game::Event::teamName(teamName));
+    }
+
+    for (const auto& egg : game().eggs()) {
+        m_QueuedEvents.emplace_back(Game::Event::eggNew(egg.id(), egg.parentId(), egg.getPosition()));
+    }
 }
 
 void Zappy::Client::GuiState::update(Client& client, std::chrono::nanoseconds dt)
