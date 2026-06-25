@@ -35,15 +35,16 @@ static bool glbHasU32Indices(const std::string &path)
         return false;
     uint32_t magic = 0, chunkLen = 0, chunkType = 0;
     file.read(reinterpret_cast<char *>(&magic), 4);
-    if (magic != 0x46546C67u)
+    if (magic != 0x46546C67u) // GLB magic: 'glTF' in little-endian ASCII
         return false;
-    file.seekg(12);
+    file.seekg(12); // skip 12-byte GLB header: magic(4) + version(4) + totalLength(4)
     file.read(reinterpret_cast<char *>(&chunkLen), 4);
     file.read(reinterpret_cast<char *>(&chunkType), 4);
-    if (chunkType != 0x4E4F534Au)
+    if (chunkType != 0x4E4F534Au) // chunk type must be 'JSON' in little-endian ASCII
         return false;
     std::string json(chunkLen, '\0');
     file.read(json.data(), chunkLen);
+    // 5125 = UNSIGNED_INT in the glTF accessor.componentType spec
     return json.find("\"componentType\":5125") != std::string::npos
         || json.find("\"componentType\": 5125") != std::string::npos;
 }
@@ -76,7 +77,9 @@ static Vector3 parsePlayerRotation(std::string_view packName)
         return {0, 0, 0};
 
     Vector3 rot = {0, 0, 0};
+    // matches `"x": 180` or `"z": -90.5`; group 1 = axis letter, group 2 = signed float
     std::regex axis("\"([xyz])\"\\s*:\\s*(-?\\d+(?:\\.\\d+)?)");
+    // start search at the playerRotation block to avoid matching xyz keys elsewhere in the JSON
     std::sregex_iterator it(json.cbegin() + blockStart, json.cend(), axis);
     std::sregex_iterator end;
     for (; it != end; ++it) {
@@ -131,6 +134,8 @@ PackTheme::PackTheme(std::string_view packName)
     std::string playerPath = resolvePath(packName, "player.glb");
     if (!playerPath.empty() && !glbHasU32Indices(playerPath)) {
         try {
+            // pass loadAnimations=false when manifest has no animations block;
+            // models without embedded animation data crash inside LoadModelAnimations
             _player = std::make_unique<CharacterModel>(playerPath, !_animations.empty());
             Vector3 rot = parsePlayerRotation(packName);
             if (rot.x != 0 || rot.y != 0 || rot.z != 0)
