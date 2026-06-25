@@ -7,6 +7,7 @@
 
 #include "Camera.hpp"
 #include "raylib.h"
+#include "raymath.h"
 
 static constexpr float cameraMoveSpeed = 5.4F;
 static constexpr float cameraPanSpeed = 2.0F;
@@ -46,35 +47,34 @@ void GameCamera::updateFreeCamera()
     const float framePanSpeed = cameraPanSpeed * ::GetFrameTime();
     const Vector2 mouseDelta = ::GetMouseDelta();
 
-    // Inputs sent to raylib's custom camera update
-    Vector3 movement = { 0.0F, 0.0F, 0.0F };
+    // Rotation and zoom still use raylib's custom camera update
     Vector3 rotation = { 0.0F, 0.0F, 0.0F };
     float zoom = -::GetMouseWheelMove();
 
-    // Movement handling
+    // Keyboard movement follows the camera direction instead of the world plane
     if (::IsKeyDown(KEY_W))
-        movement.x += frameMoveSpeed;
+        moveCamera(getForwardVector(), frameMoveSpeed);
     if (::IsKeyDown(KEY_S))
-        movement.x -= frameMoveSpeed;
+        moveCamera(getForwardVector(), -frameMoveSpeed);
     if (::IsKeyDown(KEY_D))
-        movement.y += frameMoveSpeed;
+        moveCamera(getRightVector(), frameMoveSpeed);
     if (::IsKeyDown(KEY_A))
-        movement.y -= frameMoveSpeed;
+        moveCamera(getRightVector(), -frameMoveSpeed);
     if (::IsKeyDown(KEY_SPACE))
-        movement.z += frameMoveSpeed;
+        moveCamera(_camera.up, frameMoveSpeed);
     if (::IsKeyDown(KEY_LEFT_CONTROL))
-        movement.z -= frameMoveSpeed;
+        moveCamera(_camera.up, -frameMoveSpeed);
 
     // Middle mouse pans the camera instead of rotating it
     if (::IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) {
         if (mouseDelta.x > 0.0F)
-            movement.y += framePanSpeed;
+            moveCamera(getRightVector(), framePanSpeed);
         if (mouseDelta.x < 0.0F)
-            movement.y -= framePanSpeed;
+            moveCamera(getRightVector(), -framePanSpeed);
         if (mouseDelta.y > 0.0F)
-            movement.z -= framePanSpeed;
+            moveCamera(_camera.up, -framePanSpeed);
         if (mouseDelta.y < 0.0F)
-            movement.z += framePanSpeed;
+            moveCamera(_camera.up, framePanSpeed);
     } else {
         // Normal mouse movement rotates the camera
         rotation.x = mouseDelta.x * cameraMouseSensitivity;
@@ -87,8 +87,26 @@ void GameCamera::updateFreeCamera()
     if (::IsKeyPressed(KEY_KP_ADD))
         zoom -= 2.0F;
 
-    // Apply the custom controls without enabling raylib arrow-key rotation
-    ::UpdateCameraPro(&_camera, movement, rotation, zoom);
+    // Apply rotation and zoom without enabling raylib arrow-key rotation
+    ::UpdateCameraPro(&_camera, { 0.0F, 0.0F, 0.0F }, rotation, zoom);
+}
+
+void GameCamera::moveCamera(Vector3 direction, float distance)
+{
+    const Vector3 move = ::Vector3Scale(direction, distance);
+
+    _camera.position = ::Vector3Add(_camera.position, move);
+    _camera.target = ::Vector3Add(_camera.target, move);
+}
+
+Vector3 GameCamera::getForwardVector() const
+{
+    return ::Vector3Normalize(::Vector3Subtract(_camera.target, _camera.position));
+}
+
+Vector3 GameCamera::getRightVector() const
+{
+    return ::Vector3Normalize(::Vector3CrossProduct(getForwardVector(), _camera.up));
 }
 
 void GameCamera::begin3D() const

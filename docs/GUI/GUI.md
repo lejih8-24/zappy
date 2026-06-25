@@ -41,7 +41,7 @@
 
 ## Contrôles
 
-- `WASD` : déplacer la position de la caméra.
+- `WASD` : déplacer la caméra dans la direction regardée (`ZQSD` sur clavier AZERTY).
 - `déplacement souris` : changer la direction de la caméra.
 - `Space` / `Left Ctrl` : monter / descendre la caméra.
 - `molette` : zoom caméra.

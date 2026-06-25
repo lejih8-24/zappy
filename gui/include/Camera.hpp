@@ -34,6 +34,9 @@ class GameCamera {
 
     private:
         void updateFreeCamera();
+        void moveCamera(Vector3 direction, float distance);
+        Vector3 getForwardVector() const;
+        Vector3 getRightVector() const;
 
         Camera3D _camera;
         Vector3  _initPosition;
