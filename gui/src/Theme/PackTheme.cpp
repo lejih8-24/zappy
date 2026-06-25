@@ -35,6 +35,35 @@ static std::string resolvePath(std::string_view packName, const char *filename)
     return {};
 }
 
+static Vector3 parsePlayerRotation(std::string_view packName)
+{
+    std::string manifestPath = std::string(PACKS_DIR) + std::string(packName) + "/manifest.json";
+    if (!std::filesystem::exists(manifestPath))
+        return {0, 0, 0};
+
+    std::ifstream file(manifestPath);
+    std::ostringstream buf;
+    buf << file.rdbuf();
+    std::string json = buf.str();
+
+    auto blockStart = json.find("\"playerRotation\"");
+    if (blockStart == std::string::npos)
+        return {0, 0, 0};
+
+    Vector3 rot = {0, 0, 0};
+    std::regex axis("\"([xyz])\"\\s*:\\s*(-?\\d+(?:\\.\\d+)?)");
+    std::sregex_iterator it(json.cbegin() + blockStart, json.cend(), axis);
+    std::sregex_iterator end;
+    for (; it != end; ++it) {
+        char a = (*it)[1].str()[0];
+        float v = std::stof((*it)[2].str());
+        if (a == 'x') rot.x = v;
+        else if (a == 'y') rot.y = v;
+        else if (a == 'z') rot.z = v;
+    }
+    return rot;
+}
+
 static std::unordered_map<std::string, int> parseAnimations(std::string_view packName)
 {
     std::unordered_map<std::string, int> result;
@@ -78,6 +107,9 @@ PackTheme::PackTheme(std::string_view packName)
     if (!playerPath.empty()) {
         try {
             _player = std::make_unique<CharacterModel>(playerPath);
+            Vector3 rot = parsePlayerRotation(packName);
+            if (rot.x != 0 || rot.y != 0 || rot.z != 0)
+                _player->applyRotation(rot.x, rot.y, rot.z);
         } catch (...) {
             _player = nullptr;
         }
