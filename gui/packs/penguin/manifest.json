@@ -1,0 +1,10 @@
+{
+  "name": "penguin",
+  "version": "1.0.0",
+  "description": "Penguin character pack",
+  "author": "Zappy Team",
+  "animations": {
+    "walk": 0
+  },
+  "playerRotation": { "x": 180 }
+}
