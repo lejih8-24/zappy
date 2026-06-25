@@ -43,10 +43,13 @@
 
 - `WASD` : déplacer la position de la caméra.
 - `déplacement souris` : changer la direction de la caméra.
+- `Space` / `Left Ctrl` : monter / descendre la caméra.
+- `molette` : zoom caméra.
+- `clic molette` : pan caméra.
 - `R` : reset caméra.
 - `F11` : fullscreen.
 - `H` : afficher/cacher le HUD.
-- `flèches gauche/droite` : changer de page HUD.
-- `flèches haut/bas` : scroll dans la page HUD.
+- `flèches gauche/droite` : changer de page HUD uniquement.
+- `flèches haut/bas` : scroll dans la page HUD uniquement.
 - `X` : fermer le GUI.
 - `ESC` : lock caméra (permet d'avoir sa souris libre).

@@ -33,6 +33,8 @@ class GameCamera {
         const Camera3D &get() const { return _camera; }
 
     private:
+        void updateFreeCamera();
+
         Camera3D _camera;
         Vector3  _initPosition;
         Vector3  _initTarget;
