@@ -104,6 +104,12 @@ Pass `--pack <name>` when launching the GUI:
 ./zappy_gui -p 4242 --pack spongebob      # custom pack, inherits from green_man
 ```
 
+## Model Limitations
+
+raylib enforces a hard limit of **65535 vertices per mesh**. Models that exceed this will trigger a fallback to primitives automatically - the GUI will not crash, but the 3D model will not render.
+
+If your model falls back to a primitive cube unexpectedly, open it in Blender, add a **Decimate** modifier to the mesh, and reduce the ratio until the vertex count drops below 65535, then re-export as GLB.
+
 ## Creating a New Pack
 
 1. Create a folder under `gui/packs/<your-pack-name>/`
