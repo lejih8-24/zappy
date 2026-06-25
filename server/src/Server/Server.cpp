@@ -145,6 +145,7 @@ auto Zappy::Server::Builder::build() && -> Server
     Server server(m_Hostname, m_Port);
 
     server.waitPoll(m_WaitPoll);
+    server.m_Game.setGameSpeed(m_TickSpeed);
     server.m_Game.setMapSize(m_MapSize);
     server.m_Game.setTeams(m_TeamNames, m_ClientsPerTeam);
 
