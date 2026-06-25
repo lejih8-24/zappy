@@ -9,6 +9,7 @@
 
 #include <array>
 #include <cmath>
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <regex>
@@ -22,6 +23,26 @@ static constexpr std::array<const char *, 7> RESOURCE_FILES = {
     "food.glb", "linemate.glb", "deraumere.glb", "sibur.glb",
     "mendiane.glb", "phiras.glb", "thystame.glb"
 };
+
+static bool glbHasU32Indices(const std::string &path)
+{
+    std::ifstream file(path, std::ios::binary);
+    if (!file)
+        return false;
+    uint32_t magic = 0, chunkLen = 0, chunkType = 0;
+    file.read(reinterpret_cast<char *>(&magic), 4);
+    if (magic != 0x46546C67u)
+        return false;
+    file.seekg(12);
+    file.read(reinterpret_cast<char *>(&chunkLen), 4);
+    file.read(reinterpret_cast<char *>(&chunkType), 4);
+    if (chunkType != 0x4E4F534Au)
+        return false;
+    std::string json(chunkLen, '\0');
+    file.read(json.data(), chunkLen);
+    return json.find("\"componentType\":5125") != std::string::npos
+        || json.find("\"componentType\": 5125") != std::string::npos;
+}
 
 static std::string resolvePath(std::string_view packName, const char *filename)
 {
@@ -104,9 +125,9 @@ PackTheme::PackTheme(std::string_view packName)
     : _animations(parseAnimations(packName))
 {
     std::string playerPath = resolvePath(packName, "player.glb");
-    if (!playerPath.empty()) {
+    if (!playerPath.empty() && !glbHasU32Indices(playerPath)) {
         try {
-            _player = std::make_unique<CharacterModel>(playerPath);
+            _player = std::make_unique<CharacterModel>(playerPath, !_animations.empty());
             Vector3 rot = parsePlayerRotation(packName);
             if (rot.x != 0 || rot.y != 0 || rot.z != 0)
                 _player->applyRotation(rot.x, rot.y, rot.z);
