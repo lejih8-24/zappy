@@ -15,6 +15,7 @@
 #include <regex>
 #include <sstream>
 #include <string>
+#include "raymath.h"
 
 static constexpr float ANIM_FPS = 24.0f;
 static constexpr const char *BASE_PACK = "green_man";
@@ -61,7 +62,8 @@ static std::string resolvePath(std::string_view packName, const char *filename)
     return {};
 }
 
-static Vector3 parsePlayerRotation(std::string_view packName)
+// generic rotation parser reused by both player and egg
+static Vector3 parseRotation(std::string_view packName, const char *blockName)
 {
     std::string manifestPath = std::string(PACKS_DIR) + std::string(packName) + "/manifest.json";
     if (!std::filesystem::exists(manifestPath))
@@ -72,14 +74,14 @@ static Vector3 parsePlayerRotation(std::string_view packName)
     buf << file.rdbuf();
     std::string json = buf.str();
 
-    auto blockStart = json.find("\"playerRotation\"");
+    auto blockStart = json.find(std::string("\"") + blockName + "\"");
     if (blockStart == std::string::npos)
         return {0, 0, 0};
 
     Vector3 rot = {0, 0, 0};
     // matches `"x": 180` or `"z": -90.5`; group 1 = axis letter, group 2 = signed float
     std::regex axis("\"([xyz])\"\\s*:\\s*(-?\\d+(?:\\.\\d+)?)");
-    // start search at the playerRotation block to avoid matching xyz keys elsewhere in the JSON
+    // start search at the named block to avoid matching xyz keys elsewhere in the JSON
     std::sregex_iterator it(json.cbegin() + blockStart, json.cend(), axis);
     std::sregex_iterator end;
     for (; it != end; ++it) {
@@ -90,6 +92,24 @@ static Vector3 parsePlayerRotation(std::string_view packName)
         else if (a == 'z') rot.z = v;
     }
     return rot;
+}
+
+static float parseEggScale(std::string_view packName)
+{
+    std::string manifestPath = std::string(PACKS_DIR) + std::string(packName) + "/manifest.json";
+    if (!std::filesystem::exists(manifestPath))
+        return 1.0f;
+
+    std::ifstream file(manifestPath);
+    std::ostringstream buf;
+    buf << file.rdbuf();
+    std::string json = buf.str();
+
+    std::regex r("\"eggScale\"\\s*:\\s*(\\d+(?:\\.\\d+)?)");
+    std::smatch m;
+    if (std::regex_search(json, m, r))
+        return std::stof(m[1].str());
+    return 1.0f;
 }
 
 static std::unordered_map<std::string, int> parseAnimations(std::string_view packName)
@@ -130,6 +150,7 @@ namespace GUI {
 
 PackTheme::PackTheme(std::string_view packName)
     : _animations(parseAnimations(packName))
+    , _eggCorrection(MatrixIdentity())
 {
     std::string playerPath = resolvePath(packName, "player.glb");
     if (!playerPath.empty() && !glbHasU32Indices(playerPath)) {
@@ -137,7 +158,7 @@ PackTheme::PackTheme(std::string_view packName)
             // pass loadAnimations=false when manifest has no animations block;
             // models without embedded animation data crash inside LoadModelAnimations
             _player = std::make_unique<CharacterModel>(playerPath, !_animations.empty());
-            Vector3 rot = parsePlayerRotation(packName);
+            Vector3 rot = parseRotation(packName, "playerRotation");
             if (rot.x != 0 || rot.y != 0 || rot.z != 0)
                 _player->applyRotation(rot.x, rot.y, rot.z);
         } catch (...) {
@@ -146,8 +167,15 @@ PackTheme::PackTheme(std::string_view packName)
     }
 
     std::string eggPath = resolvePath(packName, "egg.glb");
-    if (!eggPath.empty())
+    if (!eggPath.empty()) {
         _egg = LoadModel(eggPath.c_str());
+        _eggScale = parseEggScale(packName);
+        Vector3 rot = parseRotation(packName, "eggRotation");
+        Matrix rx = MatrixRotateX(DEG2RAD * rot.x);
+        Matrix ry = MatrixRotateY(DEG2RAD * rot.y);
+        Matrix rz = MatrixRotateZ(DEG2RAD * rot.z);
+        _eggCorrection = MatrixMultiply(MatrixMultiply(rx, ry), rz);
+    }
 
     std::string tilePath = resolvePath(packName, "tile.glb");
     if (!tilePath.empty())
@@ -209,7 +237,12 @@ void PackTheme::drawPlayer(Vector3 pos, float rotationDeg) const
 void PackTheme::drawEgg(Vector3 pos) const
 {
     if (_egg.has_value()) {
-        DrawModel(*_egg, pos, 1.0f, WHITE);
+        // same matrix composition as CharacterModel::draw: scale * correction * translation
+        Matrix scale = MatrixScale(_eggScale, _eggScale, _eggScale);
+        Matrix translation = MatrixTranslate(pos.x, pos.y, pos.z);
+        Matrix transform = MatrixMultiply(MatrixMultiply(scale, _eggCorrection), translation);
+        for (int i = 0; i < _egg->meshCount; i++)
+            DrawMesh(_egg->meshes[i], _egg->materials[_egg->meshMaterial[i]], transform);
         return;
     }
     _fallback.drawEgg(pos);

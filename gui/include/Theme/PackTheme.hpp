@@ -39,6 +39,8 @@ class PackTheme : public ITheme {
         DefaultTheme _fallback;
         std::unique_ptr<CharacterModel> _player;
         std::optional<Model> _egg;
+        float _eggScale = 1.0f;
+        Matrix _eggCorrection{};
         std::optional<Model> _tile;
         std::array<std::optional<Model>, 7> _resources; // one slot per resource type: food, linemate, deraumere, sibur, mendiane, phiras, thystame
 };

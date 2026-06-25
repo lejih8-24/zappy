@@ -7,5 +7,7 @@
     "walk": 2,
     "idle": 0,
     "death": 1
-  }
+  },
+  "eggScale": 0.03,
+  "eggRotation": { "x": -90 }
 }
