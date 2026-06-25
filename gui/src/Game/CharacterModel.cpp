@@ -8,6 +8,7 @@
 #include "Game/CharacterModel.hpp"
 #include <stdexcept>
 #include <string>
+#include "raymath.h"
 
 static constexpr const char *DEFAULT_MODEL_PATH = PACKS_DIR "green_man/player.glb";
 
@@ -33,6 +34,14 @@ void GUI::CharacterModel::draw(Vector3 position, float rotationDeg, int animatio
 {
     UpdateModelAnimation(_model, _animations[animationIndex], frame);
     DrawModelEx(_model, position, {0.0f, 1.0f, 0.0f}, rotationDeg, {1.0f, 1.0f, 1.0f}, WHITE);
+}
+
+void GUI::CharacterModel::applyRotation(float xDeg, float yDeg, float zDeg)
+{
+    Matrix rx = MatrixRotateX(DEG2RAD * xDeg);
+    Matrix ry = MatrixRotateY(DEG2RAD * yDeg);
+    Matrix rz = MatrixRotateZ(DEG2RAD * zDeg);
+    _model.transform = MatrixMultiply(MatrixMultiply(MatrixMultiply(_model.transform, rx), ry), rz);
 }
 
 int GUI::CharacterModel::getAnimationFrameCount(int animationIndex) const
