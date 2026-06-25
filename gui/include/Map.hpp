@@ -8,6 +8,7 @@
 #pragma once
 
 #include "Game/GameState.hpp"
+#include "Game/CharacterModel.hpp"
 
 #include "raylib.h"
 
@@ -24,6 +25,8 @@ class Map {
         Vector3 getTilePosition(int x, int y, const GameState &state, float height = 0.0f) const;
 
         float _squareSize;
+
+        CharacterModel _character;
 };
 
 }
