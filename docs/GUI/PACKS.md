@@ -39,8 +39,8 @@ Each asset is resolved independently through three levels:
 | Scenario | Player | Egg |
 |----------|--------|-----|
 | No `--pack` flag | Primitive cube | Primitive sphere |
-| `--pack green_man` (no egg.glb) | 3D green character | Primitive sphere |
-| `--pack spongebob` (has player.glb, no egg.glb) | Spongebob character | green_man egg (or sphere if green_man has none) |
+| `--pack green_man` | 3D green character | 3D egg model |
+| `--pack spongebob` (has player.glb, no egg.glb) | Spongebob character | green_man egg |
 | `--pack spongebob` (has player.glb + egg.glb) | Spongebob character | Spongebob egg |
 
 ## manifest.json
@@ -55,7 +55,10 @@ Every pack must have a `manifest.json` at its root. This is what identifies a fo
   "author": "Your Name",
   "animations": {
     "walk": 2
-  }
+  },
+  "playerRotation": { "x": 0, "y": 0, "z": 0 },
+  "eggScale": 1.0,
+  "eggRotation": { "x": 0, "y": 0, "z": 0 }
 }
 ```
 
@@ -65,7 +68,10 @@ Every pack must have a `manifest.json` at its root. This is what identifies a fo
 | `version` | yes | Semantic version string |
 | `description` | yes | Short human-readable description |
 | `author` | yes | Author or team name |
-| `animations.walk` | no | Animation slot index for the walk cycle (default: 2) |
+| `animations.walk` | no | Animation slot index for the walk cycle (default: 0) |
+| `playerRotation` | no | Euler angles (degrees) to correct the player model orientation. Any axis can be omitted (defaults to 0). |
+| `eggScale` | no | Uniform scale applied to `egg.glb` (default: 1.0). Use this when the model was exported at a different unit scale. |
+| `eggRotation` | no | Euler angles (degrees) to correct the egg model orientation. Any axis can be omitted (defaults to 0). |
 
 ## Asset Files
 
@@ -92,7 +98,7 @@ Renders everything with raylib primitives (cubes and spheres). No asset files ne
 
 ### `green_man`
 
-The base GLB pack. Ships with `player.glb`. Other assets fall back to primitives until added. All custom packs inherit missing assets from this pack.
+The base GLB pack. Ships with `player.glb` and `egg.glb`. Other assets fall back to primitives until added. All custom packs inherit missing assets from this pack.
 
 ## Using a Pack
 
