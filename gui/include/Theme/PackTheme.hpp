@@ -34,6 +34,8 @@ class PackTheme : public ITheme {
 
         int getAnimIndex(const std::string &name, int defaultIndex = 0) const;
 
+        float getPlayerLabelHeight() const override;
+
     private:
         std::unordered_map<std::string, int> _animations;
         DefaultTheme _fallback;
@@ -43,6 +45,8 @@ class PackTheme : public ITheme {
         Matrix _eggCorrection{};
         std::optional<Model> _tile;
         std::array<std::optional<Model>, 7> _resources; // one slot per resource type: food, linemate, deraumere, sibur, mendiane, phiras, thystame
+
+        float _playerLabelHeight = 2.5f;
 };
 
 }

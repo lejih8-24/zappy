@@ -9,6 +9,9 @@
 #include "Map.hpp"
 
 #include <array>
+#include <algorithm>
+#include <string>
+#include <raymath.h>
 
 static constexpr float getResourceHeight(unsigned int quantity)
 {
@@ -88,6 +91,30 @@ void Map::draw(const GameState &state) const
         (void)id;
         Vector3 pos = getTilePosition(egg.x, egg.y, state, 0.35f);
         _theme.drawEgg(pos);
+    }
+}
+
+void Map::drawLabels(const GameState &state, Camera3D camera) const
+{
+    for (const auto &[id, player] : state.players) {
+        (void)id;
+        Vector3 labelPos = getTilePosition(player.x, player.y, state, _theme.getPlayerLabelHeight());
+        Vector2 screenPos = GetWorldToScreen(labelPos, camera);
+
+        if (screenPos.x < 0 || screenPos.x > static_cast<float>(GetScreenWidth()) ||
+            screenPos.y < 0 || screenPos.y > static_cast<float>(GetScreenHeight()))
+            continue;
+        
+        float dist = Vector3Distance(camera.position, labelPos);
+        int fontSize = std::clamp(static_cast<int>(140.0f / dist), 8, 22);
+
+        std::string label = player.teamName + " L" + std::to_string(player.level);
+        int textWidth = MeasureText(label.c_str(), fontSize);
+        int sx = static_cast<int>(screenPos.x) - textWidth / 2;
+        int sy = static_cast<int>(screenPos.y);
+
+        DrawText(label.c_str(), sx + 1, sy + 1, fontSize, BLACK);
+        DrawText(label.c_str(), sx, sy, fontSize, RAYWHITE);
     }
 }
 

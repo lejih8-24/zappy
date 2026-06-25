@@ -17,6 +17,8 @@ class DefaultTheme : public ITheme {
         void drawResource(std::size_t resourceIndex, Vector3 pos, float height) const override;
         void drawPlayer(Vector3 pos, float rotationDeg) const override;
         void drawEgg(Vector3 pos) const override;
+
+        float getPlayerLabelHeight() const override;
 };
 
 }
