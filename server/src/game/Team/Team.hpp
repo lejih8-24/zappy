@@ -21,6 +21,7 @@ namespace Zappy::Game {
             std::size_t maxMembers;
 
         public:
+            Team() noexcept;
             Team(std::string_view name, std::size_t maxMembers);
 
             std::string_view name() const noexcept { return m_Name; }
