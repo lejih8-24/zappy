@@ -42,6 +42,7 @@ namespace Zappy::Game {
         Quantity thystame;
 
         bool contains(const Resources& amount) const;
+        bool empty() const;
 
         inline Resources operator+(const Resources& other) const { return Resources(*this) += other; }
         Resources& operator+=(const Resources& other);
@@ -50,6 +51,7 @@ namespace Zappy::Game {
         Resources& operator-=(const Resources& other);
 
         inline Quantity& operator[](ResourceType type) noexcept { return reinterpret_cast<Quantity*>(this)[static_cast<std::size_t>(type)]; }
+        inline const Quantity& operator[](ResourceType type) const noexcept { return reinterpret_cast<const Quantity*>(this)[static_cast<std::size_t>(type)]; }
 
         operator std::string() const;
 

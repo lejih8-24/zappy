@@ -27,6 +27,21 @@ bool Zappy::Game::Resources::contains(const Resources& amount) const
 }
 
 /**
+ * Determines if there are any
+ * resources or if everything
+ * is empty.
+ */
+bool Zappy::Game::Resources::empty() const
+{
+    for (auto resourceAmount : *this) {
+        if (resourceAmount != 0)
+            return false;
+    }
+
+    return true;
+}
+
+/**
  * Adds the resource amounts from the
  * other resources struct to this
  * resource struct.
