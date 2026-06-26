@@ -1,1 +1,3 @@
 food.glb -> "Salmon" (https://skfb.ly/6nUq8) by scrampunk is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
+tile.glb -> "Floating Ice Island" (https://skfb.ly/oPsyI) by starchild is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
+linemate.glb -> "Ice Cube" (https://skfb.ly/oA9yq) by spiffatron is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
