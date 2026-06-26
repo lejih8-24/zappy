@@ -94,23 +94,6 @@ static Vector3 parseRotation(std::string_view packName, const char *blockName)
     return rot;
 }
 
-static float parseEggScale(std::string_view packName)
-{
-    std::string manifestPath = std::string(PACKS_DIR) + std::string(packName) + "/manifest.json";
-    if (!std::filesystem::exists(manifestPath))
-        return 1.0f;
-
-    std::ifstream file(manifestPath);
-    std::ostringstream buf;
-    buf << file.rdbuf();
-    std::string json = buf.str();
-
-    std::regex r("\"eggScale\"\\s*:\\s*(\\d+(?:\\.\\d+)?)");
-    std::smatch m;
-    if (std::regex_search(json, m, r))
-        return std::stof(m[1].str());
-    return 1.0f;
-}
 
 static std::unordered_map<std::string, int> parseAnimations(std::string_view packName)
 {
@@ -146,23 +129,22 @@ static std::unordered_map<std::string, int> parseAnimations(std::string_view pac
     return result;
 }
 
-static float parsePlayerLabelHeight(std::string_view packName)
+static float parseManifestFloat(std::string_view packName, const char *key, float defaultValue)
 {
     std::string manifestPath = std::string(PACKS_DIR) + std::string(packName) + "/manifest.json";
     if (!std::filesystem::exists(manifestPath))
-        return 2.5f;
+        return defaultValue;
 
     std::ifstream file(manifestPath);
     std::ostringstream buf;
     buf << file.rdbuf();
     std::string json = buf.str();
 
-    std::regex r("\"playerLabelHeight\"\\s*:\\s*(\\d+(?:\\.\\d+)?)");
+    std::regex r(std::string("\"") + key + "\"\\s*:\\s*(\\d+(?:\\.\\d+)?)");
     std::smatch m;
     if (std::regex_search(json, m, r))
         return std::stof(m[1].str());
-    return 2.5f;
-
+    return defaultValue;
 }
 
 namespace GUI {
@@ -189,7 +171,7 @@ PackTheme::PackTheme(std::string_view packName)
     std::string eggPath = resolvePath(packName, "egg.glb");
     if (!eggPath.empty()) {
         _egg = LoadModel(eggPath.c_str());
-        _eggScale = parseEggScale(packName);
+        _eggScale = parseManifestFloat(packName, "eggScale", 1.0f);
         Vector3 rot = parseRotation(packName, "eggRotation");
         Matrix rx = MatrixRotateX(DEG2RAD * rot.x);
         Matrix ry = MatrixRotateY(DEG2RAD * rot.y);
