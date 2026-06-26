@@ -34,9 +34,10 @@ void DefaultTheme::drawResource(std::size_t resourceIndex, Vector3 pos, float he
     DrawCubeV(pos, { 0.32F, height, 0.32F }, RESOURCE_COLORS[resourceIndex]);
 }
 
-void DefaultTheme::drawPlayer(Vector3 pos, float rotationDeg) const
+void DefaultTheme::drawPlayer(Vector3 pos, float rotationDeg, Player::AnimState state) const
 {
     (void)rotationDeg;
+    (void)state;
     DrawCubeV(pos, { 0.75f, 1.1f, 0.75f }, BLUE);
 }
 
