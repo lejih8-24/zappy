@@ -27,7 +27,6 @@ Zappy::Exceptions::ArgumentParseException::ArgumentParseException(std::string_vi
         << "  -n=NAME1[,NAME...]  Specifies the names of the available teams\n"
         << "  -c=MAXCLIENTS       Limits the max amount of clients per team\n"
         << "  -f=TICKSPEED        Sets the simulation's tick speed\n"
-        << "  -w                  Optimizes the server to wait for updates\n"
         << "  -h                  Display this help message and exit\n";
 
     m_Message = msg.str();
