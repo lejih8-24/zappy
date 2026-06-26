@@ -146,11 +146,31 @@ static std::unordered_map<std::string, int> parseAnimations(std::string_view pac
     return result;
 }
 
+static float parsePlayerLabelHeight(std::string_view packName)
+{
+    std::string manifestPath = std::string(PACKS_DIR) + std::string(packName) + "/manifest.json";
+    if (!std::filesystem::exists(manifestPath))
+        return 2.5f;
+
+    std::ifstream file(manifestPath);
+    std::ostringstream buf;
+    buf << file.rdbuf();
+    std::string json = buf.str();
+
+    std::regex r("\"playerLabelHeight\"\\s*:\\s*(\\d+(?:\\.\\d+)?)");
+    std::smatch m;
+    if (std::regex_search(json, m, r))
+        return std::stof(m[1].str());
+    return 2.5f;
+
+}
+
 namespace GUI {
 
 PackTheme::PackTheme(std::string_view packName)
     : _animations(parseAnimations(packName))
     , _eggCorrection(MatrixIdentity())
+    , _playerLabelHeight(parsePlayerLabelHeight(packName))
 {
     std::string playerPath = resolvePath(packName, "player.glb");
     if (!playerPath.empty() && !glbHasU32Indices(playerPath)) {
@@ -246,6 +266,11 @@ void PackTheme::drawEgg(Vector3 pos) const
         return;
     }
     _fallback.drawEgg(pos);
+}
+
+float PackTheme::getPlayerLabelHeight() const
+{
+    return _playerLabelHeight;
 }
 
 }

@@ -45,4 +45,9 @@ void DefaultTheme::drawEgg(Vector3 pos) const
     DrawSphere(pos, 0.35f, RAYWHITE);
 }
 
+float DefaultTheme::getPlayerLabelHeight() const
+{
+    return 1.5f;
+}
+
 }

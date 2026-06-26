@@ -96,6 +96,7 @@ void Render::renderLoop(Zappy::Networking::GraphicsClient &client)
         _camera.begin3D();
         _map.draw(_state);
         _camera.end3D();
+        _map.drawLabels(_state, _camera.get());
 
         if (_showHud)
             drawHud();

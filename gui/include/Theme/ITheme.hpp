@@ -20,6 +20,8 @@ class ITheme {
         virtual void drawResource(std::size_t resourceIndex, Vector3 pos, float height) const = 0;
         virtual void drawPlayer(Vector3 pos, float rotationDeg) const = 0;
         virtual void drawEgg(Vector3 pos) const = 0;
+
+        virtual float getPlayerLabelHeight() const = 0;
 };
 
 }

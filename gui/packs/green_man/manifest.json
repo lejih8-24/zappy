@@ -9,5 +9,6 @@
     "death": 1
   },
   "eggScale": 0.03,
-  "eggRotation": { "x": -90 }
+  "eggRotation": { "x": -90 },
+  "playerLabelHeight": 2.75
 }
