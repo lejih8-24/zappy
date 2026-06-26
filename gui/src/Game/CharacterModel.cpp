@@ -45,8 +45,7 @@ GUI::CharacterModel::~CharacterModel()
 
 void GUI::CharacterModel::draw(Vector3 position, float rotationDeg, int animationIndex, float frame, float scale) const
 {
-    if (_animationCount > 0)
-        // % guard: prevents OOB if caller passes a stale or out-of-range animation index
+    if (_animationCount > 0 && animationIndex >= 0)
         UpdateModelAnimation(_model, _animations[animationIndex % _animationCount], frame);
     Matrix s = MatrixScale(scale, scale, scale);
     Matrix yaw = MatrixRotate({0.0f, 1.0f, 0.0f}, rotationDeg * DEG2RAD);
