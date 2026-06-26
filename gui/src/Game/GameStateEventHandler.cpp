@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <utility>
+#include "raylib.h"
 
 static GUI::Tile &getTile(GUI::GameState &state, int x, int y)
 {
@@ -72,8 +73,11 @@ void GameStateEventHandler::operator()(const Zappy::Networking::PlayerLevel &eve
 {
     auto player = _state.players.find(event.id);
 
-    if (player != _state.players.end())
-        player->second.level = event.level;
+    if (player == _state.players.end())
+        return;
+    player->second.level = event.level;
+    player->second.animState = Player::AnimState::LevelUp;
+    player->second.animStateEndTime = GetTime() + 2.5f;
 }
 
 void GameStateEventHandler::operator()(const Zappy::Networking::PlayerInventory &event)
@@ -113,7 +117,13 @@ void GameStateEventHandler::operator()(const Zappy::Networking::PlayerDropResour
 
 void GameStateEventHandler::operator()(const Zappy::Networking::PlayerDie &event)
 {
-    _state.players.erase(event.playerId);
+    auto player = _state.players.find(event.playerId);
+
+    if (player == _state.players.end())
+        return;
+    player->second.alive = false;
+    player->second.animState = Player::AnimState::Dead;
+    player->second.animStateEndTime = 0.0f;
 }
 
 void GameStateEventHandler::operator()(const Zappy::Networking::EggCreate &event)
@@ -139,8 +149,10 @@ void GameStateEventHandler::operator()(const Zappy::Networking::PlayerIncantatio
     _state.incantations.push_back(std::move(incantation));
     for (int id : event.playerIds) {
         auto player = _state.players.find(id);
-        if (player != _state.players.end())
-            player->second.isIncantating = true;
+        if (player != _state.players.end()) {
+            player->second.animState = Player::AnimState::Incantation;
+            player->second.animStateEndTime = 0.0f;
+        }
     }
 }
 
@@ -162,7 +174,7 @@ void GameStateEventHandler::operator()(const Zappy::Networking::PlayerIncantatio
     for (int id : incantation->playerIds) {
         auto player = _state.players.find(id);
         if (player != _state.players.end())
-            player->second.isIncantating = false;
+            player->second.animState = Player::AnimState::Idle;
     }
 }
 
@@ -180,6 +192,36 @@ void GameStateEventHandler::operator()(const Zappy::Networking::ServerGameEnd &e
 {
     _state.gameEnded = true;
     _state.winningTeam = event.winnerTeam;
+}
+
+void GameStateEventHandler::operator()(const Zappy::Networking::PlayerBroadcast &event)
+{
+    auto player = _state.players.find(event.id);
+
+    if (player == _state.players.end())
+        return;
+    player->second.animState = Player::AnimState::Broadcast;
+    player->second.animStateEndTime = GetTime() + 2.0f;
+}
+
+void GameStateEventHandler::operator()(const Zappy::Networking::PlayerExpulsion &event)
+{
+    auto player = _state.players.find(event.id);
+
+    if (player == _state.players.end())
+        return;
+    player->second.animState = Player::AnimState::Eject;
+    player->second.animStateEndTime = GetTime() + 1.0f;
+}
+
+void GameStateEventHandler::operator()(const Zappy::Networking::PlayerLayEgg &event)
+{
+    auto player = _state.players.find(event.playerId);
+
+    if (player == _state.players.end())
+        return;
+    player->second.animState = Player::AnimState::LayingEgg;
+    player->second.animStateEndTime = GetTime() + 1.5f;
 }
 
 }
