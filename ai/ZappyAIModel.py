@@ -1,376 +1,237 @@
 #!/usr/local/bin/python
 
 import time
+import uuid
+import random
+
 from CommandModel import *
 from BroadcastManager import BroadcastManager
-from constants import Role, State, ELEVATION_RULES
-from pathfinding import find_path_to_closest
+from btree.bt_nodes import IsHungry, ActionSearchFood, ActionFarmStones, CanElevate, \
+    ActionGroupAndIncant, \
+    HasMasterCall, ActionJoinMaster, ActionContributeStones
+from ai_movement import AINavigator
+from ai_states import AIState
+from dashboard import Display
+from logger import AILogger
+from btree.bt_core import Selector, Sequence
+from constants import Role, State
+from network import ServerEvent, ProtocolParser
 
 
 class ZappyAI:
     def __init__(self, network, team_name, map_x, map_y):
+        self.id = str(uuid.uuid4())[:4]
         self.network = network
-        self.team_name = team_name
         self.map_x = map_x
         self.map_y = map_y
-
-        self.level = 1
-        self.inventory = {"food": 10, "linemate": 0, "deraumere": 0, "sibur": 0, "mendiane": 0, "phiras": 0,
-                          "thystame": 0}
-        self.elevation_rules = ELEVATION_RULES
+        self.logger = AILogger("./ai.logs", self.id)
+        self.comms = BroadcastManager(self.id, token="AlphaNor_Zappy_26")
+        self.display = Display()
+        self.states = AIState(self.id, team_name)
+        self.navigator = AINavigator(self)
+        self.bt = self._build_behavior_tree()
+        self.parser = ProtocolParser(self.comms)
 
         self.is_alive = True
         self.pending_commands = []
-        self.vision_grid = None
-        self.role = Role.Explorer
-        self.state = State.FARMING
-        self.comms = BroadcastManager(token="AlphaNor_Zappy_26")
-        self.previous_debug = ""
+
+        self.cycle_count = 0
+        self.last_inventory_cycle = 0
+        self.last_interaction_cycle = 0
+
+    def _build_behavior_tree(self):
+        return Selector([
+            Sequence([IsHungry(), ActionSearchFood()]),
+            Sequence([HasMasterCall(), ActionJoinMaster(), ActionContributeStones()]),
+            Sequence([CanElevate(), ActionGroupAndIncant()]),
+            ActionFarmStones()
+        ])
 
     def run(self):
         while self.is_alive:
             responses = self.network.get_responses()
-            for response in responses:
-                self._process_server_message(response)
+            for raw_response in responses:
+                event = self.parser.parse(raw_response)
+                if event.type != "IGNORE":
+                    self._process_server_event(event)
 
             if self.is_alive:
                 self._decide_next_action()
 
-            time.sleep(0.01)
 
-    def _process_server_message(self, message: str):
-        if message == "dead":
-            print("L'IA est morte de faim.")
+    def _handle_broadcast(self, direction: int, decoded: dict):
+        req = decoded.get("request")
+        level = decoded.get("level")
+        sender_id = decoded.get("sender_id")
+
+        # Attention : Ce log va s'afficher très souvent, mais il est vital pour le debug.
+        self.logger.Info(f"[COMMS_RECV] dir={direction} | sender={sender_id} | req={req} | lvl={level}")
+
+        if req != "DATA_SHARE" and level != self.states.level:
+            self.logger.Info(f"[COMMS_DROP] Rejet de {req} venant de {sender_id} : Différence de niveau ({level} vs {self.states.level}).")
+            return
+
+        if req == "INCANTATION_CALL":
+            if self.states.is_master:
+                required_players = self.states.elevation_rules[self.states.level]["players"]
+                if self.states.count_player_case() >= required_players:
+                    self.logger.Info(f"[COMMS_DROP] Appel de {sender_id} ignoré : Ma case Master est déjà pleine.")
+                    return
+
+                # Logique de résolution de conflit (Logs déjà présents et excellents)
+                if self.id > sender_id:
+                    self.logger.Warn(f"[COMMS_CONFLICT] Résolu ! {sender_id} prioritaire. J'abandonne mon rituel.")
+                    self.states.is_master = False
+                    self.states.master_direction = direction
+                    self.states.last_master_id = sender_id
+                else:
+                    self.logger.Warn(f"[COMMS_CONFLICT] Avec {sender_id}. Mon ID ({self.id}) est prioritaire, je maintiens.")
+                return
+
+            if getattr(self.states, 'arrived_at_master', False) and sender_id == getattr(self.states, 'last_master_id',
+                                                                                         None):
+                if direction != 0:
+                    self.logger.Info(
+                        f"[COMMS_IGNORE] J'ignore le ping de {sender_id} car je suis ancré. Le serveur a dit {direction}.")
+                return
+
+            self.states.last_master_id = sender_id
+            self.states.master_direction = direction
+
+        elif req == "INCANTATION_STARTING":
+            if direction == 0:
+                self.logger.Info(f"[COMMS_LOCK] Rituel de {sender_id} démarré. Je suis sur la case, verrouillage.")
+                self.states.ready_for_incantation = True
+            else:
+                self.logger.Info(f"[COMMS_LATE] Rituel de {sender_id} démarré mais je suis à distance ({direction}). Annulation du suivi.")
+                self.states.clear_master_call()
+
+
+        elif req == "ABORT" or decoded.get("data") == "ABORT":
+
+            self.logger.Info(f"[COMMS_ABORT] Le Master {sender_id} a annulé son appel. Retour au travail.")
+
+            self.states.clear_master_call()
+
+            self.states.arrived_at_master = False
+
+    def _handle_command_response(self, raw_message: str):
+        """Flux FIFO strictement respecté : On POP toujours la commande en premier !"""
+
+        if not self.pending_commands:
+            self.logger.Error(f"Réponse inattendue (aucune commande en attente) : {raw_message}")
+            return
+
+        current_command = self.pending_commands.pop(0)
+
+        if isinstance(current_command, IncantationCommand) and raw_message == "ko":
+            self.logger.Warn("L'incantation a échoué (un joueur a bougé ou une pierre manque).")
+            self.states.ready_for_incantation = False
+            self.states.is_master = False
+            self.states.clear_master_call()
+            return
+
+        result = current_command.parse_response(raw_message)
+        self._update_state_from_result(current_command, result)
+
+    def _process_server_event(self, event: ServerEvent):
+        if event.type == "DEAD":
+            self.logger.Error("L'IA est morte de faim.")
             self.is_alive = False
-            return
 
-        if message.startswith("message"):
-            parts = message.split(",", 1)
-            if len(parts) == 2:
-                direction = int(parts[0].replace("message", "").strip())
-                raw_text = parts[1].strip()
-                decoded = self.comms.parse_message(raw_text)
-
-                if decoded:
-                    if decoded["request"] == "INCANTATION_CALL" and decoded["level"] == self.level:
-                        self.role = Role.Slave
-                        self.state = State.GROUPING
-                        self.target_direction = direction
-                        print(f"🏃 Entendu l'appel du Master {decoded['sender_id']} à la direction {direction}")
-
-                    elif decoded["request"] == "INCANTATION_STARTING" and self.role == Role.Slave:
-                        if direction == 0:
-                            print("Je suis sur la case de l'incantation ! Je reste pour le rituel.")
-                            self.state = State.CONTRIBUTING
-                        else:
-                            print("Le groupe est déjà complet et je suis trop loin. Retour au farming.")
-                            self.role = Role.Explorer
-                            self.state = State.FARMING
-
-                    elif decoded["request"] == "ABORT" and self.role == Role.Slave:
-                        self.role = Role.Explorer
-                        self.state = State.FARMING
-                        print("Le Master a annulé l'appel (ressources manquantes). Retour au farming.")
-            return
-
-        if message.startswith("eject"):
-            direction = int(message.split(":")[1].strip())
-            print(f"Je me suis fait éjecter depuis la direction {direction} !")
+        elif event.type == "EJECT":
+            self.logger.Warn(f"Je me suis fait éjecter depuis la direction {event.data['direction']} !")
             self.pending_commands.clear()
-            self.vision_grid = None
-            return
+            self.states.vision_grid = None
 
-        if message == "Elevation underway":
-            print("Début de l'incantation, je suis immobilisé !")
+        elif event.type == "ELEVATION_START":
+            self.logger.Good("Début de l'incantation, je suis immobilisé !")
+            self.states.ready_for_incantation = True
+
+        elif event.type == "ELEVATION_SUCCESS":
+            self.states.level = event.data["level"]
+            self.states.is_master = False
+            self.states.ready_for_incantation = False
+            self.states.clear_master_call()
+            self.logger.Good(f"Succès ! Je suis niveau {self.states.level}")
+
             if self.pending_commands and isinstance(self.pending_commands[0], IncantationCommand):
                 self.pending_commands.pop(0)
-            return
 
-        if message.startswith("Current level:"):
-            self.level = int(message.split(":")[1].strip())
-            self.state = State.FARMING
-            self.role = Role.Explorer
-            print(f"Succès ! Je suis niveau {self.level}")
-            return
+            self.queue_command(InventoryCommand())
 
-        if message == "ko" and self.state == State.WAITING_ELEVATION:
-            print("L'incantation a échoué (un joueur a bougé ou une pierre manque).")
-            self.state = State.FARMING
-            self.role = Role.Explorer
-            return
+        elif event.type == "BROADCAST":
+            self._handle_broadcast(event.data["direction"], event.data["decoded"])
 
-        if self.pending_commands:
-            current_command = self.pending_commands.pop(0)
-            result = current_command.parse_response(message)
-            print(f"Commande {current_command.command_string} terminée. Résultat: {result}")
-            self._update_state_from_result(current_command, result)
-        else:
-            print(f"Réponse inattendue (aucune commande en attente) : {message}")
-
-    def _is_command_pending(self, command_class) -> bool:
-        """Vérifie si un type de commande précis est déjà dans la file d'attente."""
-        return any(isinstance(cmd, command_class) for cmd in self.pending_commands)
+        elif event.type == "RESPONSE":
+            self._handle_command_response(event.data["raw"])
 
     def _update_state_from_result(self, command, result):
         if isinstance(command, InventoryCommand) and isinstance(result, dict):
-            self.inventory = result
+            self.states.inventory = result
+            self.last_inventory_cycle = self.cycle_count
+
         elif isinstance(command, LookCommand) and isinstance(result, list):
-            self.vision_grid = result
+            self.states.vision_grid = result
+
         elif isinstance(command, TakeCommand) and result is True:
-            self.inventory[command.obj_name] += 1
+            self.states.inventory[command.obj_name] = self.states.inventory.get(command.obj_name, 0) + 1
+            self.states.vision_grid = None
+
         elif isinstance(command, SetCommand) and result is True:
-            self.inventory[command.obj_name] = self.inventory.get(command.obj_name, 1) - 1
+            self.states.inventory[command.obj_name] = self.states.inventory.get(command.obj_name, 1) - 1
+            self.states.vision_grid = None
 
-    def _queue_command(self, command):
-        if len(self.pending_commands) < 9:
-            self.pending_commands.append(command)
-            self.network.send_command(command.command_string)
+        elif isinstance(command, ForkCommand) and result is True:
+            self.logger.Good("L'oeuf a été pondu avec succès ! Retour au travail.")
 
-    def can_elevate(self) -> bool:
-        rules = self.elevation_rules[self.level]
-        for stone, required_qty in rules["stones"].items():
-            if self.inventory.get(stone, 0) < required_qty:
-                return False
-        return True
+        elif isinstance(command, TurnRightCommand) and result is True:
+            self.states.orientation = (self.states.orientation + 1) % 4
+            self.states.vision_grid = None
 
-    def _count_player_case(self):
-        if not self.vision_grid:
-            return 0
-        return self.vision_grid[0].get('player', 0)
+        elif isinstance(command, TurnLeftCommand) and result is True:
+            self.states.orientation = (self.states.orientation - 1) % 4
+            self.states.vision_grid = None
+
+        elif isinstance(command, ForwardCommand) and result is True:
+            if self.states.orientation == 0:
+                self.states.pos_y = (self.states.pos_y + 1) % self.map_y
+            elif self.states.orientation == 1:
+                self.states.pos_x = (self.states.pos_x + 1) % self.map_x
+            elif self.states.orientation == 2:
+                self.states.pos_y = (self.states.pos_y - 1) % self.map_y
+            elif self.states.orientation == 3:
+                self.states.pos_x = (self.states.pos_x - 1) % self.map_x
+            self.states.vision_grid = None
 
     def _decide_next_action(self):
+        self.cycle_count += 1
+        if getattr(self.states, 'ready_for_incantation', False):
+            return
+
+        if len(self.pending_commands) > 0 and (self.cycle_count - self.last_interaction_cycle) > 700:
+            self.logger.Warn(f"[TIMEOUT] {self.id} : Le serveur ne répond plus. Déconnexion.")
+            self.is_alive = False
+            return
+
+        if (self.cycle_count - self.last_inventory_cycle) > 25 and not self.is_command_pending(InventoryCommand):
+            self.queue_command(InventoryCommand())
+            return
+
         if len(self.pending_commands) >= 9:
-            debug = f"[DEBUG] File d'attente pleine ({len(self.pending_commands)}/9). Attente des réponses réseau."
-            if debug != self.previous_debug:
-                self.previous_debug = f"[DEBUG] File d'attente pleine ({len(self.pending_commands)}/9). Attente des réponses réseau."
-                print(self.previous_debug)
             return
 
-        if self.state == State.WAITING_ELEVATION:
-            debug = f"[DEBUG] En transe (WAITING_ELEVATION). L'IA est bloquée en attendant la fin de l'incantation."
-            if debug != self.previous_debug:
-                self.previous_debug = f"[DEBUG] En transe (WAITING_ELEVATION). L'IA est bloquée en attendant la fin de l'incantation."
-                print(self.previous_debug)
-            return
+        self.bt.tick(self)
 
-        current_food = self.inventory.get("food", 0)
+        if time.time() % 1 < 0.05:
+            self.display.save_dashboard_state(self.states.name, Role.Explorer, State.FARMING, self.states.level,
+                                              [self.states.pos_x, self.states.pos_y], self.states.inventory)
 
-        if current_food < 15 and self.state not in [State.INCANTATION, State.CONTRIBUTING]:
-            if self.state != State.SURVIVAL:
-                debug = f"[DEBUG] URGENCE VITALE : Nourriture critique ({current_food}/15). Abandon de l'état {self.state.name}, passage en SURVIVAL !"
-                if debug != self.previous_debug:
-                    self.previous_debug = f"[DEBUG] URGENCE VITALE : Nourriture critique ({current_food}/15). Abandon de l'état {self.state.name}, passage en SURVIVAL !"
-                    print(self.previous_debug)
-            self.state = State.SURVIVAL
+    def queue_command(self, command):
+        if len(self.pending_commands) < 9:
+            self.pending_commands.append(command)
+            self.last_interaction_cycle = self.cycle_count
+            self.network.send_command(command.command_string)
 
-        elif current_food >= 20 and self.state == State.SURVIVAL:
-            debug = f"[DEBUG] Réserves reconstituées ({current_food}/25). Fin de l'urgence, retour au FARMING !"
-            if debug != self.previous_debug:
-                self.previous_debug = f"[DEBUG] Réserves reconstituées ({current_food}/25). Fin de l'urgence, retour au FARMING !"
-                print(self.previous_debug)
-            self.state = State.FARMING
-
-        elif self.can_elevate() and self.state == State.FARMING:
-            debug = f"[DEBUG] J'ai toutes les pierres requises pour le niveau {self.level + 1} ! Je deviens MASTER et passe en GROUPING."
-            if debug != self.previous_debug:
-                self.previous_debug = f"[DEBUG] J'ai toutes les pierres requises pour le niveau {self.level + 1} ! Je deviens MASTER et passe en GROUPING."
-                print(self.previous_debug)
-            self.state = State.GROUPING
-            self.role = Role.Master
-
-        debug = f"[DEBUG] Réflexion -> État: {self.state.name} | Rôle: {self.role.name} | Nourriture: {current_food}"
-        if debug != self.previous_debug:
-            self.previous_debug = f"[DEBUG] Réflexion -> État: {self.state.name} | Rôle: {self.role.name} | Nourriture: {current_food}"
-            print(self.previous_debug)
-
-        if self.state == State.SURVIVAL:
-            self._state_survival()
-        elif self.state == State.FARMING:
-            self._state_farming()
-        elif self.state == State.GROUPING:
-            self._state_grouping()
-        elif self.state == State.CONTRIBUTING:
-            self._state_contributing()
-        elif self.state == State.INCANTATION:
-            self._state_incantation()
-
-    def _move_instructions(self, path: list, target_item: str):
-        if path is not None:
-            for action in path:
-                if action == "Forward":
-                    self._queue_command(ForwardCommand())
-                elif action == "Right":
-                    self._queue_command(TurnRightCommand())
-                elif action == "Left":
-                    self._queue_command(TurnLeftCommand())
-
-            if target_item:
-                self._queue_command(TakeCommand(target_item))
-            self.vision_grid = None
-        else:
-            self._queue_command(ForwardCommand())
-            self._queue_command(LookCommand())
-            self.vision_grid = None
-
-    def _get_needed_material(self) -> str | None:
-        if self.level >= 8:
-            return None
-        rule = self.elevation_rules[self.level]["stones"]
-        for stone, required_qty in rule.items():
-            if self.inventory.get(stone, 0) < required_qty:
-                return stone
-        return None
-
-    def _state_survival(self):
-        if not self.vision_grid:
-            if not self._is_command_pending(LookCommand):
-                self._queue_command(LookCommand())
-            return
-        path = find_path_to_closest(self.vision_grid, "food")
-        self._move_instructions(path, "food")
-
-    def _state_farming(self):
-        if not self.vision_grid:
-            if not self._is_command_pending(LookCommand):
-                self._queue_command(LookCommand())
-            return
-
-        target_mat = self._get_needed_material()
-        if not target_mat:
-            print("Toutes les ressources sont réunies. Passage en mode GROUPING.")
-            self.state = State.GROUPING
-            return
-
-        path = find_path_to_closest(self.vision_grid, target_mat)
-        self._move_instructions(path, target_mat)
-
-    def _state_grouping(self):
-        if self.role == Role.Master:
-            if not self.vision_grid:
-                if not self._is_command_pending(LookCommand):
-                    self._queue_command(LookCommand())
-                return
-
-            players_on_tile = self._count_player_case()
-            required_players = self.elevation_rules[self.level]["players"]
-
-            if players_on_tile >= required_players:
-                print(f"Assez de trantoriens ({players_on_tile}/{required_players}).")
-
-                if not self._is_command_pending(BroadcastCommand):
-                    msg = self.comms.format_message("ALL", self.level, Role.Master, State.INCANTATION,
-                                                    "INCANTATION_STARTING")
-                    self._queue_command(BroadcastCommand(self.comms.token, msg))
-
-                self.state = State.INCANTATION
-            else:
-                print(f"En attente de trantoriens ({players_on_tile}/{required_players}).")
-
-                if not self._is_command_pending(BroadcastCommand):
-                    msg = self.comms.format_message("ALL", self.level, Role.Master, State.GROUPING,
-                                                    "INCANTATION_CALL")
-                    self._queue_command(BroadcastCommand(self.comms.token, msg))
-
-                self.vision_grid = None
-        elif self.role == Role.Slave:
-            if getattr(self, "target_direction", None) is None:
-                return
-
-            k = self.target_direction
-
-            self.target_direction = None
-
-            if k == 0:
-                print("Arrivé sur la case du Master ! Je vide mes poches.")
-                self.state = State.CONTRIBUTING
-            elif k in [1, 2, 8]:
-                self._queue_command(ForwardCommand())
-            elif k in [3, 4]:
-                self._queue_command(TurnLeftCommand())
-            elif k in [5, 6, 7]:
-                self._queue_command(TurnRightCommand())
-
-    def _state_contributing(self):
-        """Le Slave est sur la case du Master et donne toutes ses pierres."""
-        dropped_something = False
-
-        for item, qty in list(self.inventory.items()):
-            if item != "food" and qty > 0:
-                for _ in range(qty):
-                    self._queue_command(SetCommand(item))
-                    self.inventory[item] -= 1
-                    dropped_something = True
-
-        if dropped_something:
-            print("Don de mes pierres en cours...")
-        else:
-            print("Je n'ai plus rien. J'attends le rituel.")
-            self.state = State.WAITING_ELEVATION
-
-    def _is_floor_perfect(self) -> bool:
-        if not self.vision_grid: return False
-        floor = self.vision_grid[0]
-        rules = self.elevation_rules[self.level]
-
-        if floor.get("player", 0) != rules["players"]:
-            return False
-
-        for item, qty in floor.items():
-            if item == "player" or qty == 0:
-                continue
-            if qty != rules["stones"].get(item, 0):
-                return False
-
-        for stone, required_qty in rules["stones"].items():
-            if floor.get(stone, 0) != required_qty:
-                return False
-        return True
-
-    def _clean_floor(self) -> bool:
-        if not self.vision_grid: return False
-        floor = self.vision_grid[0]
-        cleaned_something = False
-
-        for item, qty in floor.items():
-            if item != "player" and qty > 0:
-                for _ in range(qty):
-                    self._queue_command(TakeCommand(item))
-                    cleaned_something = True
-        return cleaned_something
-
-    def _state_incantation(self):
-        if self._is_command_pending(SetCommand) or self._is_command_pending(TakeCommand):
-            return
-
-        if not self.vision_grid:
-            if not self._is_command_pending(LookCommand):
-                self._queue_command(LookCommand())
-            return
-
-        if self._is_floor_perfect():
-            print(f"La case est prête ! Lancement de l'Incantation (Niveau {self.level} -> {self.level + 1}).")
-            self._queue_command(IncantationCommand())
-            self.state = State.WAITING_ELEVATION
-            return
-
-        if not self.can_elevate():
-            print(f"Inventaire insuffisant pour préparer le rituel du niveau {self.level + 1}.")
-            msg = self.comms.format_message("ALL", self.level, Role.Master, State.FARMING, "ABORT")
-            self._queue_command(BroadcastCommand(self.comms.token, msg))
-            self.state = State.FARMING
-            return
-
-        if self._clean_floor():
-            print("Nettoyage de la case en cours...")
-            self.vision_grid = None
-            self._queue_command(LookCommand())
-            return
-
-        print(f"Dépôt chirurgical des pierres pour le niveau {self.level + 1}...")
-        rules = self.elevation_rules[self.level]
-        for stone, required_qty in rules["stones"].items():
-            for _ in range(required_qty):
-                self._queue_command(SetCommand(stone))
-
-        self.vision_grid = None
-        self._queue_command(LookCommand())
+    def is_command_pending(self, command_class) -> bool:
+        return any(isinstance(cmd, command_class) for cmd in self.pending_commands)

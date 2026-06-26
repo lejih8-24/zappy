@@ -1,6 +1,47 @@
 import socket
 import select
 import sys
+from dataclasses import dataclass
+from typing import Any
+
+@dataclass
+class ServerEvent:
+    """Représente un événement asynchrone propre envoyé par le serveur Zappy."""
+    type: str
+    data: Any = None
+
+class ProtocolParser:
+    def __init__(self, comms_manager):
+        self.comms = comms_manager
+
+    def parse(self, message: str) -> ServerEvent:
+        """Traduit une chaîne brute du serveur en événement structuré."""
+
+        if message == "dead":
+            return ServerEvent(type="DEAD")
+
+        if message.startswith("message"):
+            parts = message.split(",", 1)
+            if len(parts) == 2:
+                direction = int(parts[0].replace("message", "").strip())
+                raw_text = parts[1].strip()
+                decoded = self.comms.parse_message(raw_text)
+                if decoded:
+                    return ServerEvent(type="BROADCAST", data={"direction": direction, "decoded": decoded})
+            return ServerEvent(type="IGNORE")
+
+        if message.startswith("eject"):
+            direction = int(message.split(":")[1].strip())
+            return ServerEvent(type="EJECT", data={"direction": direction})
+
+        if message == "Elevation underway":
+            return ServerEvent(type="ELEVATION_START")
+
+        if message.startswith("Current level:"):
+            level = int(message.split(":")[1].strip())
+            return ServerEvent(type="ELEVATION_SUCCESS", data={"level": level})
+
+        return ServerEvent(type="RESPONSE", data={"raw": message})
 
 class NetworkClient:
     def __init__(self, host: str, port: int):
