@@ -7,6 +7,8 @@
 */
 
 #include "Server.hpp"
+#include <chrono>
+#include <cstdint>
 #include <zappy/exceptions.hpp>
 #include <zappy/utils.hpp>
 #include <iostream>
@@ -15,6 +17,10 @@
 Zappy::Server::Server(std::string_view ip, std::uint16_t port)
     : Lattice::Server<Client>(ip, port)
     , m_Game()
+    , m_UpdateDuration(-1)
+    , m_UpdateStart(std::chrono::steady_clock::now())
+    , m_DeltaTime(0)
+    , m_EventQueue()
 {
 
 }
@@ -52,6 +58,9 @@ void Zappy::Server::onShutdown()
 void Zappy::Server::onClientAccepted(const Client& client)
 {
     Zappy::logger.info() << client.name() << ": connected" << std::endl;
+
+    using std::chrono_literals::operator ""ms;
+    m_UpdateDuration = 20'000ms / m_Game.gameSpeed();
 }
 
 void Zappy::Server::onClientDisconnected(const Client& client)
@@ -61,13 +70,17 @@ void Zappy::Server::onClientDisconnected(const Client& client)
 
 void Zappy::Server::updateServer()
 {
-    Zappy::logger.debug() << "updating server" << std::endl;
-
     auto currentTime = std::chrono::steady_clock::now();
     m_DeltaTime = currentTime - m_UpdateStart;
     m_UpdateStart = currentTime;
 
+    Zappy::logger.debug() << "updating server (delta: " << std::chrono::duration<float, std::milli>(m_DeltaTime) << ")" << std::endl;
+
     m_Game.update(m_DeltaTime);
+
+    using std::chrono_literals::operator ""ms;
+    if (m_UpdateDuration > 0ms)
+        m_UpdateDuration = DEFAULT_TIMEOUT / m_Game.gameSpeed();
 }
 
 void Zappy::Server::updateClient(Client& client)
@@ -77,13 +90,25 @@ void Zappy::Server::updateClient(Client& client)
     client.update(m_Game, m_DeltaTime);
 }
 
+int Zappy::Server::pollTimeout(int previousTimeout)
+{
+    if (m_UpdateDuration.count() < 0)
+        return -1;
+
+    auto timeoutDelta = std::chrono::steady_clock::now() - m_UpdateStart;
+    if (m_UpdateDuration <= timeoutDelta)
+        return 0;
+
+    auto timeout = std::chrono::duration_cast<std::chrono::milliseconds>(m_UpdateDuration - timeoutDelta);
+    return timeout.count();
+}
+
 Zappy::Server::Builder::Builder()
     : m_Hostname("127.0.0.1")
     , m_Port(0)
     , m_MapSize{ 0, 0 }
     , m_TickSpeed(100)
     , m_ClientsPerTeam(0)
-    , m_WaitPoll(false)
     , m_TeamNames()
 {
 
@@ -112,6 +137,15 @@ auto Zappy::Server::Builder::fromArguments(std::span<const char*> args) -> Build
     if (m_ClientsPerTeam == 0)
         throw Exceptions::ParseException(std::string(progName) + ": missing required argument -c (clients per team)");
 
+    return std::move(*this);
+}
+
+auto Zappy::Server::Builder::setTickSpeed(std::uint32_t speed) -> Builder&&
+{
+    if (speed == 0)
+        throw Exceptions::ParseException("game tick speed (frequency) may not be 0");
+
+    m_TickSpeed = speed;
     return std::move(*this);
 }
 
@@ -144,7 +178,6 @@ auto Zappy::Server::Builder::build() && -> Server
 {
     Server server(m_Hostname, m_Port);
 
-    server.waitPoll(m_WaitPoll);
     server.m_Game.setGameSpeed(m_TickSpeed);
     server.m_Game.setMapSize(m_MapSize);
     server.m_Game.setTeams(m_TeamNames, m_ClientsPerTeam);
@@ -178,7 +211,6 @@ std::span<const char*> Zappy::Server::Builder::parseOption(std::string_view prog
         case 'f': return parseTickSpeedOption(progName, args);
         case 'c': return parseMaxClientsOption(progName, args);
         case 'h': throw Exceptions::ArgumentParseException(progName);
-        case 'w': setWaitPoll(true); return args;
 
         default: throw Exceptions::ArgumentParseException(progName, "invalid option -- '"s + option[1] + "'");
     }

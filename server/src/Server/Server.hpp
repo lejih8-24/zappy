@@ -22,7 +22,10 @@ namespace Zappy {
     class Server : public Lattice::Server<Client::Client> {
         using Client = Client::Client;
 
+        static constexpr std::chrono::milliseconds DEFAULT_TIMEOUT { 20'000 };
+
         Game::Game m_Game;
+        std::chrono::milliseconds m_UpdateDuration;
         std::chrono::steady_clock::time_point m_UpdateStart;
         std::chrono::nanoseconds m_DeltaTime;
         std::deque<std::string> m_EventQueue;
@@ -53,6 +56,8 @@ namespace Zappy {
             void updateServer() override;
             void updateClient(Client& client) override;
 
+            int pollTimeout(int previousTimeout) override;
+
         public:
             class Builder {
                 std::string_view m_Hostname;
@@ -60,7 +65,6 @@ namespace Zappy {
                 std::pair<std::uint32_t, std::uint32_t> m_MapSize;
                 std::uint32_t m_TickSpeed;
                 std::uint32_t m_ClientsPerTeam;
-                bool m_WaitPoll;
                 std::vector<std::string> m_TeamNames;
 
                 public:
@@ -72,9 +76,8 @@ namespace Zappy {
                     inline Builder&& setHostname(std::string_view hostname)                { m_Hostname = hostname;          return std::move(*this); }
                     inline Builder&& setPort(std::uint16_t port)                           { m_Port = port;                  return std::move(*this); }
                     inline Builder&& setMapSize(std::uint32_t width, std::uint32_t height) { m_MapSize = { width, height };  return std::move(*this); }
-                    inline Builder&& setTickSpeed(std::uint32_t speed)                     { m_TickSpeed = speed;            return std::move(*this); }
                     inline Builder&& setMaxClientsPerTeam(std::uint32_t clients)           { m_ClientsPerTeam = clients;     return std::move(*this); }
-                    inline Builder&& setWaitPoll(bool waitPoll)                            { m_WaitPoll = waitPoll;          return std::move(*this); }
+                    Builder&& setTickSpeed(std::uint32_t speed);
                     Builder&& addTeamName(std::string_view name);
                     Builder&& setTeamNames(std::span<std::string_view> names);
                     Builder&& setTeamNames(std::span<const char*> names);
