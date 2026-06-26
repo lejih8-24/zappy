@@ -7,15 +7,7 @@ class Role(Enum):
     Slave = 3
 
     def __str__(self):
-        if self.value == 0:
-            return "Explorer"
-        if self.value == 1:
-            return "Master"
-        if self.value == 2:
-            return "Incanting"
-        if self.value == 3:
-            return "Slave"
-        return None
+        return self.name
 
 class State(Enum):
     FARMING = 0
@@ -27,21 +19,7 @@ class State(Enum):
     FORKING = 6
 
     def __str__(self):
-        if self.value == 0:
-            return "FARMING"
-        if self.value == 1:
-            return "INCANTATION"
-        if self.value == 2:
-            return "GROUPING"
-        if self.value == 3:
-            return "SURVIVAL"
-        if self.value == 4:
-            return "WAITING_ELEVATION"
-        if self.value == 5:
-            return "CONTRIBUTING"
-        if self.value == 6:
-            return "FORKING"
-        return None
+        return self.name
 
 
 ELEVATION_RULES = {
