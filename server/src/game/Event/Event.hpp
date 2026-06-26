@@ -21,6 +21,9 @@ namespace Zappy::Game {
             static std::string tileContents(unsigned int x, unsigned int y, const Resources& resources);
             static std::string teamName(std::string_view name);
 
+            static std::string playerNew(int playerId, std::pair<unsigned int, unsigned int> pos, int orientation, int level, std::string_view team);
+            static std::string playerDie(int playerId);
+
             static std::string eggNew(int eggId, int playerId, std::pair<unsigned int, unsigned int> pos);
             static std::string eggHatch(int eggId);
 
