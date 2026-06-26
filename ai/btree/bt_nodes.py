@@ -15,23 +15,35 @@ class IsHungry(Node):
 
         if getattr(ai.states, 'is_master', False):
             safety_threshold = 18
-
         elif getattr(ai.states, 'last_master_id', None) is not None:
             safety_threshold = 22
-
         else:
             safety_threshold = 35 if ai.states.level >= 2 else 15
 
         if current_food < safety_threshold:
+            if getattr(ai.states, 'is_master', False):
+                ai.logger.Warn("[SURVIVAL] Urgence faim ! J'abandonne mon poste de Master pour survivre.")
+                msg = ai.comms.format_message("ALL", ai.states.level, "Master", "ABORT", "")
+                ai.queue_command(BroadcastCommand(ai.id, msg))
+                ai.states.is_master = False
+                if hasattr(ai.states, 'master_wait_cycle'):
+                    del ai.states.master_wait_cycle
+
             return NodeStatus.SUCCESS
 
         return NodeStatus.FAILURE
 
+
 class CanElevate(Node):
-    """Vérifie si le drone possède toutes les ressources pour passer au niveau supérieur."""
+    """Vérifie si le drone possède toutes les ressources (ou s'il est déjà engagé comme Master)."""
+
     def tick(self, ai) -> NodeStatus:
+        if getattr(ai.states, 'is_master', False):
+            return NodeStatus.SUCCESS
+
         if ai.states.can_elevate():
             return NodeStatus.SUCCESS
+
         return NodeStatus.FAILURE
 
 class HasMasterCall(Node):
@@ -132,7 +144,7 @@ class ActionGroupAndIncant(Node):
 
         if required_players > 1:
             if players_on_tile < required_players:
-                if ai.cycle_count - getattr(ai.states, 'last_call_cycle', 0) > 250:
+                if ai.cycle_count - getattr(ai.states, 'last_call_cycle', 0) > 40:
                     msg = ai.comms.format_message("ALL", ai.states.level, "Master", "GROUPING", "INCANTATION_CALL")
                     ai.queue_command(BroadcastCommand(ai.id, msg))
                     ai.states.last_call_cycle = ai.cycle_count
@@ -177,7 +189,7 @@ class ActionGroupAndIncant(Node):
 
 
 class ActionJoinMaster(Node):
-    """Fait avancer le drone vers la source du signal du Master avec mémoire."""
+    """Fait avancer le drone vers la source du signal du Master de manière stable."""
 
     def tick(self, ai) -> NodeStatus:
         if getattr(ai.states, 'ready_for_incantation', False):
@@ -188,6 +200,7 @@ class ActionJoinMaster(Node):
 
         k = ai.states.master_direction
 
+        # 1. Gestion de la perte de signal
         if k is None:
             if getattr(ai.states, 'arrived_at_master', False):
                 return NodeStatus.SUCCESS
@@ -195,12 +208,11 @@ class ActionJoinMaster(Node):
             if not hasattr(ai.states, 'join_wait_cycle'):
                 ai.states.join_wait_cycle = ai.cycle_count
             elif ai.cycle_count - ai.states.join_wait_cycle > 800:
-                ai.logger.Warn("[BT] Le signal du Master est perdu. J'abandonne la recherche.")
+                ai.logger.Warn("[BT] Le signal du Master est perdu. J'abandonne.")
                 ai.states.clear_master_call()
                 ai.states.arrived_at_master = False
                 del ai.states.join_wait_cycle
                 return NodeStatus.FAILURE
-
             return NodeStatus.RUNNING
 
         if hasattr(ai.states, 'join_wait_cycle'):
@@ -217,16 +229,16 @@ class ActionJoinMaster(Node):
 
         if k in [1, 2, 8]:
             ai.queue_command(ForwardCommand())
-        elif k in [3, 4]:
+        elif k in [3, 4, 5]:
             ai.queue_command(TurnLeftCommand())
-        elif k in [5, 6, 7]:
+        elif k in [6, 7]:
             ai.queue_command(TurnRightCommand())
 
         return NodeStatus.RUNNING
 
 
 class ActionContributeStones(Node):
-    """Vide l'inventaire des pierres sur la case du Master."""
+    """Vide l'inventaire des pierres sur la case du Master et attend."""
 
     def tick(self, ai) -> NodeStatus:
         if len(ai.pending_commands) > 0:
@@ -251,6 +263,7 @@ class ActionContributeStones(Node):
         if ai.cycle_count - ai.states.wait_start_cycle > 1500:
             ai.logger.Warn("[BT] Le Master n'a pas toutes les pierres. J'annule le suivi pour retourner farmer.")
             ai.states.clear_master_call()
+            ai.states.arrived_at_master = False
             del ai.states.wait_start_cycle
             return NodeStatus.FAILURE
 

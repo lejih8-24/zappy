@@ -65,23 +65,35 @@ class ZappyAI:
         level = decoded.get("level")
         sender_id = decoded.get("sender_id")
 
+        # Attention : Ce log va s'afficher très souvent, mais il est vital pour le debug.
+        self.logger.Info(f"[COMMS_RECV] dir={direction} | sender={sender_id} | req={req} | lvl={level}")
+
         if req != "DATA_SHARE" and level != self.states.level:
+            self.logger.Info(f"[COMMS_DROP] Rejet de {req} venant de {sender_id} : Différence de niveau ({level} vs {self.states.level}).")
             return
 
         if req == "INCANTATION_CALL":
             if self.states.is_master:
                 required_players = self.states.elevation_rules[self.states.level]["players"]
                 if self.states.count_player_case() >= required_players:
+                    self.logger.Info(f"[COMMS_DROP] Appel de {sender_id} ignoré : Ma case Master est déjà pleine.")
                     return
 
+                # Logique de résolution de conflit (Logs déjà présents et excellents)
                 if self.id > sender_id:
-                    self.logger.Warn(f"[COMMS] Conflit résolu ! {sender_id} est prioritaire. J'abandonne mon rituel.")
+                    self.logger.Warn(f"[COMMS_CONFLICT] Résolu ! {sender_id} prioritaire. J'abandonne mon rituel.")
                     self.states.is_master = False
                     self.states.master_direction = direction
                     self.states.last_master_id = sender_id
                 else:
-                    self.logger.Warn(
-                        f"[COMMS] Conflit avec {sender_id}. Mon ID ({self.id}) est prioritaire, je maintiens.")
+                    self.logger.Warn(f"[COMMS_CONFLICT] Avec {sender_id}. Mon ID ({self.id}) est prioritaire, je maintiens.")
+                return
+
+            if getattr(self.states, 'arrived_at_master', False) and sender_id == getattr(self.states, 'last_master_id',
+                                                                                         None):
+                if direction != 0:
+                    self.logger.Info(
+                        f"[COMMS_IGNORE] J'ignore le ping de {sender_id} car je suis ancré. Le serveur a dit {direction}.")
                 return
 
             self.states.last_master_id = sender_id
@@ -89,14 +101,14 @@ class ZappyAI:
 
         elif req == "INCANTATION_STARTING":
             if direction == 0:
-                self.logger.Info("[COMMS] Rituel démarré. Je suis sur la case, verrouillage de ma position.")
+                self.logger.Info(f"[COMMS_LOCK] Rituel de {sender_id} démarré. Je suis sur la case, verrouillage.")
                 self.states.ready_for_incantation = True
             else:
-                self.logger.Info("[COMMS] Le groupe est complet et je suis en retard. Annulation du suivi.")
+                self.logger.Info(f"[COMMS_LATE] Rituel de {sender_id} démarré mais je suis à distance ({direction}). Annulation du suivi.")
                 self.states.clear_master_call()
 
         elif req == "ABORT":
-            self.logger.Info(f"[COMMS] Le Master {sender_id} a annulé l'appel. Retour au travail.")
+            self.logger.Info(f"[COMMS_ABORT] Le Master {sender_id} a annulé son appel. Retour au travail.")
             self.states.clear_master_call()
 
     def _handle_command_response(self, raw_message: str):
