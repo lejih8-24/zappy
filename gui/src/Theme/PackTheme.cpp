@@ -7,6 +7,7 @@
 
 #include "Theme/PackTheme.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstdint>
@@ -133,8 +134,12 @@ static std::unordered_map<std::string, int> parseAnimations(std::string_view pac
     return result;
 }
 
-static float parseManifestFloat(std::string_view packName, const char *key, float defaultValue)
+static float parseManifestFloat(std::string_view packName, const char *key, float defaultValue,
+    float minValue = -1e30f, float maxValue = 1e30f)
 {
+    // clamp the default too so a bad default can't bypass the range check
+    defaultValue = std::clamp(defaultValue, minValue, maxValue);
+
     std::string manifestPath = std::string(PACKS_DIR) + std::string(packName) + "/manifest.json";
     if (!std::filesystem::exists(manifestPath))
         return defaultValue;
@@ -147,7 +152,7 @@ static float parseManifestFloat(std::string_view packName, const char *key, floa
     std::regex r(std::string("\"") + key + "\"\\s*:\\s*(\\d+(?:\\.\\d+)?)");
     std::smatch m;
     if (std::regex_search(json, m, r))
-        return std::stof(m[1].str());
+        return std::clamp(std::stof(m[1].str()), minValue, maxValue);
     return defaultValue;
 }
 
