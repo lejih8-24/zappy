@@ -20,6 +20,7 @@ namespace Zappy::Client {
 
             inline void init() override {}
             inline void setGame(Game::Game& game) override { m_Game = &game; }
+            inline void disconnect(Game::Game&) override {}
 
         protected:
             inline Game::Game& game() noexcept { return *m_Game; }

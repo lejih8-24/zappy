@@ -27,6 +27,7 @@ namespace Zappy::Client {
 
             virtual void setGame(Game::Game& game) = 0;
             virtual void update(Client& client, std::chrono::nanoseconds dt) = 0;
+            virtual void disconnect(Game::Game& game) = 0;
     };
 
     template <typename T>
