@@ -13,7 +13,9 @@ add_executable(zappy_server
                src/client/Client/Client.cpp
                src/client/GuiState/GuiState.cpp
                src/client/HandshakeState/HandshakeState.cpp
+               src/client/PlayerInitState/PlayerInitState.cpp
                src/client/PlayerRunState/PlayerRunState.cpp
+               src/client/PlayerWaitState/PlayerWaitState.cpp
                src/exceptions/ArgumentParseException/ArgumentParseException.cpp
                src/game/Egg/Egg.cpp
                src/game/Event/Event.cpp
