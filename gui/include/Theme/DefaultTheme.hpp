@@ -19,6 +19,7 @@ class DefaultTheme : public ITheme {
         void drawEgg(Vector3 pos) const override;
 
         float getPlayerLabelHeight() const override;
+        float getPlayerLabelScale() const override;
 };
 
 }
