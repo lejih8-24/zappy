@@ -132,15 +132,17 @@ Color Hud::getTeamColor(const GameState &state, std::string_view teamName) const
 void Hud::addPlayerFlagSegments(HudLine &line, const Player &player) const
 {
     Player::AnimState state = player.getEffectiveAnimState(GetTime());
-    if (state == Player::AnimState::Idle || state == Player::AnimState::Walk || state == Player::AnimState::Dead || state == Player::AnimState::LevelUp)
+    if (state == Player::AnimState::Walk || state == Player::AnimState::Dead || state == Player::AnimState::LevelUp)
         return;
     line.push_back({"  ", RAYWHITE});
-    if (player.isIncantating)
+    if (state == Player::AnimState::Incantation)
         line.push_back({"I", VIOLET});
-    if (player.isLayingEgg)
+    if (state == Player::AnimState::LayingEgg)
         line.push_back({"E", ORANGE});
-    if (player.isBroadcasting)
+    if (state == Player::AnimState::Broadcast)
         line.push_back({"B", SKYBLUE});
+    if (state == Player::AnimState::Eject)
+        line.push_back({"X", RED});
 }
 
 void Hud::addOverviewLines(const GameState &state, HudLines &lines) const
