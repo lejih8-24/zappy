@@ -19,6 +19,7 @@ GUI::CharacterModel::CharacterModel() : CharacterModel(DEFAULT_MODEL_PATH)
 GUI::CharacterModel::CharacterModel(std::string_view path, bool loadAnimations)
     : _model(LoadModel(std::string(path).c_str()))
     , _animations(nullptr)
+    , _animationCount(0)
     , _correction(MatrixIdentity())
 {
     // raylib stores indices as u16 internally; a mesh exceeding 65535 vertices would
@@ -70,5 +71,7 @@ void GUI::CharacterModel::applyRotation(float xDeg, float yDeg, float zDeg)
 
 int GUI::CharacterModel::getAnimationFrameCount(int animationIndex) const
 {
+    if (!_animations || animationIndex < 0 || animationIndex >= _animationCount)
+        return 1;
     return _animations[animationIndex].keyframeCount;
 }
