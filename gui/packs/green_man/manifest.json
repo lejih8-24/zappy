@@ -1,0 +1,14 @@
+{
+  "name": "green_man",
+  "version": "1.0.0",
+  "description": "3D green character model pack",
+  "author": "Zappy Team",
+  "animations": {
+    "walk": 2,
+    "idle": 0,
+    "death": 1
+  },
+  "eggScale": 0.03,
+  "eggRotation": { "x": -90 },
+  "playerLabelHeight": 2.75
+}

@@ -10,6 +10,7 @@
 #include "Camera.hpp"
 #include "Game/GameState.hpp"
 #include "Map.hpp"
+#include "Theme/ThemeManager.hpp"
 #include "UI/Hud.hpp"
 #include "Window.hpp"
 
@@ -23,7 +24,7 @@ namespace GUI {
 
 class Render {
     public:
-        Render(std::string_view host, int port);
+        Render(std::string_view host, int port, std::string_view pack = "default");
         void renderLoop(Zappy::Networking::GraphicsClient &client);
 
     private:
@@ -39,6 +40,7 @@ class Render {
 
         GameState _state;
         Window _window;
+        ThemeManager _themeManager;
         Map _map;
         GameCamera _camera;
         Hud _hud;

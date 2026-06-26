@@ -22,6 +22,10 @@ add_executable(zappy_gui
                src/Game/Player.cpp
                src/Game/ServerMessage.cpp
                src/Game/Tile.cpp
+               src/Game/CharacterModel.cpp
+               src/Theme/DefaultTheme.cpp
+               src/Theme/PackTheme.cpp
+               src/Theme/ThemeManager.cpp
                src/Camera.cpp
                src/GuiArgs.cpp
                src/Map.cpp
@@ -36,3 +40,6 @@ target_include_directories(zappy_gui
 
 target_link_libraries(zappy_gui PRIVATE raylib
                                 PRIVATE lattice)
+
+target_compile_definitions(zappy_gui PRIVATE ASSETS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets/"
+                                           PACKS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/packs/")

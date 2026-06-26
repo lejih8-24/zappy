@@ -8,9 +8,10 @@
 
 #include "Map.hpp"
 
-#include "Game/ResourceColors.hpp"
-
+#include <algorithm>
 #include <array>
+#include <string>
+#include <raymath.h>
 
 static constexpr float getResourceHeight(unsigned int quantity)
 {
@@ -28,8 +29,9 @@ static_assert(getResourceHeight(100) == 0.70F); // Many resources: capped height
 
 namespace GUI {
 
-Map::Map(float squareSize)
-    : _squareSize(squareSize)
+Map::Map(ITheme &theme, float squareSize)
+    : _theme(theme)
+    , _squareSize(squareSize)
 {
 }
 
@@ -45,7 +47,6 @@ Vector3 Map::getTilePosition(int x, int y, const GameState &state, float height)
 void Map::draw(const GameState &state) const
 {
     static constexpr float resourceOffset = 0.28F;
-
     static constexpr std::array<Vector2, Zappy::Game::Resources::RESOURCE_COUNT> resourceSlots = {
         Vector2{-1.0F, -1.0F}, //? Food
         Vector2{0.0F, -1.0F},  //? Linemate
@@ -56,19 +57,14 @@ void Map::draw(const GameState &state) const
         Vector2{0.0F, 1.0F},   //? Thystame
     };
 
-    // Draw the map grid from the current GameState size.
     for (std::size_t row = 0; row < state.mapHeight; ++row) {
         for (std::size_t col = 0; col < state.mapWidth; ++col) {
             Vector3 pos = getTilePosition(static_cast<int>(col), static_cast<int>(row), state, -0.1f);
             Vector3 size = { _squareSize - 0.1f, 0.2f, _squareSize - 0.1f };
-            Color squareColor = ((col + row) % 2 == 0) ? GREEN : DARKGREEN;
-
-            DrawCubeV(pos, size, squareColor);
-            DrawCubeWiresV(pos, size, BLACK);
+            _theme.drawTile(pos, size, (col + row) % 2 == 0);
         }
     }
 
-    // Draw each resource type in its own slot, leaving the tile center free for eggs/players
     for (const Tile &tile : state.tiles) {
         std::size_t resourceIndex = 0;
 
@@ -79,24 +75,46 @@ void Map::draw(const GameState &state) const
 
                 pos.x += resourceSlots[resourceIndex].x * _squareSize * resourceOffset;
                 pos.z += resourceSlots[resourceIndex].y * _squareSize * resourceOffset;
-                DrawCubeV(pos, { 0.32F, height, 0.32F }, ResourceColors[resourceIndex]);
+                _theme.drawResource(resourceIndex, pos, height);
             }
             ++resourceIndex;
         }
     }
 
-    // Draw players from the GameState instead of hardcoded render data.
     for (const auto &[id, player] : state.players) {
         (void)id;
-        Vector3 pos = getTilePosition(player.x, player.y, state, 0.65f);
-        DrawCubeV(pos, { 0.75f, 1.1f, 0.75f }, BLUE);
+        Vector3 pos = getTilePosition(player.x, player.y, state, 0.0f);
+        _theme.drawPlayer(pos, player.rotationDeg);
     }
 
-    // Draw eggs from the GameState.
     for (const auto &[id, egg] : state.eggs) {
         (void)id;
         Vector3 pos = getTilePosition(egg.x, egg.y, state, 0.35f);
-        DrawSphere(pos, 0.35f, RAYWHITE);
+        _theme.drawEgg(pos);
+    }
+}
+
+void Map::drawLabels(const GameState &state, Camera3D camera) const
+{
+    for (const auto &[id, player] : state.players) {
+        (void)id;
+        Vector3 labelPos = getTilePosition(player.x, player.y, state, _theme.getPlayerLabelHeight());
+        Vector2 screenPos = GetWorldToScreen(labelPos, camera);
+
+        if (screenPos.x < 0 || screenPos.x > static_cast<float>(GetScreenWidth()) ||
+            screenPos.y < 0 || screenPos.y > static_cast<float>(GetScreenHeight()))
+            continue;
+
+        float dist = Vector3Distance(camera.position, labelPos);
+        int fontSize = std::clamp(static_cast<int>(140.0f / dist), 8, 22);
+
+        std::string label = player.teamName + " L" + std::to_string(player.level);
+        int textWidth = MeasureText(label.c_str(), fontSize);
+        int sx = static_cast<int>(screenPos.x) - textWidth / 2;
+        int sy = static_cast<int>(screenPos.y);
+
+        DrawText(label.c_str(), sx + 1, sy + 1, fontSize, BLACK);
+        DrawText(label.c_str(), sx, sy, fontSize, RAYWHITE);
     }
 }
 

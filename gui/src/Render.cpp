@@ -17,11 +17,12 @@
 
 namespace GUI {
 
-Render::Render(std::string_view host, int port)
+Render::Render(std::string_view host, int port, std::string_view pack)
     : _state()
     , _window(1440, 900,
           std::string("Zappy GUI - ").append(host).append(":").append(std::to_string(port)), 60)
-    , _map()
+    , _themeManager(pack)
+    , _map(_themeManager.active())
     , _camera({ 0.0f, 20.0f, 20.0f }, { 0.0f, 0.0f, 0.0f })
     , _hud()
 {
@@ -101,6 +102,7 @@ void Render::drawFrame()
     DrawFPS(10, 10);
 
     draw3DScene();
+    _map.drawLabels(_state, _camera.get());
     _hud.draw(_state, _window);
     drawCrosshair();
     drawFocusOverlay();

@@ -28,6 +28,7 @@ conn.send(b"msz 10 10\n")
 conn.send(b"tna TeamA\n")
 conn.send(b"tna TeamB\n")
 conn.send(b"pnw #1 0 0 1 1 TeamA\n")
+# conn.send(b"enw #1 #1 5 5\n")
 
 time.sleep(1)
 for x in range(1, 10):
