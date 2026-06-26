@@ -107,9 +107,14 @@ class ZappyAI:
                 self.logger.Info(f"[COMMS_LATE] Rituel de {sender_id} démarré mais je suis à distance ({direction}). Annulation du suivi.")
                 self.states.clear_master_call()
 
-        elif req == "ABORT":
+
+        elif req == "ABORT" or decoded.get("data") == "ABORT":
+
             self.logger.Info(f"[COMMS_ABORT] Le Master {sender_id} a annulé son appel. Retour au travail.")
+
             self.states.clear_master_call()
+
+            self.states.arrived_at_master = False
 
     def _handle_command_response(self, raw_message: str):
         """Flux FIFO strictement respecté : On POP toujours la commande en premier !"""

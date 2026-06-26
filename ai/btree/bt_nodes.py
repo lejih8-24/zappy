@@ -5,7 +5,7 @@ from pathfinding import find_path_to_closest
 
 
 class IsHungry(Node):
-    """Évalue la faim du drone avec des seuils dynamiques selon son rôle."""
+    """Évalue la faim avec un système d'hystérésis pour éviter l'effet Yo-Yo."""
 
     def tick(self, ai) -> NodeStatus:
         current_food = ai.states.inventory.get("food", 0)
@@ -14,22 +14,33 @@ class IsHungry(Node):
             return NodeStatus.FAILURE
 
         if getattr(ai.states, 'is_master', False):
-            safety_threshold = 18
+            panic_threshold = 18
+            comfort_threshold = 25
         elif getattr(ai.states, 'last_master_id', None) is not None:
-            safety_threshold = 22
+            panic_threshold = 22
+            comfort_threshold = 30
         else:
-            safety_threshold = 35 if ai.states.level >= 2 else 15
+            panic_threshold = 35 if ai.states.level >= 2 else 15
+            comfort_threshold = panic_threshold + 10
 
-        if current_food < safety_threshold:
-            if getattr(ai.states, 'is_master', False):
-                ai.logger.Warn("[SURVIVAL] Urgence faim ! J'abandonne mon poste de Master pour survivre.")
-                msg = ai.comms.format_message("ALL", ai.states.level, "Master", "ABORT", "")
-                ai.queue_command(BroadcastCommand(ai.id, msg))
-                ai.states.is_master = False
-                if hasattr(ai.states, 'master_wait_cycle'):
-                    del ai.states.master_wait_cycle
-
+        if getattr(ai.states, 'is_hunting_food', False):
+            if current_food >= comfort_threshold:
+                ai.states.is_hunting_food = False
+                return NodeStatus.FAILURE
             return NodeStatus.SUCCESS
+
+        else:
+            if current_food < panic_threshold:
+                if getattr(ai.states, 'is_master', False):
+                    ai.logger.Warn("[SURVIVAL] Urgence faim ! J'abandonne mon poste.")
+                    msg = ai.comms.format_message("ALL", ai.states.level, "Master", "GROUPING", "ABORT")
+                    ai.queue_command(BroadcastCommand(ai.id, msg))
+                    ai.states.is_master = False
+                    if hasattr(ai.states, 'master_wait_cycle'):
+                        del ai.states.master_wait_cycle
+
+                ai.states.is_hunting_food = True
+                return NodeStatus.SUCCESS
 
         return NodeStatus.FAILURE
 
@@ -134,13 +145,14 @@ class ActionGroupAndIncant(Node):
         if not hasattr(ai.states, 'master_wait_cycle'):
             ai.states.master_wait_cycle = ai.cycle_count
 
-        if ai.cycle_count - ai.states.master_wait_cycle > 4500:
-            ai.logger.Warn("[MASTER] Trop long (manque de pierres/joueurs) ! J'annule le rituel.")
-            msg = ai.comms.format_message("ALL", ai.states.level, "Master", "ABORT", "")
-            ai.queue_command(BroadcastCommand(ai.id, msg))
-            ai.states.is_master = False
-            del ai.states.master_wait_cycle
-            return NodeStatus.FAILURE
+            if ai.cycle_count - getattr(ai.states, 'master_wait_cycle', 0) > 4500:
+                ai.logger.Warn("[MASTER] Trop long (manque de pierres/joueurs) ! J'annule le rituel.")
+                msg = ai.comms.format_message("ALL", ai.states.level, "Master", "GROUPING", "ABORT")
+                ai.queue_command(BroadcastCommand(ai.id, msg))
+                ai.states.is_master = False
+                if hasattr(ai.states, 'master_wait_cycle'):
+                    del ai.states.master_wait_cycle
+                return NodeStatus.FAILURE
 
         if required_players > 1:
             if players_on_tile < required_players:
