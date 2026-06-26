@@ -47,17 +47,17 @@ std::optional<std::string> Zappy::Server::popEvent()
 
 void Zappy::Server::onStart()
 {
-    Zappy::logger.info() << "starting server on " << hostname() << ":" << port() << std::endl;
+    logger.info() << "starting server on " << hostname() << ":" << port() << std::endl;
 }
 
 void Zappy::Server::onShutdown()
 {
-    Zappy::logger.info() << "server shutting down..." << std::endl;
+    logger.info() << "server shutting down..." << std::endl;
 }
 
 void Zappy::Server::onClientAccepted(const Client& client)
 {
-    Zappy::logger.info() << client.name() << ": connected" << std::endl;
+    logger.info() << client.name() << ": connected" << std::endl;
 
     using std::chrono_literals::operator ""ms;
     m_UpdateDuration = 20'000ms / m_Game.gameSpeed();
@@ -65,7 +65,7 @@ void Zappy::Server::onClientAccepted(const Client& client)
 
 void Zappy::Server::onClientDisconnected(const Client& client)
 {
-    Zappy::logger.info() << client.name() << ": disconnected" << std::endl;
+    logger.info() << client.name() << ": disconnected" << std::endl;
 }
 
 void Zappy::Server::updateServer()
@@ -74,7 +74,7 @@ void Zappy::Server::updateServer()
     m_DeltaTime = currentTime - m_UpdateStart;
     m_UpdateStart = currentTime;
 
-    Zappy::logger.debug() << "updating server (delta: " << std::chrono::duration<float, std::milli>(m_DeltaTime) << ")" << std::endl;
+    logger.debug() << "updating server (delta: " << std::chrono::duration<float, std::milli>(m_DeltaTime) << ")" << std::endl;
 
     m_Game.update(m_DeltaTime);
 
@@ -85,7 +85,7 @@ void Zappy::Server::updateServer()
 
 void Zappy::Server::updateClient(Client& client)
 {
-    Zappy::logger.debug() << "updating " << client.name() << std::endl;
+    logger.debug() << "updating " << client.name() << std::endl;
 
     client.update(m_Game, m_DeltaTime);
 }
