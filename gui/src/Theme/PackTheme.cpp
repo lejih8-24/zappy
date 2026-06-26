@@ -264,9 +264,9 @@ void PackTheme::drawPlayer(Vector3 pos, float rotationDeg, Player::AnimState sta
         const std::string &name = (nameIt != stateNames.end()) ? nameIt->second : "idle";
         int walkIdx = getAnimIndex("walk", 0);
         int animIdx = (state == Player::AnimState::Idle)
-            ? -1
+            ? walkIdx
             : getAnimIndex(name, walkIdx);
-        float frame = (animIdx < 0)
+        float frame = (state == Player::AnimState::Idle)
             ? 0.0f
             : std::fmod(GetTime() * ANIM_FPS, _player->getAnimationFrameCount(animIdx));
         _player->draw(pos, rotationDeg, animIdx, frame, _playerScale);
