@@ -10,10 +10,10 @@
 #include <zappy/client.hpp>
 
 
-Zappy::Client::HandshakeState::HandshakeState()
+Zappy::Client::HandshakeState::HandshakeState(bool sendWelcome)
     : BaseState()
     , m_TeamName()
-    , m_WelcomeSent(false)
+    , m_WelcomeSent(!sendWelcome)
 {
 
 }
@@ -32,5 +32,5 @@ void Zappy::Client::HandshakeState::update(Client& client, std::chrono::nanoseco
     if (m_TeamName == "GRAPHIC")
         client.setState(std::make_unique<GuiState>());
     else
-        client.setState(std::make_unique<PlayerRunState>());
+        client.setState(std::make_unique<PlayerRunState>(std::move(m_TeamName)));
 }

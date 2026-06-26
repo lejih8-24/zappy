@@ -21,7 +21,7 @@ namespace Zappy::Client {
         bool m_WelcomeSent;
 
         public:
-            HandshakeState();
+            HandshakeState(bool sendWelcome = true);
 
             void update(Client& client, std::chrono::nanoseconds dt) override;
     };
