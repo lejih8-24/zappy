@@ -32,6 +32,8 @@ namespace Zappy::Game {
             std::vector<std::string> m_GraphicsEvents;
             unsigned int m_GameSpeed;
 
+            std::chrono::duration<double, std::milli> m_TimeSinceResourceRespawn;
+
         public:
             Game() noexcept;
 
@@ -57,6 +59,10 @@ namespace Zappy::Game {
             void playerLayEgg(const Player& player);
 
         private:
+            void regenerateResources();
+            void regenerateResource(ResourceType type, unsigned int amount);
+            std::pair<unsigned int, unsigned int> randomTileResourcePosition() const;
+
             template <std::integral T>
             static T random(T start, std::type_identity_t<T> end)
             {
@@ -67,7 +73,7 @@ namespace Zappy::Game {
             std::pair<unsigned int, unsigned int> randomPosition() const
             {
                 auto [x, y] = m_Map.size();
-                return { random(0u, x), random(0u, y) };
+                return { random(0u, x - 1), random(0u, y - 1) };
             }
     };
 }
