@@ -53,12 +53,15 @@ namespace Zappy::Game {
             inline void setMapSize(std::pair<unsigned int, unsigned int> size) { m_Map.resize(size.first, size.second); }
             inline std::pair<unsigned int, unsigned int> mapSize() noexcept { return m_Map.size(); }
 
+            inline Team& playerTeam(const Player& player) { return m_Teams.at(std::string(player.team())); }
+
             void setTeams(std::span<std::string> names, std::size_t maxMembers);
 
             void playerLayEgg(int playerId) { return playerLayEgg(m_Players[playerId]); }
             void playerLayEgg(const Player& player);
-
             Player* hatchEgg(std::string_view team);
+
+            void killPlayer(const Player& player);
 
         private:
             void regenerateResources();

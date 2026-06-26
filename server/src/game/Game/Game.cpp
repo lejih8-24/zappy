@@ -88,6 +88,12 @@ auto Zappy::Game::Game::hatchEgg(std::string_view team) -> Player*
         auto& player = m_Players.emplace_back(team);
         player.moveTo(x, y);
 
+        m_GraphicsEvents.emplace_back(
+            Event::playerNew(
+                player.id(), player.position(),
+                static_cast<int>(player.orientation()),
+                player.level(), player.team()
+        ));
         m_GraphicsEvents.emplace_back(Event::eggHatch(it->id()));
 
         m_Eggs.erase(it);
@@ -95,6 +101,16 @@ auto Zappy::Game::Game::hatchEgg(std::string_view team) -> Player*
     }
 
     return nullptr;
+}
+
+void Zappy::Game::Game::killPlayer(const Player& player)
+{
+    auto& team = playerTeam(player);
+
+    team.members--;
+    team.maxMembers--;
+
+    m_GraphicsEvents.emplace_back(Event::playerDie(player.id()));
 }
 
 void Zappy::Game::Game::regenerateResources()
