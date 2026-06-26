@@ -14,6 +14,8 @@
 
 namespace Zappy::Client {
     class GuiState : public BaseState {
+        static constexpr std::size_t EVENT_MERGE_LIMIT = 128;
+
         std::deque<std::string> m_QueuedEvents;
 
         public:
@@ -23,6 +25,7 @@ namespace Zappy::Client {
             void update(Client& client, std::chrono::nanoseconds dt) override;
 
         private:
+            std::string mergeEvents();
             void handleCommand(std::string_view command);
     };
 }

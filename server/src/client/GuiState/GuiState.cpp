@@ -42,20 +42,38 @@ void Zappy::Client::GuiState::init()
 
 void Zappy::Client::GuiState::update(Client& client, std::chrono::nanoseconds dt)
 {
-    // only one event can be sent per update,
-    // so add all new server events to the queue
-    for (const auto& event : game().graphicsEvents()) {
+    for (const auto& event : game().graphicsEvents())
         m_QueuedEvents.emplace_back(event);
-    }
 
     if (!m_QueuedEvents.empty()) {
-        client.send(m_QueuedEvents.front());
-        m_QueuedEvents.pop_front();
+        std::string events = mergeEvents();
+        client.send(events);
     }
 
     std::string command;
     if (client.readline(command))
         handleCommand(command);
+}
+
+/**
+ * Merges all* events into a single
+ * string so it can be sent off to
+ * the client in a single write() call
+ * (*up to a limit of EVENT_MERGE_LIMIT).
+ *
+ * Assumes m_QueuedEvents.size() > 0.
+ */
+std::string Zappy::Client::GuiState::mergeEvents()
+{
+    std::string events = std::move(m_QueuedEvents.front());
+    m_QueuedEvents.pop_front();
+
+    for (std::size_t i = 0; !m_QueuedEvents.empty() && i < EVENT_MERGE_LIMIT; i++) {
+        events += m_QueuedEvents.front();
+        m_QueuedEvents.pop_front();
+    }
+
+    return events;
 }
 
 void Zappy::Client::GuiState::handleCommand(std::string_view command)
