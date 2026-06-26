@@ -42,18 +42,19 @@ GUI::CharacterModel::~CharacterModel()
     UnloadModel(_model);
 }
 
-void GUI::CharacterModel::draw(Vector3 position, float rotationDeg, int animationIndex, float frame) const
+void GUI::CharacterModel::draw(Vector3 position, float rotationDeg, int animationIndex, float frame, float scale) const
 {
     if (_animationCount > 0)
         // % guard: prevents OOB if caller passes a stale or out-of-range animation index
         UpdateModelAnimation(_model, _animations[animationIndex % _animationCount], frame);
+    Matrix s = MatrixScale(scale, scale, scale);
     Matrix yaw = MatrixRotate({0.0f, 1.0f, 0.0f}, rotationDeg * DEG2RAD);
     Matrix translation = MatrixTranslate(position.x, position.y, position.z);
     // DrawModelEx composes its own transform on top of model.transform, so setting
     // model.transform to a correction matrix applies it in the wrong space for animated
     // meshes. DrawMesh with an explicit matrix gives full control over the order.
-    // Column-vector convention (rightmost applied first): correction(model space) * yaw * translation(world).
-    Matrix transform = MatrixMultiply(MatrixMultiply(_correction, yaw), translation);
+    // Column-vector convention (rightmost applied first): scale(model space) * correction * yaw * translation(world).
+    Matrix transform = MatrixMultiply(MatrixMultiply(MatrixMultiply(s, _correction), yaw), translation);
     for (int i = 0; i < _model.meshCount; i++)
         DrawMesh(_model.meshes[i], _model.materials[_model.meshMaterial[i]], transform);
 }
