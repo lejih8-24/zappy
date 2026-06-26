@@ -172,11 +172,14 @@ PackTheme::PackTheme(std::string_view packName)
     , _playerLabelHeight(parseManifestFloat(packName, "playerLabelHeight", 2.5f, 0.0f, 20.0f))
     , _playerLabelScale(parseManifestFloat(packName, "playerLabelScale", 140.0f, 10.0f, 500.0f))
 {
+    std::string packDir = std::string(PACKS_DIR) + std::string(packName);
+    if (!std::filesystem::exists(packDir) || !std::filesystem::is_directory(packDir)) {
+        std::cerr << "ERROR: Pack '" << packName << "' not found at " << packDir << "\n";
+        std::exit(1);
+    }
     std::string playerPath = resolvePath(packName, "player.glb");
     if (!playerPath.empty() && !glbHasU32Indices(playerPath)) {
         try {
-            // pass loadAnimations=false when manifest has no animations block;
-            // models without embedded animation data crash inside LoadModelAnimations
             _player = std::make_unique<CharacterModel>(playerPath, !_animations.empty());
             Vector3 rot = parseRotation(packName, "playerRotation");
             if (rot.x != 0 || rot.y != 0 || rot.z != 0)
