@@ -8,8 +8,10 @@
     "idle": 0,
     "death": 1
   },
-  "playerRotation": { "x": 0, "y": 0, "z": 0 },
+  "playerRotation": { "x": 0, "y": 180, "z": 0 },
+  "playerScale": 1,
+  "playerLabelHeight": 2.75,
+  "playerLabelScale": 140.0,
   "eggScale": 0.03,
-  "eggRotation": { "x": -90 },
-  "playerLabelHeight": 2.75
+  "eggRotation": { "x": -90 }
 }

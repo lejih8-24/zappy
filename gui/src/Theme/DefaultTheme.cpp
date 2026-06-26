@@ -50,4 +50,9 @@ float DefaultTheme::getPlayerLabelHeight() const
     return 1.5f;
 }
 
+float DefaultTheme::getPlayerLabelScale() const
+{
+    return 140.0f;
+}
+
 }

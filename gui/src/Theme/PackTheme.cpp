@@ -7,6 +7,7 @@
 
 #include "Theme/PackTheme.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstdint>
@@ -77,12 +78,16 @@ static Vector3 parseRotation(std::string_view packName, const char *blockName)
     auto blockStart = json.find(std::string("\"") + blockName + "\"");
     if (blockStart == std::string::npos)
         return {0, 0, 0};
+    // clamp search to the {...} block so later fields with the same axis keys don't overwrite
+    auto blockOpen = json.find('{', blockStart);
+    auto blockClose = json.find('}', blockOpen);
+    if (blockOpen == std::string::npos || blockClose == std::string::npos)
+        return {0, 0, 0};
 
     Vector3 rot = {0, 0, 0};
     // matches `"x": 180` or `"z": -90.5`; group 1 = axis letter, group 2 = signed float
     std::regex axis("\"([xyz])\"\\s*:\\s*(-?\\d+(?:\\.\\d+)?)");
-    // start search at the named block to avoid matching xyz keys elsewhere in the JSON
-    std::sregex_iterator it(json.cbegin() + blockStart, json.cend(), axis);
+    std::sregex_iterator it(json.cbegin() + blockOpen, json.cbegin() + blockClose, axis);
     std::sregex_iterator end;
     for (; it != end; ++it) {
         char a = (*it)[1].str()[0];
@@ -94,23 +99,6 @@ static Vector3 parseRotation(std::string_view packName, const char *blockName)
     return rot;
 }
 
-static float parseEggScale(std::string_view packName)
-{
-    std::string manifestPath = std::string(PACKS_DIR) + std::string(packName) + "/manifest.json";
-    if (!std::filesystem::exists(manifestPath))
-        return 1.0f;
-
-    std::ifstream file(manifestPath);
-    std::ostringstream buf;
-    buf << file.rdbuf();
-    std::string json = buf.str();
-
-    std::regex r("\"eggScale\"\\s*:\\s*(\\d+(?:\\.\\d+)?)");
-    std::smatch m;
-    if (std::regex_search(json, m, r))
-        return std::stof(m[1].str());
-    return 1.0f;
-}
 
 static std::unordered_map<std::string, int> parseAnimations(std::string_view packName)
 {
@@ -146,23 +134,26 @@ static std::unordered_map<std::string, int> parseAnimations(std::string_view pac
     return result;
 }
 
-static float parsePlayerLabelHeight(std::string_view packName)
+static float parseManifestFloat(std::string_view packName, const char *key, float defaultValue,
+    float minValue = -1e30f, float maxValue = 1e30f)
 {
+    // clamp the default too so a bad default can't bypass the range check
+    defaultValue = std::clamp(defaultValue, minValue, maxValue);
+
     std::string manifestPath = std::string(PACKS_DIR) + std::string(packName) + "/manifest.json";
     if (!std::filesystem::exists(manifestPath))
-        return 2.5f;
+        return defaultValue;
 
     std::ifstream file(manifestPath);
     std::ostringstream buf;
     buf << file.rdbuf();
     std::string json = buf.str();
 
-    std::regex r("\"playerLabelHeight\"\\s*:\\s*(\\d+(?:\\.\\d+)?)");
+    std::regex r(std::string("\"") + key + "\"\\s*:\\s*(\\d+(?:\\.\\d+)?)");
     std::smatch m;
     if (std::regex_search(json, m, r))
-        return std::stof(m[1].str());
-    return 2.5f;
-
+        return std::clamp(std::stof(m[1].str()), minValue, maxValue);
+    return defaultValue;
 }
 
 namespace GUI {
@@ -170,7 +161,9 @@ namespace GUI {
 PackTheme::PackTheme(std::string_view packName)
     : _animations(parseAnimations(packName))
     , _eggCorrection(MatrixIdentity())
-    , _playerLabelHeight(parsePlayerLabelHeight(packName))
+    , _playerScale(parseManifestFloat(packName, "playerScale", 1.0f, 0.001f, 100.0f))
+    , _playerLabelHeight(parseManifestFloat(packName, "playerLabelHeight", 2.5f, 0.0f, 20.0f))
+    , _playerLabelScale(parseManifestFloat(packName, "playerLabelScale", 140.0f, 10.0f, 500.0f))
 {
     std::string playerPath = resolvePath(packName, "player.glb");
     if (!playerPath.empty() && !glbHasU32Indices(playerPath)) {
@@ -189,7 +182,7 @@ PackTheme::PackTheme(std::string_view packName)
     std::string eggPath = resolvePath(packName, "egg.glb");
     if (!eggPath.empty()) {
         _egg = LoadModel(eggPath.c_str());
-        _eggScale = parseEggScale(packName);
+        _eggScale = parseManifestFloat(packName, "eggScale", 1.0f, 0.001f, 100.0f);
         Vector3 rot = parseRotation(packName, "eggRotation");
         Matrix rx = MatrixRotateX(DEG2RAD * rot.x);
         Matrix ry = MatrixRotateY(DEG2RAD * rot.y);
@@ -248,7 +241,7 @@ void PackTheme::drawPlayer(Vector3 pos, float rotationDeg) const
     if (_player) {
         int walkIdx = getAnimIndex("walk", 0);
         float frame = std::fmod(GetTime() * ANIM_FPS, _player->getAnimationFrameCount(walkIdx));
-        _player->draw(pos, rotationDeg, walkIdx, frame);
+        _player->draw(pos, rotationDeg, walkIdx, frame, _playerScale);
         return;
     }
     _fallback.drawPlayer(pos, rotationDeg);
@@ -271,6 +264,11 @@ void PackTheme::drawEgg(Vector3 pos) const
 float PackTheme::getPlayerLabelHeight() const
 {
     return _playerLabelHeight;
+}
+
+float PackTheme::getPlayerLabelScale() const
+{
+    return _playerLabelScale;
 }
 
 }

@@ -106,7 +106,7 @@ void Map::drawLabels(const GameState &state, Camera3D camera) const
             continue;
 
         float dist = Vector3Distance(camera.position, labelPos);
-        int fontSize = std::clamp(static_cast<int>(140.0f / dist), 8, 22);
+        int fontSize = std::clamp(static_cast<int>(_theme.getPlayerLabelScale() / dist), 8, 22);
 
         std::string label = player.teamName + " L" + std::to_string(player.level);
         int textWidth = MeasureText(label.c_str(), fontSize);

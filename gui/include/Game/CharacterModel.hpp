@@ -20,7 +20,7 @@ class CharacterModel {
         CharacterModel(const CharacterModel &) = delete; // two copies sharing the same raylib GPU handle would double-free on destruction = crash
         CharacterModel &operator=(const CharacterModel &) = delete;
 
-        void draw(Vector3 position, float rotationDeg, int animationIndex, float frame) const;
+        void draw(Vector3 position, float rotationDeg, int animationIndex, float frame, float scale = 1.0f) const;
         void applyRotation(float xDeg, float yDeg, float zDeg);
         int getAnimationFrameCount(int animationIndex) const;
 
