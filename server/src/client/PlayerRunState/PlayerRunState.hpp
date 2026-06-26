@@ -27,5 +27,9 @@ namespace Zappy::Client {
 
             void init() override;
             void update(Client& client, std::chrono::nanoseconds dt) override;
+
+        private:
+            static void toLowercase(std::string& repr);
+            void runCommand(std::string& command);
     };
 }
