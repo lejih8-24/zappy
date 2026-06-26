@@ -161,9 +161,9 @@ namespace GUI {
 PackTheme::PackTheme(std::string_view packName)
     : _animations(parseAnimations(packName))
     , _eggCorrection(MatrixIdentity())
-    , _playerScale(parseManifestFloat(packName, "playerScale", 1.0f))
-    , _playerLabelHeight(parseManifestFloat(packName, "playerLabelHeight", 2.5f))
-    , _playerLabelScale(parseManifestFloat(packName, "playerLabelScale", 140.0f))
+    , _playerScale(parseManifestFloat(packName, "playerScale", 1.0f, 0.001f, 100.0f))
+    , _playerLabelHeight(parseManifestFloat(packName, "playerLabelHeight", 2.5f, 0.0f, 20.0f))
+    , _playerLabelScale(parseManifestFloat(packName, "playerLabelScale", 140.0f, 10.0f, 500.0f))
 {
     std::string playerPath = resolvePath(packName, "player.glb");
     if (!playerPath.empty() && !glbHasU32Indices(playerPath)) {
@@ -182,7 +182,7 @@ PackTheme::PackTheme(std::string_view packName)
     std::string eggPath = resolvePath(packName, "egg.glb");
     if (!eggPath.empty()) {
         _egg = LoadModel(eggPath.c_str());
-        _eggScale = parseManifestFloat(packName, "eggScale", 1.0f);
+        _eggScale = parseManifestFloat(packName, "eggScale", 1.0f, 0.001f, 100.0f);
         Vector3 rot = parseRotation(packName, "eggRotation");
         Matrix rx = MatrixRotateX(DEG2RAD * rot.x);
         Matrix ry = MatrixRotateY(DEG2RAD * rot.y);
