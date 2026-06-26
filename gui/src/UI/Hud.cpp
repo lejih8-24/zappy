@@ -56,6 +56,7 @@ void Hud::update(HudAction action)
         --_scroll;
 }
 
+// Count only incantations that are currently running (status activated)
 std::size_t Hud::getActiveIncantationCount(const GameState &state) const
 {
     return std::count_if(state.incantations.begin(), state.incantations.end(),
@@ -64,6 +65,7 @@ std::size_t Hud::getActiveIncantationCount(const GameState &state) const
         });
 }
 
+// Count players whose their team name matches the teamName we're currently inspecting
 std::size_t Hud::getTeamPlayerCount(const GameState &state, std::string_view teamName) const
 {
     return std::count_if(state.players.begin(), state.players.end(), [teamName](const auto &entry) {
@@ -71,8 +73,10 @@ std::size_t Hud::getTeamPlayerCount(const GameState &state, std::string_view tea
     });
 }
 
+// Build the HUD level summary for one team, like "L1:2 L3:1" (L[playerLvl]:[nb])
 std::string Hud::getTeamLevels(const GameState &state, std::string_view teamName) const
 {
+    // lvl / nbPlayers
     std::map<std::size_t, std::size_t> levels;
     std::ostringstream stream;
 
@@ -86,7 +90,7 @@ std::string Hud::getTeamLevels(const GameState &state, std::string_view teamName
     for (const auto &[level, nbPlayers] : levels)
         stream << "L" << level << ":" << nbPlayers << " ";
     std::string result = stream.str();
-    result.pop_back();
+    result.pop_back(); // delete the useless space char at the end of the string
     return result;
 }
 
