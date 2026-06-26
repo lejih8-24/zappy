@@ -8,14 +8,24 @@
 
 #pragma once
 
-#include "../BaseState.hpp"
+#include "../QueueState.hpp"
+#include <string>
 
+
+namespace Zappy::Game {
+    class Player;
+}
 
 namespace Zappy::Client {
-    class PlayerRunState : public BaseState {
-        public:
-            PlayerRunState();
+    class PlayerRunState : public QueueState<128> {
+        std::string m_TeamName;
+        Game::Player* m_Player;
 
+        public:
+            PlayerRunState(const std::string& teamName);
+            PlayerRunState(std::string&& teamName);
+
+            void init() override;
             void update(Client& client, std::chrono::nanoseconds dt) override;
     };
 }
