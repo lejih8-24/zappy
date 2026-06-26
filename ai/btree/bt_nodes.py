@@ -1,6 +1,6 @@
 from .bt_core import Node, NodeStatus
 from CommandModel import LookCommand, ForwardCommand, TurnLeftCommand, TurnRightCommand, SetCommand, BroadcastCommand, \
-    IncantationCommand, TakeCommand, ForkCommand
+    IncantationCommand, TakeCommand
 from pathfinding import find_path_to_closest
 
 
@@ -10,34 +10,32 @@ class IsHungry(Node):
     def tick(self, ai) -> NodeStatus:
         current_food = ai.states.inventory.get("food", 0)
 
-        if getattr(ai.states, 'ready_for_incantation', False):
+        if ai.states.ready_for_incantation:
             return NodeStatus.FAILURE
 
-        if getattr(ai.states, 'is_master', False):
+        if ai.states.is_master:
+            panic_threshold = 14
+            comfort_threshold = 21
+        elif ai.states.last_master_id is not None:
             panic_threshold = 18
             comfort_threshold = 25
-        elif getattr(ai.states, 'last_master_id', None) is not None:
-            panic_threshold = 22
-            comfort_threshold = 30
         else:
             panic_threshold = 35 if ai.states.level >= 2 else 15
             comfort_threshold = panic_threshold + 10
 
-        if getattr(ai.states, 'is_hunting_food', False):
+        if ai.states.is_hunting_food:
             if current_food >= comfort_threshold:
                 ai.states.is_hunting_food = False
                 return NodeStatus.FAILURE
             return NodeStatus.SUCCESS
-
         else:
             if current_food < panic_threshold:
-                if getattr(ai.states, 'is_master', False):
+                if ai.states.is_master:
                     ai.logger.Warn("[SURVIVAL] Urgence faim ! J'abandonne mon poste.")
                     msg = ai.comms.format_message("ALL", ai.states.level, "Master", "GROUPING", "ABORT")
                     ai.queue_command(BroadcastCommand(ai.id, msg))
                     ai.states.is_master = False
-                    if hasattr(ai.states, 'master_wait_cycle'):
-                        del ai.states.master_wait_cycle
+                    ai.states.master_wait_cycle = None
 
                 ai.states.is_hunting_food = True
                 return NodeStatus.SUCCESS
@@ -46,42 +44,34 @@ class IsHungry(Node):
 
 
 class CanElevate(Node):
-    """Vérifie si le drone possède toutes les ressources (ou s'il est déjà engagé comme Master)."""
-
     def tick(self, ai) -> NodeStatus:
-        if getattr(ai.states, 'is_master', False):
+        if ai.states.is_master:
             return NodeStatus.SUCCESS
-
         if ai.states.can_elevate():
             return NodeStatus.SUCCESS
-
         return NodeStatus.FAILURE
 
+
 class HasMasterCall(Node):
-    """Vérifie si le drone est engagé envers un Master."""
     def tick(self, ai) -> NodeStatus:
-        if getattr(ai.states, 'last_master_id', None) is not None or getattr(ai.states, 'ready_for_incantation', False):
+        if ai.states.last_master_id is not None or ai.states.ready_for_incantation:
             return NodeStatus.SUCCESS
         return NodeStatus.FAILURE
 
 
 class ActionSearchFood(Node):
-    """Cherche et ramasse de la nourriture en priorité."""
-
     def tick(self, ai) -> NodeStatus:
         if len(ai.pending_commands) > 0:
             return NodeStatus.RUNNING
 
         if ai.cycle_count % 400 == 0:
             current_food = ai.states.inventory.get('food', 0)
-
-            if getattr(ai.states, 'is_master', False):
-                target = 18
-            elif getattr(ai.states, 'last_master_id', None) is not None:
-                target = 22
+            if ai.states.is_master:
+                target = 25
+            elif ai.states.last_master_id is not None:
+                target = 30
             else:
-                target = 35 if ai.states.level >= 2 else 15
-
+                target = 45 if ai.states.level >= 2 else 25
             ai.logger.Info(f"[SURVIVAL] Recherche de nourriture en cours ({current_food}/{target})...")
 
         if not ai.states.vision_grid:
@@ -99,8 +89,6 @@ class ActionSearchFood(Node):
 
 
 class ActionFarmStones(Node):
-    """Cherche et ramasse la pierre manquante pour l'élévation."""
-
     def tick(self, ai) -> NodeStatus:
         if len(ai.pending_commands) > 0:
             return NodeStatus.RUNNING
@@ -125,8 +113,6 @@ class ActionFarmStones(Node):
 
 
 class ActionGroupAndIncant(Node):
-    """Le chef d'orchestre : Regroupe l'équipe, prépare la case et lance l'incantation."""
-
     def tick(self, ai) -> NodeStatus:
         if len(ai.pending_commands) > 0:
             return NodeStatus.RUNNING
@@ -142,21 +128,21 @@ class ActionGroupAndIncant(Node):
         rules = ai.states.elevation_rules[ai.states.level]
         required_players = rules["players"]
 
-        if not hasattr(ai.states, 'master_wait_cycle'):
+        # LOGIQUE DE TIMEOUT CORRIGÉE
+        if ai.states.master_wait_cycle is None:
             ai.states.master_wait_cycle = ai.cycle_count
-
-            if ai.cycle_count - getattr(ai.states, 'master_wait_cycle', 0) > 4500:
+        else:
+            if ai.cycle_count - ai.states.master_wait_cycle > 4500:
                 ai.logger.Warn("[MASTER] Trop long (manque de pierres/joueurs) ! J'annule le rituel.")
                 msg = ai.comms.format_message("ALL", ai.states.level, "Master", "GROUPING", "ABORT")
                 ai.queue_command(BroadcastCommand(ai.id, msg))
                 ai.states.is_master = False
-                if hasattr(ai.states, 'master_wait_cycle'):
-                    del ai.states.master_wait_cycle
+                ai.states.master_wait_cycle = None
                 return NodeStatus.FAILURE
 
         if required_players > 1:
             if players_on_tile < required_players:
-                if ai.cycle_count - getattr(ai.states, 'last_call_cycle', 0) > 40:
+                if ai.cycle_count - ai.states.last_call_cycle > 40:
                     msg = ai.comms.format_message("ALL", ai.states.level, "Master", "GROUPING", "INCANTATION_CALL")
                     ai.queue_command(BroadcastCommand(ai.id, msg))
                     ai.states.last_call_cycle = ai.cycle_count
@@ -192,19 +178,15 @@ class ActionGroupAndIncant(Node):
                 f"[MASTER] Case parfaite ! Lancement du rituel (Niveau {ai.states.level} -> {ai.states.level + 1}).")
             ai.queue_command(IncantationCommand())
             ai.states.ready_for_incantation = True
-
-            if hasattr(ai.states, 'master_wait_cycle'):
-                del ai.states.master_wait_cycle
+            ai.states.master_wait_cycle = None
             return NodeStatus.RUNNING
 
         return NodeStatus.RUNNING
 
 
 class ActionJoinMaster(Node):
-    """Fait avancer le drone vers la source du signal du Master de manière stable."""
-
     def tick(self, ai) -> NodeStatus:
-        if getattr(ai.states, 'ready_for_incantation', False):
+        if ai.states.ready_for_incantation:
             return NodeStatus.SUCCESS
 
         if len(ai.pending_commands) > 0:
@@ -212,24 +194,21 @@ class ActionJoinMaster(Node):
 
         k = ai.states.master_direction
 
-        # 1. Gestion de la perte de signal
         if k is None:
-            if getattr(ai.states, 'arrived_at_master', False):
+            if ai.states.arrived_at_master:
                 return NodeStatus.SUCCESS
 
-            if not hasattr(ai.states, 'join_wait_cycle'):
+            if ai.states.join_wait_cycle is None:
                 ai.states.join_wait_cycle = ai.cycle_count
             elif ai.cycle_count - ai.states.join_wait_cycle > 800:
                 ai.logger.Warn("[BT] Le signal du Master est perdu. J'abandonne.")
                 ai.states.clear_master_call()
                 ai.states.arrived_at_master = False
-                del ai.states.join_wait_cycle
+                ai.states.join_wait_cycle = None
                 return NodeStatus.FAILURE
             return NodeStatus.RUNNING
 
-        if hasattr(ai.states, 'join_wait_cycle'):
-            del ai.states.join_wait_cycle
-
+        ai.states.join_wait_cycle = None
         ai.states.master_direction = None
 
         if k == 0:
@@ -250,8 +229,6 @@ class ActionJoinMaster(Node):
 
 
 class ActionContributeStones(Node):
-    """Vide l'inventaire des pierres sur la case du Master et attend."""
-
     def tick(self, ai) -> NodeStatus:
         if len(ai.pending_commands) > 0:
             return NodeStatus.RUNNING
@@ -269,36 +246,17 @@ class ActionContributeStones(Node):
             ai.states.wait_start_cycle = ai.cycle_count
             return NodeStatus.RUNNING
 
-        if not hasattr(ai.states, 'wait_start_cycle'):
+        if ai.states.wait_start_cycle is None:
             ai.states.wait_start_cycle = ai.cycle_count
 
         if ai.cycle_count - ai.states.wait_start_cycle > 1500:
             ai.logger.Warn("[BT] Le Master n'a pas toutes les pierres. J'annule le suivi pour retourner farmer.")
             ai.states.clear_master_call()
             ai.states.arrived_at_master = False
-            del ai.states.wait_start_cycle
+            ai.states.wait_start_cycle = None
             return NodeStatus.FAILURE
 
         if ai.cycle_count % 300 == 0:
             ai.logger.Info("[BT] Contribution terminée. En attente de l'incantation...")
-
-        return NodeStatus.RUNNING
-
-
-class ShouldReproduce(Node):
-    """Vérifie si le drone a accumulé assez de réserves pour pondre en toute sécurité."""
-
-    def tick(self, ai) -> NodeStatus:
-        if ai.states.inventory.get("food", 0) > 40:
-            return NodeStatus.SUCCESS
-        return NodeStatus.FAILURE
-
-class ActionFork(Node):
-    def tick(self, ai) -> NodeStatus:
-        if len(ai.pending_commands) > 0:
-            return NodeStatus.RUNNING
-
-        ai.logger.Info("Réserves optimales atteintes ! Début de la ponte...")
-        ai.queue_command(ForkCommand())
 
         return NodeStatus.RUNNING

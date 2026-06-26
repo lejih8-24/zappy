@@ -1,4 +1,5 @@
 import os
+import shutil
 import time
 import json
 import curses
@@ -10,8 +11,8 @@ class Display:
     def __init__(self, folder: str = '.zappy_stats'):
         self.folder = folder
         if not any(f.endswith('.json') for f in os.listdir('.') if f.startswith('.zappy_stats')):
+            shutil.rmtree('.zappy_stats', ignore_errors=True)
             os.makedirs(".zappy_stats", exist_ok=True)
-            os.system("rm -rf .zappy_stats/*")
 
     def save_dashboard_state(self, id, role, state, level, position, inventory):
         """Sauvegarde l'état actuel dans un fichier JSON partagé."""

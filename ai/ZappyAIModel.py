@@ -6,7 +6,7 @@ import random
 
 from CommandModel import *
 from BroadcastManager import BroadcastManager
-from btree.bt_nodes import ShouldReproduce, ActionFork, IsHungry, ActionSearchFood, ActionFarmStones, CanElevate, \
+from btree.bt_nodes import IsHungry, ActionSearchFood, ActionFarmStones, CanElevate, \
     ActionGroupAndIncant, \
     HasMasterCall, ActionJoinMaster, ActionContributeStones
 from ai_movement import AINavigator
@@ -58,7 +58,6 @@ class ZappyAI:
             if self.is_alive:
                 self._decide_next_action()
 
-            time.sleep(0.01)
 
     def _handle_broadcast(self, direction: int, decoded: dict):
         req = decoded.get("request")
@@ -118,7 +117,6 @@ class ZappyAI:
 
     def _handle_command_response(self, raw_message: str):
         """Flux FIFO strictement respecté : On POP toujours la commande en premier !"""
-        self.last_interaction_time = time.time()
 
         if not self.pending_commands:
             self.logger.Error(f"Réponse inattendue (aucune commande en attente) : {raw_message}")

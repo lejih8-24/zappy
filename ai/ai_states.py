@@ -23,6 +23,13 @@ class AIState:
         self.master_direction = None
         self.last_master_id = None
         self.ready_for_incantation = False
+        self.is_hunting_food = False
+        self.arrived_at_master = False
+
+        self.master_wait_cycle = None
+        self.last_call_cycle = 0
+        self.join_wait_cycle = None
+        self.wait_start_cycle = None
 
         self.orientation = 0
         self.pos_x = 0
