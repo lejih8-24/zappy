@@ -9,6 +9,7 @@
 #pragma once
 
 #include "../QueueState.hpp"
+#include <unordered_map>
 #include <string>
 
 
@@ -18,7 +19,11 @@ namespace Zappy::Game {
 
 namespace Zappy::Client {
     class PlayerRunState : public QueueState<128> {
-            Game::Player& m_Player;
+        using CommandHandler = void(*)(PlayerRunState&, Client&, Game::Game&);
+        static const std::unordered_map<std::string_view, CommandHandler> COMMAND_HANDLERS;
+
+        Game::Player& m_Player;
+        std::chrono::duration<double, std::milli> m_Cooldown;
 
         public:
             PlayerRunState(Game::Player& player);
@@ -28,6 +33,10 @@ namespace Zappy::Client {
 
         private:
             static void toLowercase(std::string& repr);
-            void runCommand(std::string& command);
+            void runCommand(Client& client, std::string& command);
+
+            static void forwardCommand(PlayerRunState& state, Client& client, Game::Game& game);
+            static void rightCommand(PlayerRunState& state, Client& client, Game::Game& game);
+            static void leftCommand(PlayerRunState& state, Client& client, Game::Game& game);
     };
 }
