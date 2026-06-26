@@ -232,7 +232,7 @@ int PackTheme::getAnimIndex(const std::string &name, int defaultIndex) const
 void PackTheme::drawTile(Vector3 pos, Vector3 size, bool isLight) const
 {
     if (_tile.has_value()) {
-        DrawModel(*_tile, pos, 1.0f, WHITE);
+        drawStaticModel(*_tile, pos, _tileScale, _tileCorrection);
         return;
     }
     _fallback.drawTile(pos, size, isLight);
@@ -241,32 +241,44 @@ void PackTheme::drawTile(Vector3 pos, Vector3 size, bool isLight) const
 void PackTheme::drawResource(std::size_t resourceIndex, Vector3 pos, float height) const
 {
     if (resourceIndex < _resources.size() && _resources[resourceIndex].has_value()) {
-        DrawModel(*_resources[resourceIndex], pos, 1.0f, WHITE);
+        drawStaticModel(*_resources[resourceIndex], pos, _resourceScale, _resourceCorrection);
         return;
     }
     _fallback.drawResource(resourceIndex, pos, height);
 }
 
-void PackTheme::drawPlayer(Vector3 pos, float rotationDeg) const
+void PackTheme::drawPlayer(Vector3 pos, float rotationDeg, Player::AnimState state) const
 {
     if (_player) {
+        static const std::unordered_map<Player::AnimState, std::string> stateNames = {
+            {Player::AnimState::Idle,        "idle"},
+            {Player::AnimState::Walk,        "walk"},
+            {Player::AnimState::Incantation, "incantation"},
+            {Player::AnimState::Dead,        "dead"},
+            {Player::AnimState::Broadcast,   "broadcast"},
+            {Player::AnimState::LayingEgg,   "laying_egg"},
+            {Player::AnimState::LevelUp,     "level_up"},
+            {Player::AnimState::Eject,       "eject"},
+        };
+        auto nameIt = stateNames.find(state);
+        const std::string &name = (nameIt != stateNames.end()) ? nameIt->second : "idle";
         int walkIdx = getAnimIndex("walk", 0);
-        float frame = std::fmod(GetTime() * ANIM_FPS, _player->getAnimationFrameCount(walkIdx));
-        _player->draw(pos, rotationDeg, walkIdx, frame, _playerScale);
+        int animIdx = (state == Player::AnimState::Idle)
+            ? -1
+            : getAnimIndex(name, walkIdx);
+        float frame = (animIdx < 0)
+            ? 0.0f
+            : std::fmod(GetTime() * ANIM_FPS, _player->getAnimationFrameCount(animIdx));
+        _player->draw(pos, rotationDeg, animIdx, frame, _playerScale);
         return;
     }
-    _fallback.drawPlayer(pos, rotationDeg);
+    _fallback.drawPlayer(pos, rotationDeg, state);
 }
 
 void PackTheme::drawEgg(Vector3 pos) const
 {
     if (_egg.has_value()) {
-        // same matrix composition as CharacterModel::draw: scale * correction * translation
-        Matrix scale = MatrixScale(_eggScale, _eggScale, _eggScale);
-        Matrix translation = MatrixTranslate(pos.x, pos.y, pos.z);
-        Matrix transform = MatrixMultiply(MatrixMultiply(scale, _eggCorrection), translation);
-        for (int i = 0; i < _egg->meshCount; i++)
-            DrawMesh(_egg->meshes[i], _egg->materials[_egg->meshMaterial[i]], transform);
+        drawStaticModel(*_egg, pos, _eggScale, _eggCorrection);
         return;
     }
     _fallback.drawEgg(pos);
