@@ -14,3 +14,4 @@
 #include "../../src/client/PlayerRunState/PlayerRunState.hpp"
 #include "../../src/client/BaseState.hpp"
 #include "../../src/client/IState.hpp"
+#include "../../src/client/QueueState.hpp"
