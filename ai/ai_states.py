@@ -3,7 +3,6 @@ from CommandModel import *
 from pathfinding import find_path_to_closest
 from typing import TYPE_CHECKING
 
-# drone_state.py
 from constants import Role, State, ELEVATION_RULES
 
 class AIState:
@@ -24,8 +23,14 @@ class AIState:
         self.master_direction = None
         self.last_master_id = None
         self.ready_for_incantation = False
+        self.is_hunting_food = False
+        self.arrived_at_master = False
 
-        self.world_map = {}
+        self.master_wait_cycle = None
+        self.last_call_cycle = 0
+        self.join_wait_cycle = None
+        self.wait_start_cycle = None
+
         self.orientation = 0
         self.pos_x = 0
         self.pos_y = 0

@@ -1,4 +1,5 @@
 import os
+import shutil
 import time
 import json
 import curses
@@ -10,6 +11,7 @@ class Display:
     def __init__(self, folder: str = '.zappy_stats'):
         self.folder = folder
         if not any(f.endswith('.json') for f in os.listdir('.') if f.startswith('.zappy_stats')):
+            shutil.rmtree('.zappy_stats', ignore_errors=True)
             os.makedirs(".zappy_stats", exist_ok=True)
 
     def save_dashboard_state(self, id, role, state, level, position, inventory):
@@ -49,6 +51,9 @@ def draw_dashboard(stdscr):
 
     while True:
         stdscr.clear()
+        # 1. On récupère la taille maximale du terminal à cet instant (y = hauteur, x = largeur)
+        max_y, max_x = stdscr.getmaxyx()
+
         stdscr.addstr(0, 0, "╔══════════════════════════════════════════════════════════════════════════════╗",
                       curses.A_BOLD)
         stdscr.addstr(1, 0, "║                      ZAPPY SWARM REAL-TIME DASHBOARD                         ║",
@@ -67,36 +72,48 @@ def draw_dashboard(stdscr):
 
             row = 5
             for filename in sorted(files):
+                # 2. SÉCURITÉ : Si la prochaine écriture dépasse le bas du terminal, on arrête d'afficher
+                if row + 3 >= max_y:
+                    stdscr.addstr(max_y - 1, 2, "... [Agrandissez le terminal pour voir les autres drones] ...",
+                                  curses.A_DIM)
+                    break
+
                 path = os.path.join(stats_dir, filename)
                 try:
                     with open(path, "r") as f:
                         data = json.load(f)
 
                     d_id = data["id"]
-                    role = data["role"]
-                    state = data["state"]
-                    level = data["level"]
-                    pos = data["position"]
-                    inv = data["inventory"]
+                    # Extraction robuste en cas de changement de format enum
+                    role = data.get("role", "Unknown")
+                    state = data.get("state", "Unknown")
+                    level = data.get("level", 1)
+                    pos = data.get("position", [0, 0])
+                    inv = data.get("inventory", {})
 
                     color = curses.color_pair(4)
-                    if State.SURVIVAL == state:
+                    if state == State.SURVIVAL.value or state == "SURVIVAL":
                         color = curses.color_pair(3)
-                    elif Role.Master == role:
+                    elif role == Role.Master.value or role == "Master":
                         color = curses.color_pair(1)
-                    elif Role.Slave == role:
+                    elif role == Role.Slave.value or role == "Slave":
                         color = curses.color_pair(2)
 
                     stdscr.addstr(row, 2, f"🤖 Drone [{d_id}]", curses.A_BOLD)
                     stdscr.addstr(row, 18, f"Niveau: {level}  |  Pos estimée: ({pos[0]},{pos[1]})  |  ")
-                    stdscr.addstr(row, 48, f"Rôle: {role.__str__():<8}  État: {state.__str__():<15}", color)
+                    stdscr.addstr(row, 48, f"Rôle: {str(role):<8}  État: {str(state):<15}", color)
 
                     inv_str = (f"Nourriture: {inv.get('food', 0):<2} │ "
                                f"L: {inv.get('linemate', 0)} │ D: {inv.get('deraumere', 0)} │ "
                                f"S: {inv.get('sibur', 0)} │ M: {inv.get('mendiane', 0)} │ "
                                f"P: {inv.get('phiras', 0)} │ T: {inv.get('thystame', 0)}")
-                    stdscr.addstr(row + 1, 4, f"🎒 Pocket ➔ {inv_str}")
-                    stdscr.addstr(row + 2, 2, "╶" * 76, curses.A_DIM)
+
+                    safe_inv_str = inv_str[:max_x - 15]
+                    stdscr.addstr(row + 1, 4, f"🎒 Pocket ➔ {safe_inv_str}")
+
+                    line_len = min(76, max_x - 3)
+                    if line_len > 0:
+                        stdscr.addstr(row + 2, 2, "╶" * line_len, curses.A_DIM)
 
                     row += 3
                 except (json.JSONDecodeError, KeyError, IOError):
@@ -109,7 +126,10 @@ def draw_dashboard(stdscr):
             if key == ord('q'):
                 if os.path.exists(stats_dir):
                     for f in os.listdir(stats_dir):
-                        os.remove(os.path.join(stats_dir, f))
+                        try:
+                            os.remove(os.path.join(stats_dir, f))
+                        except OSError:
+                            pass
                 break
         except KeyboardInterrupt:
             break
