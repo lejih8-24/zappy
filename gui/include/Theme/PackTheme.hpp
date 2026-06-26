@@ -45,7 +45,11 @@ class PackTheme : public ITheme {
         float _eggScale = 1.0f;
         Matrix _eggCorrection{};
         std::optional<Model> _tile;
-        std::array<std::optional<Model>, 7> _resources; // one slot per resource type: food, linemate, deraumere, sibur, mendiane, phiras, thystame
+        float _tileScale = 1.0f;
+        Matrix _tileCorrection{};
+        std::array<std::optional<Model>, 7> _resources;
+        float _resourceScale = 1.0f;
+        Matrix _resourceCorrection{};
 
         float _playerScale = 1.0f;
         float _playerLabelHeight = 2.5f;

@@ -192,18 +192,19 @@ PackTheme::PackTheme(std::string_view packName)
     std::string eggPath = resolvePath(packName, "egg.glb");
     if (!eggPath.empty()) {
         _egg = LoadModel(eggPath.c_str());
-        _eggScale = parseManifestFloat(packName, "eggScale", 1.0f, 0.001f, 100.0f);
-        Vector3 rot = parseRotation(packName, "eggRotation");
-        Matrix rx = MatrixRotateX(DEG2RAD * rot.x);
-        Matrix ry = MatrixRotateY(DEG2RAD * rot.y);
-        Matrix rz = MatrixRotateZ(DEG2RAD * rot.z);
-        _eggCorrection = MatrixMultiply(MatrixMultiply(rx, ry), rz);
+        _eggScale = parseManifestFloat(packName, "eggScale", 1.0f, 0.000001f, 100.0f);
+        _eggCorrection = parseRotationMatrix(packName, "eggRotation");
     }
 
     std::string tilePath = resolvePath(packName, "tile.glb");
-    if (!tilePath.empty())
+    if (!tilePath.empty()) {
         _tile = LoadModel(tilePath.c_str());
+        _tileScale = parseManifestFloat(packName, "tileScale", 1.0f, 0.000001f, 100.0f);
+        _tileCorrection = parseRotationMatrix(packName, "tileRotation");
+    }
 
+    _resourceScale = parseManifestFloat(packName, "resourceScale", 1.0f, 0.000001f, 100.0f);
+    _resourceCorrection = parseRotationMatrix(packName, "resourceRotation");
     for (std::size_t i = 0; i < RESOURCE_FILES.size(); ++i) {
         std::string rPath = resolvePath(packName, RESOURCE_FILES[i]);
         if (!rPath.empty())
