@@ -44,6 +44,11 @@ std::string Zappy::Game::Event::eggNew(int eggId, int playerId, std::pair<unsign
                    + std::to_string(pos.second)     + "\n";
 }
 
+std::string Zappy::Game::Event::eggHatch(int eggId)
+{
+    return "ebo #" + std::to_string(eggId) + "\n";
+}
+
 std::string Zappy::Game::Event::serverGameSpeed(unsigned int speed)
 {
   return "sgt " + std::to_string(speed) + "\n";

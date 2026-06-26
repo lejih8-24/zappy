@@ -22,6 +22,7 @@ namespace Zappy::Game {
             static std::string teamName(std::string_view name);
 
             static std::string eggNew(int eggId, int playerId, std::pair<unsigned int, unsigned int> pos);
+            static std::string eggHatch(int eggId);
 
             static std::string serverGameSpeed(unsigned int speed);
     };
