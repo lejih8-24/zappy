@@ -14,6 +14,9 @@
 
 
 namespace Zappy::Utils {
+    template <typename T, typename ...Args>
+    concept Invocable = std::is_invocable_v<T, Args...>;
+
     /**
      * 2D array class.
      *
@@ -62,6 +65,16 @@ namespace Zappy::Utils {
                 m_SizeX = width;
                 m_SizeY = height;
                 m_Data.resize(width * height, fill);
+            }
+
+            template <class Operator, typename R>
+            R reduce(Operator&& fnc, R start = R()) const
+            {
+                for (const auto& elem : m_Data) {
+                    start = fnc(elem, start);
+                }
+
+                return start;
             }
 
             Element& operator[](std::pair<std::size_t, std::size_t> index) noexcept
