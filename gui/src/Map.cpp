@@ -81,10 +81,11 @@ void Map::draw(const GameState &state) const
         }
     }
 
+    float now = GetTime();
     for (const auto &[id, player] : state.players) {
         (void)id;
         Vector3 pos = getTilePosition(player.x, player.y, state, 0.0f);
-        _theme.drawPlayer(pos, player.rotationDeg);
+        _theme.drawPlayer(pos, player.rotationDeg, player.getEffectiveAnimState(now));
     }
 
     for (const auto &[id, egg] : state.eggs) {
