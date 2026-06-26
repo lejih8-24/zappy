@@ -3,7 +3,7 @@
 ** Project - Zappy
 ** File description:
 ** Header file for
-** PlayerRunState class
+** PlayerInitState class
 */
 
 #pragma once
@@ -17,17 +17,15 @@ namespace Zappy::Game {
 }
 
 namespace Zappy::Client {
-    class PlayerRunState : public QueueState<128> {
-            Game::Player& m_Player;
+    class PlayerInitState : public QueueState<128> {
+        std::string m_TeamName;
+        Game::Player* m_Player;
 
         public:
-            PlayerRunState(Game::Player& player);
+            PlayerInitState(const std::string& teamName);
+            PlayerInitState(std::string&& teamName);
 
             void init() override;
             void update(Client& client, std::chrono::nanoseconds dt) override;
-
-        private:
-            static void toLowercase(std::string& repr);
-            void runCommand(std::string& command);
     };
 }

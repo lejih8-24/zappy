@@ -32,5 +32,5 @@ void Zappy::Client::HandshakeState::update(Client& client, std::chrono::nanoseco
     if (m_TeamName == "GRAPHIC")
         client.setState(std::make_unique<GuiState>());
     else
-        client.setState(std::make_unique<PlayerRunState>(std::move(m_TeamName)));
+        client.setState(std::make_unique<PlayerInitState>(std::move(m_TeamName)));
 }
