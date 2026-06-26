@@ -77,6 +77,26 @@ void Zappy::Game::Game::playerLayEgg(const Player& player)
     m_GraphicsEvents.push_back(Event::eggNew(egg.id(), egg.parentId(), egg.getPosition()));
 }
 
+auto Zappy::Game::Game::hatchEgg(std::string_view team) -> Player*
+{
+    for (auto it = m_Eggs.begin(); it != m_Eggs.end(); ++it) {
+        if (it->team() != team)
+            continue;
+
+        auto [x, y] = it->getPosition();
+
+        auto& player = m_Players.emplace_back(team);
+        player.moveTo(x, y);
+
+        m_GraphicsEvents.emplace_back(Event::eggHatch(it->id()));
+
+        m_Eggs.erase(it);
+        return &player;
+    }
+
+    return nullptr;
+}
+
 void Zappy::Game::Game::regenerateResources()
 {
     auto [mapX, mapY] = m_Map.size();

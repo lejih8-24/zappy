@@ -58,6 +58,8 @@ namespace Zappy::Game {
             void playerLayEgg(int playerId) { return playerLayEgg(m_Players[playerId]); }
             void playerLayEgg(const Player& player);
 
+            Player* hatchEgg(std::string_view team);
+
         private:
             void regenerateResources();
             void regenerateResource(ResourceType type, unsigned int amount);
