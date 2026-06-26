@@ -4,10 +4,17 @@
   "description": "Penguin character pack",
   "author": "Zappy Team",
   "animations": {
-    "walk": 0
+    "broadcast": 0,
+    "dead": 1,
+    "eject": 2,
+    "incantation": 3,
+    "laying_egg": 4,
+    "level_up": 5,
+    "walk": 6
   },
   "eggScale": 0.03,
   "eggRotation": { "x": -90 },
+  "playerScale": 1,
   "playerLabelHeight": 2,
-  "playerRotation": { "x": 90 }
+  "playerRotation": { "x": 0, "y": 180, "z": 0 }
 }
