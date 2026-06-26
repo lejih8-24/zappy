@@ -29,14 +29,21 @@ namespace GUI {
 */
 class Player : public Entity {
     public:
+        enum class AnimState { Idle, Walk, Incantation, Dead, Broadcast, LayingEgg, LevelUp, Eject };
+
         float rotationDeg = 0.0F;
         std::size_t level = 1;
         std::string teamName;
         Zappy::Game::Resources inventory = {};
         bool alive = true;
-        bool isBroadcasting = false;
-        bool isIncantating = false;
-        bool isLayingEgg = false;
+        AnimState animState = AnimState::Idle;
+        float animStateEndTime = 0.0f;
+
+        AnimState getEffectiveAnimState(float currentTime) const {
+            if (animStateEndTime > 0.0f && currentTime > animStateEndTime)
+                return AnimState::Idle;
+            return animState;
+        }
 
     public:
         Player(int id = 0, int x = 0, int y = 0, std::size_t level = 1, const std::string &teamName = "");

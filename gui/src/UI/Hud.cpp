@@ -131,7 +131,8 @@ Color Hud::getTeamColor(const GameState &state, std::string_view teamName) const
 
 void Hud::addPlayerFlagSegments(HudLine &line, const Player &player) const
 {
-    if (!player.isIncantating && !player.isLayingEgg && !player.isBroadcasting)
+    Player::AnimState state = player.getEffectiveAnimState(GetTime());
+    if (state == Player::AnimState::Idle || state == Player::AnimState::Walk || state == Player::AnimState::Dead || state == Player::AnimState::LevelUp)
         return;
     line.push_back({"  ", RAYWHITE});
     if (player.isIncantating)
