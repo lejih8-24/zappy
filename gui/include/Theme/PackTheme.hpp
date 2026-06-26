@@ -29,7 +29,7 @@ class PackTheme : public ITheme {
 
         void drawTile(Vector3 pos, Vector3 size, bool isLight) const override;
         void drawResource(std::size_t resourceIndex, Vector3 pos, float height) const override;
-        void drawPlayer(Vector3 pos, float rotationDeg) const override;
+        void drawPlayer(Vector3 pos, float rotationDeg, Player::AnimState state) const override;
         void drawEgg(Vector3 pos) const override;
 
         int getAnimIndex(const std::string &name, int defaultIndex = 0) const;

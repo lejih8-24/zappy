@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2026
 ** Project - Zappy
 ** File description:
-** Generic pack theme with three-level asset fallback chain
+** Generic pack theme - missing assets fall back to primitives
 */
 
 #include "Theme/PackTheme.hpp"
@@ -13,13 +13,13 @@
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <regex>
 #include <sstream>
 #include <string>
 #include "raymath.h"
 
 static constexpr float ANIM_FPS = 24.0f;
-static constexpr const char *BASE_PACK = "green_man";
 
 static constexpr std::array<const char *, 7> RESOURCE_FILES = {
     "food.glb", "linemate.glb", "deraumere.glb", "sibur.glb",
@@ -54,16 +54,9 @@ static bool glbHasU32Indices(const std::string &path)
 static std::string resolvePath(std::string_view packName, const char *filename)
 {
     std::string path = std::string(PACKS_DIR) + std::string(packName) + "/" + filename;
-
-    if (std::filesystem::exists(path))
-        return path;
-    std::string basePath = std::string(PACKS_DIR) + BASE_PACK + "/" + filename;
-    if (std::filesystem::exists(basePath))
-        return basePath;
-    return {};
+    return std::filesystem::exists(path) ? path : std::string{};
 }
 
-// generic rotation parser reused by both player and egg
 static Vector3 parseRotation(std::string_view packName, const char *blockName)
 {
     std::string manifestPath = std::string(PACKS_DIR) + std::string(packName) + "/manifest.json";
@@ -99,17 +92,31 @@ static Vector3 parseRotation(std::string_view packName, const char *blockName)
     return rot;
 }
 
+static Matrix parseRotationMatrix(std::string_view packName, const char *blockName)
+{
+    Vector3 rot = parseRotation(packName, blockName);
+    Matrix rx = MatrixRotateX(DEG2RAD * rot.x);
+    Matrix ry = MatrixRotateY(DEG2RAD * rot.y);
+    Matrix rz = MatrixRotateZ(DEG2RAD * rot.z);
+    return MatrixMultiply(MatrixMultiply(rx, ry), rz);
+}
+
+static void drawStaticModel(const Model &model, Vector3 pos, float scale, const Matrix &correction)
+{
+    Matrix s = MatrixScale(scale, scale, scale);
+    Matrix t = MatrixTranslate(pos.x, pos.y, pos.z);
+    Matrix transform = MatrixMultiply(MatrixMultiply(s, correction), t);
+    for (int i = 0; i < model.meshCount; i++)
+        DrawMesh(model.meshes[i], model.materials[model.meshMaterial[i]], transform);
+}
 
 static std::unordered_map<std::string, int> parseAnimations(std::string_view packName)
 {
     std::unordered_map<std::string, int> result;
 
     std::string manifestPath = std::string(PACKS_DIR) + std::string(packName) + "/manifest.json";
-    if (!std::filesystem::exists(manifestPath)) {
-        manifestPath = std::string(PACKS_DIR) + BASE_PACK + "/manifest.json";
-        if (!std::filesystem::exists(manifestPath))
-            return result;
-    }
+    if (!std::filesystem::exists(manifestPath))
+        return result;
 
     std::ifstream file(manifestPath);
     std::ostringstream buf;
