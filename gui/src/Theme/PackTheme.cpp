@@ -152,7 +152,9 @@ namespace GUI {
 PackTheme::PackTheme(std::string_view packName)
     : _animations(parseAnimations(packName))
     , _eggCorrection(MatrixIdentity())
-    , _playerLabelHeight(parsePlayerLabelHeight(packName))
+    , _playerScale(parseManifestFloat(packName, "playerScale", 1.0f))
+    , _playerLabelHeight(parseManifestFloat(packName, "playerLabelHeight", 2.5f))
+    , _playerLabelScale(parseManifestFloat(packName, "playerLabelScale", 140.0f))
 {
     std::string playerPath = resolvePath(packName, "player.glb");
     if (!playerPath.empty() && !glbHasU32Indices(playerPath)) {
@@ -230,7 +232,7 @@ void PackTheme::drawPlayer(Vector3 pos, float rotationDeg) const
     if (_player) {
         int walkIdx = getAnimIndex("walk", 0);
         float frame = std::fmod(GetTime() * ANIM_FPS, _player->getAnimationFrameCount(walkIdx));
-        _player->draw(pos, rotationDeg, walkIdx, frame);
+        _player->draw(pos, rotationDeg, walkIdx, frame, _playerScale);
         return;
     }
     _fallback.drawPlayer(pos, rotationDeg);
@@ -253,6 +255,11 @@ void PackTheme::drawEgg(Vector3 pos) const
 float PackTheme::getPlayerLabelHeight() const
 {
     return _playerLabelHeight;
+}
+
+float PackTheme::getPlayerLabelScale() const
+{
+    return _playerLabelScale;
 }
 
 }
