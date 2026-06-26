@@ -22,6 +22,7 @@ class ITheme {
         virtual void drawEgg(Vector3 pos) const = 0;
 
         virtual float getPlayerLabelHeight() const = 0;
+        virtual float getPlayerLabelScale() const = 0;
 };
 
 }
