@@ -77,12 +77,16 @@ static Vector3 parseRotation(std::string_view packName, const char *blockName)
     auto blockStart = json.find(std::string("\"") + blockName + "\"");
     if (blockStart == std::string::npos)
         return {0, 0, 0};
+    // clamp search to the {...} block so later fields with the same axis keys don't overwrite
+    auto blockOpen = json.find('{', blockStart);
+    auto blockClose = json.find('}', blockOpen);
+    if (blockOpen == std::string::npos || blockClose == std::string::npos)
+        return {0, 0, 0};
 
     Vector3 rot = {0, 0, 0};
     // matches `"x": 180` or `"z": -90.5`; group 1 = axis letter, group 2 = signed float
     std::regex axis("\"([xyz])\"\\s*:\\s*(-?\\d+(?:\\.\\d+)?)");
-    // start search at the named block to avoid matching xyz keys elsewhere in the JSON
-    std::sregex_iterator it(json.cbegin() + blockStart, json.cend(), axis);
+    std::sregex_iterator it(json.cbegin() + blockOpen, json.cbegin() + blockClose, axis);
     std::sregex_iterator end;
     for (; it != end; ++it) {
         char a = (*it)[1].str()[0];
