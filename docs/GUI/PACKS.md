@@ -57,9 +57,11 @@ Every pack must have a `manifest.json` at its root. This is what identifies a fo
     "walk": 2
   },
   "playerRotation": { "x": 0, "y": 0, "z": 0 },
+  "playerScale": 1.0,
+  "playerLabelHeight": 2.5,
+  "playerLabelScale": 140.0,
   "eggScale": 1.0,
-  "eggRotation": { "x": 0, "y": 0, "z": 0 },
-  "playerLabelHeight": 2.5
+  "eggRotation": { "x": 0, "y": 0, "z": 0 }
 }
 ```
 
@@ -71,9 +73,11 @@ Every pack must have a `manifest.json` at its root. This is what identifies a fo
 | `author` | yes | Author or team name |
 | `animations.walk` | no | Animation slot index for the walk cycle (default: 0) |
 | `playerRotation` | no | Euler angles (degrees) to correct the player model orientation. Any axis can be omitted (defaults to 0). |
+| `playerScale` | no | Uniform scale applied to the player model (default: 1.0). Use when the model was exported at a different unit scale. |
 | `eggScale` | no | Uniform scale applied to `egg.glb` (default: 1.0). Use this when the model was exported at a different unit scale. |
 | `eggRotation` | no | Euler angles (degrees) to correct the egg model orientation. Any axis can be omitted (defaults to 0). |
 | `playerLabelHeight` | no | Height used to draw the player name/level label above the model (default: 2.5). |
+| `playerLabelScale` | no | Controls label font size relative to camera distance - higher = larger text further away (default: 140.0). |
 
 ## Asset Files
 
