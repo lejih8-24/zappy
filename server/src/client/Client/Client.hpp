@@ -48,8 +48,10 @@ namespace Zappy::Client {
             inline void registerEvents(short revents) { return m_Socket.registerEvents(revents); }
             inline int fileno() const { return m_Socket.fileno(); }
             inline bool isOpen() const { return m_Socket.isOpen(); }
+            inline void refresh() noexcept { m_Socket.refresh(); }
 
         private:
+            void nextState(Game::Game& game);
             void pushCommand();
     };
 }

@@ -31,15 +31,16 @@ Zappy::Client::Client::Client(Client&& other)
 
 void Zappy::Client::Client::update(Game::Game& game, std::chrono::nanoseconds dt)
 {
-    if (m_NextState) {
-        m_State.swap(m_NextState);
-        m_NextState = nullptr;
-        m_State->setGame(game);
-        m_State->init();
-    }
+    if (m_NextState)
+        nextState(game);
 
     pushCommand();
     m_State->update(*this, dt);
+
+    if (m_NextState) {
+        nextState(game);
+        m_State->update(*this, dt);
+    }
 }
 
 bool Zappy::Client::Client::readline(std::string& output)
@@ -77,4 +78,12 @@ void Zappy::Client::Client::pushCommand()
     }
 
     m_QueuedCommands.push_front(std::move(command));
+}
+
+void Zappy::Client::Client::nextState(Game::Game& game)
+{
+    m_State.swap(m_NextState);
+    m_NextState = nullptr;
+    m_State->setGame(game);
+    m_State->init();
 }
