@@ -8,8 +8,8 @@
 
 #include "Map.hpp"
 
-#include <array>
 #include <algorithm>
+#include <array>
 #include <string>
 #include <raymath.h>
 
@@ -104,7 +104,7 @@ void Map::drawLabels(const GameState &state, Camera3D camera) const
         if (screenPos.x < 0 || screenPos.x > static_cast<float>(GetScreenWidth()) ||
             screenPos.y < 0 || screenPos.y > static_cast<float>(GetScreenHeight()))
             continue;
-        
+
         float dist = Vector3Distance(camera.position, labelPos);
         int fontSize = std::clamp(static_cast<int>(140.0f / dist), 8, 22);
 

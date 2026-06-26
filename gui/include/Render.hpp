@@ -11,6 +11,7 @@
 #include "Game/GameState.hpp"
 #include "Map.hpp"
 #include "Theme/ThemeManager.hpp"
+#include "UI/Hud.hpp"
 #include "Window.hpp"
 
 #include <string_view>
@@ -27,14 +28,22 @@ class Render {
         void renderLoop(Zappy::Networking::GraphicsClient &client);
 
     private:
-        void drawHud() const;
+        void update(Zappy::Networking::GraphicsClient &client);
+        void pollServerEvents(Zappy::Networking::GraphicsClient &client);
+        void handleGameInput();
+        void drawFrame();
+        void draw3DScene();
+        void drawCrosshair() const;
+        void drawFocusOverlay() const;
+        void drawCameraLockLabel() const;
+        void drawHelpText() const;
 
         GameState _state;
         Window _window;
         ThemeManager _themeManager;
         Map _map;
         GameCamera _camera;
-        bool _showHud = true;
+        Hud _hud;
 };
 
 }

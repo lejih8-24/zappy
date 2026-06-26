@@ -6,5 +6,8 @@
   "animations": {
     "walk": 0
   },
+  "eggScale": 0.03,
+  "eggRotation": { "x": -90 },
+  "playerLabelHeight": 2,
   "playerRotation": { "x": 90 }
 }

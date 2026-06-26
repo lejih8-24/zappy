@@ -58,7 +58,8 @@ Every pack must have a `manifest.json` at its root. This is what identifies a fo
   },
   "playerRotation": { "x": 0, "y": 0, "z": 0 },
   "eggScale": 1.0,
-  "eggRotation": { "x": 0, "y": 0, "z": 0 }
+  "eggRotation": { "x": 0, "y": 0, "z": 0 },
+  "playerLabelHeight": 2.5
 }
 ```
 
@@ -72,6 +73,7 @@ Every pack must have a `manifest.json` at its root. This is what identifies a fo
 | `playerRotation` | no | Euler angles (degrees) to correct the player model orientation. Any axis can be omitted (defaults to 0). |
 | `eggScale` | no | Uniform scale applied to `egg.glb` (default: 1.0). Use this when the model was exported at a different unit scale. |
 | `eggRotation` | no | Euler angles (degrees) to correct the egg model orientation. Any axis can be omitted (defaults to 0). |
+| `playerLabelHeight` | no | Height used to draw the player name/level label above the model (default: 2.5). |
 
 ## Asset Files
 
