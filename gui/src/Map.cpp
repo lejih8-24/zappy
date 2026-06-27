@@ -110,11 +110,13 @@ void Map::drawResources(const GameState &state) const
 
 void Map::drawPlayers(const GameState &state) const
 {
+    auto stackIndex = buildStackIndex(state);
+    float stackSpacing = _theme.getPlayerLabelHeight();
     float now = GetTime();
     for (const auto &[id, player] : state.players) {
-        (void)id;
+        float height = static_cast<float>(stackIndex.at(id)) * stackSpacing;
         Player::DisplayPosition displayPos = player.getDisplayPosition(now);
-        Vector3 pos = getTilePosition(displayPos.x, displayPos.y, state, 0.0f);
+        Vector3 pos = getTilePosition(displayPos.x, displayPos.y, state, height);
         Player::AnimState animState = player.getEffectiveAnimState(now);
         _theme.drawPlayer(pos, player.rotationDeg, animState, player.getAnimationElapsed(now, animState));
     }
