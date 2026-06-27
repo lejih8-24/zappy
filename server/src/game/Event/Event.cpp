@@ -53,6 +53,11 @@ std::string Zappy::Game::Event::playerDie(int playerId)
     return "pdi #" + std::to_string(playerId) + "\n";
 }
 
+std::string Zappy::Game::Event::playerCollect(int playerId, unsigned int resource)
+{
+    return "pgt #" + std::to_string(playerId) + " " + std::to_string(resource) + "\n";
+}
+
 std::string Zappy::Game::Event::playerIncantationStart(std::pair<unsigned int, unsigned int> pos, unsigned int level, std::span<Player*> players)
 {
     std::string ids;
