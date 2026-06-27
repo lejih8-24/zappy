@@ -87,14 +87,20 @@ void Map::drawResources(const GameState &state) const
             ++resourceIndex;
         }
     }
+}
 
+void Map::drawPlayers(const GameState &state) const
+{
     float now = GetTime();
     for (const auto &[id, player] : state.players) {
         (void)id;
         Vector3 pos = getTilePosition(player.x, player.y, state, 0.0f);
         _theme.drawPlayer(pos, player.rotationDeg, player.getEffectiveAnimState(now));
     }
+}
 
+void Map::drawEggs(const GameState &state) const
+{
     for (const auto &[id, egg] : state.eggs) {
         (void)id;
         Vector3 pos = getTilePosition(egg.x, egg.y, state, 0.35f);
@@ -102,36 +108,51 @@ void Map::drawResources(const GameState &state) const
     }
 }
 
+void Map::draw(const GameState &state) const
+{
+    drawTiles(state);
+    drawResources(state);
+    drawPlayers(state);
+    drawEggs(state);
+}
+
+void Map::drawCountLabel(Vector2 screenPos, int fontSize, unsigned int quantity) const
+{
+    std::string label = "x" + std::to_string(quantity);
+    int textWidth = MeasureText(label.c_str(), fontSize);
+    int sx = static_cast<int>(screenPos.x) - textWidth / 2;
+    int sy = static_cast<int>(screenPos.y);
+    DrawText(label.c_str(), sx + 1, sy + 1, fontSize, BLACK); // drop shadow
+    DrawText(label.c_str(), sx, sy, fontSize, YELLOW);
+}
+
 void Map::drawResourceLabels(const GameState &state, Camera3D camera, Vector3 camForward) const
 {
     static constexpr float resourceOffset = 0.28F;
     static constexpr std::array<Vector2, Zappy::Game::Resources::RESOURCE_COUNT> resourceSlots = {
-        Vector2{-1.0F, -1.0F}, Vector2{0.0F, -1.0F}, Vector2{1.0F, -1.0F},
-        Vector2{-1.0F, 0.0F},  Vector2{1.0F, 0.0F},
-        Vector2{-1.0F, 1.0F},  Vector2{0.0F, 1.0F},
+        Vector2{-1.0F, -1.0F}, //? Food
+        Vector2{0.0F, -1.0F},  //? Linemate
+        Vector2{1.0F, -1.0F},  //? Deraumere
+        Vector2{-1.0F, 0.0F},  //? Sibur
+        Vector2{1.0F, 0.0F},   //? Mendiane
+        Vector2{-1.0F, 1.0F},  //? Phiras
+        Vector2{0.0F, 1.0F},   //? Thystame
     };
 
     for (const Tile &tile : state.tiles) {
         std::size_t resourceIndex = 0;
         for (unsigned int quantity : tile.resources) {
             if (quantity > 1) {
+                // Float label above the resource model
                 Vector3 worldPos = getTilePosition(tile.x, tile.y, state, RESOURCE_HEIGHT + 0.3f);
                 worldPos.x += resourceSlots[resourceIndex].x * _squareSize * resourceOffset;
                 worldPos.z += resourceSlots[resourceIndex].y * _squareSize * resourceOffset;
-
-                if (Vector3DotProduct(camForward, Vector3Subtract(worldPos, camera.position)) > 0) {
-                    Vector2 screenPos = GetWorldToScreen(worldPos, camera);
-                    if (screenPos.x >= 0 && screenPos.x <= static_cast<float>(GetScreenWidth()) &&
-                        screenPos.y >= 0 && screenPos.y <= static_cast<float>(GetScreenHeight())) {
-                        float dist = Vector3Distance(camera.position, worldPos);
-                        int fontSize = std::clamp(static_cast<int>(80.0f / dist), 6, 16);
-                        std::string label = "x" + std::to_string(quantity);
-                        int textWidth = MeasureText(label.c_str(), fontSize);
-                        int sx = static_cast<int>(screenPos.x) - textWidth / 2;
-                        int sy = static_cast<int>(screenPos.y);
-                        DrawText(label.c_str(), sx + 1, sy + 1, fontSize, BLACK);
-                        DrawText(label.c_str(), sx, sy, fontSize, YELLOW);
-                    }
+                auto screenPos = projectToScreen(worldPos, camera, camForward);
+                if (screenPos) {
+                    float dist = Vector3Distance(camera.position, worldPos);
+                    // Font scales inversely with distance, clamped to readable range
+                    int fontSize = std::clamp(static_cast<int>(80.0f / dist), 6, 16);
+                    drawCountLabel(*screenPos, fontSize, quantity);
                 }
             }
             ++resourceIndex;
@@ -145,22 +166,19 @@ void Map::drawPlayerLabels(const GameState &state, Camera3D camera, Vector3 camF
         (void)id;
         Vector3 labelPos = getTilePosition(player.x, player.y, state, _theme.getPlayerLabelHeight());
 
-        if (Vector3DotProduct(camForward, Vector3Subtract(labelPos, camera.position)) <= 0)
-            continue;
-
-        Vector2 screenPos = GetWorldToScreen(labelPos, camera);
-        if (screenPos.x < 0 || screenPos.x > static_cast<float>(GetScreenWidth()) ||
-            screenPos.y < 0 || screenPos.y > static_cast<float>(GetScreenHeight()))
+        auto screenPos = projectToScreen(labelPos, camera, camForward);
+        if (!screenPos)
             continue;
 
         float dist = Vector3Distance(camera.position, labelPos);
+        // Font scales inversely with distance, clamped to readable range
         int fontSize = std::clamp(static_cast<int>(_theme.getPlayerLabelScale() / dist), 8, 22);
         std::string label = player.teamName + " L" + std::to_string(player.level);
         int textWidth = MeasureText(label.c_str(), fontSize);
-        int sx = static_cast<int>(screenPos.x) - textWidth / 2;
-        int sy = static_cast<int>(screenPos.y);
+        int sx = static_cast<int>(screenPos->x) - textWidth / 2;
+        int sy = static_cast<int>(screenPos->y);
 
-        DrawText(label.c_str(), sx + 1, sy + 1, fontSize, BLACK);
+        DrawText(label.c_str(), sx + 1, sy + 1, fontSize, BLACK); // drop shadow
         DrawText(label.c_str(), sx, sy, fontSize, RAYWHITE);
     }
 }
