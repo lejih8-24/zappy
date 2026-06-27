@@ -56,6 +56,11 @@ std::string Zappy::Game::Event::playerPosition(int playerId, std::pair<unsigned 
                    + std::to_string(static_cast<unsigned int>(orientation)) + "\n";
 }
 
+std::string Zappy::Game::Event::playerLevel(int playerId, unsigned int level)
+{
+    return "plv #" + std::to_string(playerId) + " " + std::to_string(level) + "\n";
+}
+
 std::string Zappy::Game::Event::playerInventory(int playerId, std::pair<unsigned int, unsigned int> pos, const Resources& inventory)
 {
     return "pin #" + std::to_string(playerId)            + " "
