@@ -14,6 +14,9 @@
 #include <memory>
 
 
+using std::chrono_literals::operator ""ms;
+
+
 const std::unordered_map<std::string_view, Zappy::Client::PlayerRunState::CommandHandler> Zappy::Client::PlayerRunState::COMMAND_HANDLERS = {
     { "forward",     forwardCommand },
     { "right",       rightCommand },
@@ -95,8 +98,6 @@ void Zappy::Client::PlayerRunState::runCommand(Client& client, std::string& comm
 
 void Zappy::Client::PlayerRunState::forwardCommand(PlayerRunState& state, Client& client, Game::Game& game)
 {
-    using std::chrono_literals::operator ""ms;
-
     state.m_Player.moveForward(game.mapSize());
     state.queueMessage("ok\n");
     state.m_Cooldown = 7'000.0ms / game.gameSpeed();
@@ -104,8 +105,6 @@ void Zappy::Client::PlayerRunState::forwardCommand(PlayerRunState& state, Client
 
 void Zappy::Client::PlayerRunState::rightCommand(PlayerRunState& state, Client& client, Game::Game& game)
 {
-    using std::chrono_literals::operator ""ms;
-
     state.m_Player.turnRight();
     state.queueMessage("ok\n");
     state.m_Cooldown = 7'000.0ms / game.gameSpeed();
@@ -113,8 +112,6 @@ void Zappy::Client::PlayerRunState::rightCommand(PlayerRunState& state, Client& 
 
 void Zappy::Client::PlayerRunState::leftCommand(PlayerRunState& state, Client& client, Game::Game& game)
 {
-    using std::chrono_literals::operator ""ms;
-
     state.m_Player.turnLeft();
     state.queueMessage("ok\n");
     state.m_Cooldown = 7'000.0ms / game.gameSpeed();
@@ -127,8 +124,22 @@ void Zappy::Client::PlayerRunState::lookCommand(PlayerRunState& state, Client& c
 
 void Zappy::Client::PlayerRunState::inventoryCommand(PlayerRunState& state, Client& client, Game::Game& game)
 {
+    const auto& inventory = state.m_Player.inventory();
 
-    // TODO: implement
+    std::ostringstream msg;
+
+    msg << "[ "
+        << "food "      << inventory.food      << ", "
+        << "linemate "  << inventory.linemate  << ", "
+        << "deraumere " << inventory.deraumere << ", "
+        << "sibur "     << inventory.sibur     << ", "
+        << "mendiane "  << inventory.mendiane  << ", "
+        << "phiras "    << inventory.phiras    << ", "
+        << "thystame "  << inventory.thystame  << " "
+        << "]\n";
+
+    state.queueMessage(msg.str());
+    state.m_Cooldown = 1'000.0ms / game.gameSpeed();
 }
 
 void Zappy::Client::PlayerRunState::broadcastCommand(PlayerRunState& state, Client& client, Game::Game& game)
