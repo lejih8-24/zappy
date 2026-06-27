@@ -22,7 +22,7 @@ class Window {
     
         bool shouldClose() const;
     
-        void beginFrame();
+        void beginFrame(Color background = DARKBLUE);
         void endFrame();
         void toggleFullscreen();
     
