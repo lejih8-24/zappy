@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "Penguin character pack",
   "author": "Zappy Team",
-
   "animations": {
     "broadcast": 0,
     "dead": 1,
