@@ -18,6 +18,7 @@ Zappy::Game::Player::Player() noexcept
     , m_Position{ 0, 0 }
     , m_Orientation(Orientation::NORTH)
     , m_Level(0)
+    , m_Inventory{ 0 }
 {
 
 }
@@ -28,6 +29,7 @@ Zappy::Game::Player::Player(std::string_view team)
     , m_Position{ 0, 0 }
     , m_Orientation(Orientation::NORTH)
     , m_Level(1)
+    , m_Inventory{ 0 }
 {
     s_NextId++;
 }
