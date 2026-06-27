@@ -38,6 +38,12 @@ class PackTheme : public ITheme {
         float getPlayerLabelScale() const override;
         Color getBackgroundColor() const override;
 
+        struct ResourceOverride {
+            std::optional<float> scale;
+            std::optional<Matrix> correction;
+            std::optional<Vector3> translation;
+        };
+
     private:
         std::unordered_map<std::string, int> _animations;
         DefaultTheme _fallback;
@@ -54,6 +60,7 @@ class PackTheme : public ITheme {
         float _resourceScale = 1.0f;
         Matrix _resourceCorrection{};
         Vector3 _resourceTranslation = {0.0f, 0.0f, 0.0f};
+        std::array<ResourceOverride, 7> _resourceOverrides{};
 
         float _playerScale = 1.0f;
         float _playerLabelHeight = 2.5f;
