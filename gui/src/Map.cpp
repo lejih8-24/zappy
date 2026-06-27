@@ -212,8 +212,10 @@ void Map::drawPlayerLabels(const GameState &state, Camera3D camera, Vector3 camF
 
 Vector3 Map::getPlayerWorldPos(const Player &player, const GameState &state) const
 {
+    auto stackIndex = buildStackIndex(state);
+    float height = static_cast<float>(stackIndex.at(player.id)) * _theme.getPlayerLabelHeight();
     Player::DisplayPosition displayPos = player.getDisplayPosition(GetTime());
-    return getTilePosition(displayPos.x, displayPos.y, state, 0.0f);
+    return getTilePosition(displayPos.x, displayPos.y, state, height);
 }
 
 void Map::drawLabels(const GameState &state, Camera3D camera) const
