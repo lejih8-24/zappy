@@ -28,8 +28,8 @@ namespace Zappy::Client {
         public:
             PlayerRunState(Game::Player& player);
 
-            void init() override;
             void update(Client& client, std::chrono::nanoseconds dt) override;
+            void disconnect(Game::Game& game) override;
 
         private:
             static void toLowercase(std::string& repr);
@@ -38,5 +38,7 @@ namespace Zappy::Client {
             static void forwardCommand(PlayerRunState& state, Client& client, Game::Game& game);
             static void rightCommand(PlayerRunState& state, Client& client, Game::Game& game);
             static void leftCommand(PlayerRunState& state, Client& client, Game::Game& game);
+
+            static void connectNbrCommand(PlayerRunState& state, Client& client, Game::Game& game);
     };
 }

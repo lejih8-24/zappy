@@ -48,10 +48,6 @@ void Zappy::Client::PlayerInitState::update(Client& client, std::chrono::nanosec
         return;
     }
 
-    if (hasMessages()) {
-        std::string events = popMessages();
-        client.send(events);
-    }
-
+    sendQueuedMessages(client);
     client.setState(std::make_unique<PlayerRunState>(*m_Player));
 }

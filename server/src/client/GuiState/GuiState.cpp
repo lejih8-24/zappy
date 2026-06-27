@@ -44,10 +44,7 @@ void Zappy::Client::GuiState::update(Client& client, std::chrono::nanoseconds dt
     for (const auto& event : game().graphicsEvents())
         queueMessage(event);
 
-    if (hasMessages()) {
-        std::string events = popMessages();
-        client.send(events);
-    }
+    sendQueuedMessages(client);
 
     std::string command;
     if (client.readline(command))

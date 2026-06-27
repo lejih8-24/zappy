@@ -9,7 +9,6 @@
 #pragma once
 
 #include "../QueueState.hpp"
-#include <string>
 
 
 namespace Zappy::Game {

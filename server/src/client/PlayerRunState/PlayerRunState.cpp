@@ -18,6 +18,7 @@ const std::unordered_map<std::string_view, Zappy::Client::PlayerRunState::Comman
     { "forward", forwardCommand },
     { "right",   rightCommand },
     { "left",    leftCommand },
+    { "connect_nbr", connectNbrCommand },
 };
 
 
@@ -29,17 +30,9 @@ Zappy::Client::PlayerRunState::PlayerRunState(Game::Player& player)
 
 }
 
-void Zappy::Client::PlayerRunState::init()
-{
-
-}
-
 void Zappy::Client::PlayerRunState::update(Client& client, std::chrono::nanoseconds dt)
 {
-    if (hasMessages()) {
-        std::string events = popMessages();
-        client.send(events);
-    }
+    sendQueuedMessages(client);
 
     if (m_Cooldown > m_Cooldown.zero()) {
         // There are still some
@@ -62,6 +55,11 @@ void Zappy::Client::PlayerRunState::update(Client& client, std::chrono::nanoseco
 
     if (hasMessages())
         client.refresh();
+}
+
+void Zappy::Client::PlayerRunState::disconnect(Game::Game& game)
+{
+    game.killPlayer(m_Player);
 }
 
 void Zappy::Client::PlayerRunState::toLowercase(std::string& repr)
@@ -113,4 +111,11 @@ void Zappy::Client::PlayerRunState::leftCommand(PlayerRunState& state, Client& c
     state.m_Player.turnLeft();
     state.queueMessage("ok\n");
     state.m_Cooldown = 7'000.0ms / game.gameSpeed();
+}
+
+void Zappy::Client::PlayerRunState::connectNbrCommand(PlayerRunState& state, Client& client, Game::Game& game)
+{
+    auto& team = game.playerTeam(state.m_Player);
+
+    state.queueMessage(std::to_string(team.maxMembers - team.members) + "\n");
 }
