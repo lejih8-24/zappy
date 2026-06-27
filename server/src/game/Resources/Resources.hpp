@@ -67,6 +67,7 @@ namespace Zappy::Game {
     };
 
     std::optional<ResourceType> toResourceType(std::string_view repr);
+    std::string_view to_string(ResourceType resource);
 }
 
 std::ostream& operator<<(std::ostream& stream, const Zappy::Game::Resources& resources);

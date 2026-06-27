@@ -106,6 +106,20 @@ auto Zappy::Game::toResourceType(std::string_view repr) -> std::optional<Resourc
     }
 }
 
+std::string_view Zappy::Game::to_string(ResourceType type)
+{
+    switch (type) {
+        case ResourceType::FOOD:      return "food";
+        case ResourceType::LINEMATE:  return "linemate";
+        case ResourceType::DERAUMERE: return "deraumere";
+        case ResourceType::SIBUR:     return "sibur";
+        case ResourceType::MENDIANE:  return "mendiane";
+        case ResourceType::PHIRAS:    return "phiras";
+        case ResourceType::THYSTAME:  return "thystame";
+        default: return "";
+    }
+}
+
 /**
  * Displays the available resources
  * in the given output stream.
