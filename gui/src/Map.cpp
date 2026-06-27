@@ -97,9 +97,15 @@ void Map::draw(const GameState &state) const
 
 void Map::drawLabels(const GameState &state, Camera3D camera) const
 {
+    Vector3 camForward = Vector3Normalize(Vector3Subtract(camera.target, camera.position));
+
     for (const auto &[id, player] : state.players) {
         (void)id;
         Vector3 labelPos = getTilePosition(player.x, player.y, state, _theme.getPlayerLabelHeight());
+
+        if (Vector3DotProduct(camForward, Vector3Subtract(labelPos, camera.position)) <= 0)
+            continue;
+
         Vector2 screenPos = GetWorldToScreen(labelPos, camera);
 
         if (screenPos.x < 0 || screenPos.x > static_cast<float>(GetScreenWidth()) ||
