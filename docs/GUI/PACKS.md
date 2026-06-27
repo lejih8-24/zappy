@@ -99,9 +99,34 @@ Every pack must have a `manifest.json` at its root. This is what identifies a fo
 | `resourceScale` | no | 1.0 | 0.000001 - 100.0 | Uniform scale applied to all resource models (`food.glb`, `linemate.glb`, etc.). |
 | `resourceRotation` | no | `{0,0,0}` | any angle | Euler angles (degrees) applied to all resource models. Any axis can be omitted. |
 | `resourceTranslation` | no | `{0,0,0}` | any value | World-space XYZ offset applied to all resource positions after scale and rotation. |
+| `food` / `linemate` / ... | no | - | - | Per-resource override block. See below. |
 | `backgroundColor` | no | `{0,82,172}` | 0-255 per channel | RGB background/sky color. Any channel can be omitted (defaults to DARKBLUE). |
 
 Values outside the listed range are silently clamped to the nearest bound. Rotation angles are unclamped (any positive or negative degree value is valid).
+
+### Per-resource overrides
+
+Each resource type can have its own config block that overrides the global `resource*` fields on a per-field basis:
+
+```json
+"food":      { "scale": 0.05, "translation": { "y": 0.5 } },
+"linemate":  { "scale": 0.03, "rotation": { "x": -90 } },
+"deraumere": { "scale": 0.04 },
+"sibur":     { "scale": 0.03 },
+"mendiane":  { "scale": 0.04 },
+"phiras":    { "scale": 0.03 },
+"thystame":  { "scale": 0.05 }
+```
+
+Each block supports the same three keys as the global fields:
+
+| Key | Global equivalent | Description |
+|---|---|---|
+| `scale` | `resourceScale` | Override uniform scale for this resource only |
+| `rotation` | `resourceRotation` | Override Euler rotation for this resource only |
+| `translation` | `resourceTranslation` | Override world-space offset for this resource only |
+
+Fallback chain per field: per-resource block > global `resource*` field > code default. Omitting a key in the per-resource block falls back to the global value, not to the code default.
 
 ## Player Animation States
 
