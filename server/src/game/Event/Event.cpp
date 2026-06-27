@@ -36,14 +36,16 @@ std::string Zappy::Game::Event::teamName(std::string_view name)
     return "tna " + std::string(name) + "\n";
 }
 
-std::string Zappy::Game::Event::playerNew(int playerId, std::pair<unsigned int, unsigned int> pos, int orientation, int level, std::string_view team)
+std::string Zappy::Game::Event::playerNew(int playerId, std::pair<unsigned int, unsigned int> pos, Orientation orientation, int level, std::string_view team)
 {
-    return "pnw #" + std::to_string(playerId)    + " "
-                   + std::to_string(pos.first)   + " "
-                   + std::to_string(pos.second)  + " "
-                   + std::to_string(orientation) + " "
-                   + std::to_string(level)       + " "
-                   + std::string(team)           + "\n";
+    unsigned int orient = static_cast<unsigned int>(orientation);
+
+    return "pnw #" + std::to_string(playerId)   + " "
+                   + std::to_string(pos.first)  + " "
+                   + std::to_string(pos.second) + " "
+                   + std::to_string(orient)     + " "
+                   + std::to_string(level)      + " "
+                   + std::string(team)          + "\n";
 }
 
 std::string Zappy::Game::Event::playerDie(int playerId)
