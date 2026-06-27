@@ -39,7 +39,7 @@ void Zappy::Client::GuiState::init()
     }
 }
 
-void Zappy::Client::GuiState::update(Client& client, std::chrono::nanoseconds dt)
+void Zappy::Client::GuiState::postUpdate(Client& client)
 {
     for (const auto& event : game().graphicsEvents())
         queueMessage(event);

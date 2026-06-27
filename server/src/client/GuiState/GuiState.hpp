@@ -17,7 +17,8 @@ namespace Zappy::Client {
             GuiState();
 
             void init() override;
-            void update(Client& client, std::chrono::nanoseconds dt) override;
+            inline void update(Client&, std::chrono::nanoseconds) override {}
+            void postUpdate(Client& client) override;
 
         private:
             void handleCommand(std::string_view command);
