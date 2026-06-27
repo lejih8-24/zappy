@@ -182,14 +182,23 @@ void Zappy::Client::PlayerRunState::takeCommand(std::string_view args, PlayerRun
         return;
     }
 
-    bool success = game.collectResource(state.m_Player, *resourceType);
+    bool success = game.playerCollectResource(state.m_Player, *resourceType);
     state.queueMessage(success ? "ok\n" : "ko\n");
     state.m_Cooldown = 7'000.0ms / game.gameSpeed();
 }
 
-void Zappy::Client::PlayerRunState::setCommand(std::string_view, PlayerRunState& state, Client& client, Game::Game& game)
+void Zappy::Client::PlayerRunState::setCommand(std::string_view args, PlayerRunState& state, Client& client, Game::Game& game)
 {
-    // TODO: implement
+    auto resourceType = Game::toResourceType(args);
+    if (!resourceType) {
+        logger.warning() << "unknown resource type " << logger.escape(args) << std::endl;
+        state.queueMessage("ko\n");
+        return;
+    }
+
+    bool success = game.playerDropResource(state.m_Player, *resourceType);
+    state.queueMessage(success ? "ok\n" : "ko\n");
+    state.m_Cooldown = 7'000.0ms / game.gameSpeed();
 }
 
 void Zappy::Client::PlayerRunState::incantationCommand(std::string_view, PlayerRunState& state, Client& client, Game::Game& game)

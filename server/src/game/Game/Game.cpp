@@ -100,7 +100,7 @@ void Zappy::Game::Game::playerUpdatePosition(const Player& player)
     m_GraphicsEvents.emplace_back(Event::playerPosition(player.id(), player.position(), player.orientation()));
 }
 
-bool Zappy::Game::Game::collectResource(Player& player, ResourceType type)
+bool Zappy::Game::Game::playerCollectResource(Player& player, ResourceType type)
 {
     auto& resource = m_Map[player.position()][type];
     if (resource == 0)
@@ -109,6 +109,19 @@ bool Zappy::Game::Game::collectResource(Player& player, ResourceType type)
     resource--;
     player.inventory()[type]++;
     m_GraphicsEvents.emplace_back(Event::playerCollect(player.id(), static_cast<unsigned int>(type)));
+
+    return true;
+}
+
+bool Zappy::Game::Game::playerDropResource(Player& player, ResourceType type)
+{
+    auto& resource = player.inventory()[type];
+    if (resource == 0)
+        return false;
+
+    resource--;
+    m_Map[player.position()][type]++;
+    m_GraphicsEvents.emplace_back(Event::playerDrop(player.id(), static_cast<unsigned int>(type)));
 
     return true;
 }
