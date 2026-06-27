@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Penguin character pack",
   "author": "Zappy Team",
+
   "animations": {
     "broadcast": 0,
     "dead": 1,
@@ -21,6 +22,8 @@
   "eggRotation": { "x": -90 },
 
   "resourceScale": 0.01,
+
+  "food": { "scale": 0.5, "translation": { "x": 0.5, "y": -0.5 } },
 
   "tileScale": 0.0016,
   "tileTranslation": { "x": -4.5, "y": -1.5, "z": -3.5},
