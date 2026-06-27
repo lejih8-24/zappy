@@ -20,6 +20,7 @@ class DefaultTheme : public ITheme {
 
         float getPlayerLabelHeight() const override;
         float getPlayerLabelScale() const override;
+        Color getBackgroundColor() const override;
 };
 
 }

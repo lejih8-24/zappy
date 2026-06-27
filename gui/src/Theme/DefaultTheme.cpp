@@ -56,4 +56,9 @@ float DefaultTheme::getPlayerLabelScale() const
     return 140.0f;
 }
 
+Color DefaultTheme::getBackgroundColor() const
+{
+    return DARKBLUE;
+}
+
 }
