@@ -19,6 +19,23 @@
 // Y size of every resource model - center at half height above tile surface
 static constexpr float RESOURCE_HEIGHT = 0.20F;
 
+// Returns player_id -> stack slot index (0 = ground, 1 = above, ...).
+// Players on the same tile are sorted by ID for a stable, deterministic order.
+static std::unordered_map<int, int> buildStackIndex(const GUI::GameState &state)
+{
+    std::map<std::pair<int, int>, std::vector<int>> groups;
+    for (const auto &[id, player] : state.players)
+        groups[{player.x, player.y}].push_back(id);
+
+    std::unordered_map<int, int> index;
+    for (auto &[pos, ids] : groups) {
+        std::sort(ids.begin(), ids.end());
+        for (int i = 0; i < static_cast<int>(ids.size()); ++i)
+            index[ids[i]] = i;
+    }
+    return index;
+}
+
 // Returns nullopt if worldPos is behind the camera or outside screen bounds
 static std::optional<Vector2> projectToScreen(Vector3 worldPos, Camera3D camera, Vector3 camForward)
 {
