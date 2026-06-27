@@ -24,7 +24,7 @@ class Map {
         Vector3 getPlayerWorldPos(const Player &player, const GameState &state) const;
 
     private:
-        Vector3 getTilePosition(int x, int y, const GameState &state, float height = 0.0f) const;
+        Vector3 getTilePosition(float x, float y, const GameState &state, float height = 0.0f) const;
         void drawTiles(const GameState &state) const;
         void drawResources(const GameState &state) const;
         void drawPlayers(const GameState &state) const;

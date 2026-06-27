@@ -25,6 +25,29 @@ static GUI::Tile &getTile(GUI::GameState &state, int x, int y)
     return *tile;
 }
 
+static float getMovementDuration(const GUI::GameState &state)
+{
+    if (state.timeUnit <= 0)
+        return 0.35F;
+    return std::max(7.0F / static_cast<float>(state.timeUnit), 0.20F);
+}
+
+static float getClosestWrappedTarget(float current, int target, std::size_t mapSize)
+{
+    if (mapSize == 0)
+        return static_cast<float>(target);
+
+    float mapSizeF = static_cast<float>(mapSize);
+    float wrappedTarget = static_cast<float>(target);
+    float delta = wrappedTarget - current;
+
+    if (delta > mapSizeF / 2.0F)
+        wrappedTarget -= mapSizeF;
+    else if (delta < -mapSizeF / 2.0F)
+        wrappedTarget += mapSizeF;
+    return wrappedTarget;
+}
+
 namespace GUI {
 
 GameStateEventHandler::GameStateEventHandler(GameState &state)
@@ -64,6 +87,18 @@ void GameStateEventHandler::operator()(const Zappy::Networking::PlayerPosition &
 
     if (player == _state.players.end())
         return;
+    bool hasMoved = player->second.x != event.x || player->second.y != event.y;
+    float now = GetTime();
+
+    if (hasMoved) {
+        Player::DisplayPosition start = player->second.getDisplayPosition(now);
+        Player::DisplayPosition target = {
+            getClosestWrappedTarget(start.x, event.x, _state.mapWidth),
+            getClosestWrappedTarget(start.y, event.y, _state.mapHeight),
+        };
+
+        player->second.startMovement(now, start, target, getMovementDuration(_state));
+    }
     player->second.x = event.x;
     player->second.y = event.y;
     player->second.rotationDeg = event.rotationDeg;
@@ -86,8 +121,11 @@ void GameStateEventHandler::operator()(const Zappy::Networking::PlayerInventory 
 
     if (player == _state.players.end())
         return;
-    player->second.x = event.x;
-    player->second.y = event.y;
+    if (player->second.x != event.x || player->second.y != event.y) {
+        player->second.x = event.x;
+        player->second.y = event.y;
+        player->second.snapDisplayPosition(event.x, event.y);
+    }
     player->second.inventory = event.inventory;
 }
 

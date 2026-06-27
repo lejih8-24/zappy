@@ -39,12 +39,12 @@ Map::Map(ITheme &theme, float squareSize)
 }
 
 // Centers the grid on the world origin so the map is symmetrical around (0,0)
-Vector3 Map::getTilePosition(int x, int y, const GameState &state, float height) const
+Vector3 Map::getTilePosition(float x, float y, const GameState &state, float height) const
 {
     return {
-        (static_cast<float>(x) - static_cast<float>(state.mapWidth) / 2.0f) * _squareSize,
+        (x - static_cast<float>(state.mapWidth) / 2.0f) * _squareSize,
         height,
-        (static_cast<float>(y) - static_cast<float>(state.mapHeight) / 2.0f) * _squareSize,
+        (y - static_cast<float>(state.mapHeight) / 2.0f) * _squareSize,
     };
 }
 
@@ -94,7 +94,8 @@ void Map::drawPlayers(const GameState &state) const
     float now = GetTime();
     for (const auto &[id, player] : state.players) {
         (void)id;
-        Vector3 pos = getTilePosition(player.x, player.y, state, 0.0f);
+        Player::DisplayPosition displayPos = player.getDisplayPosition(now);
+        Vector3 pos = getTilePosition(displayPos.x, displayPos.y, state, 0.0f);
         _theme.drawPlayer(pos, player.rotationDeg, player.getEffectiveAnimState(now));
     }
 }
@@ -162,9 +163,11 @@ void Map::drawResourceLabels(const GameState &state, Camera3D camera, Vector3 ca
 
 void Map::drawPlayerLabels(const GameState &state, Camera3D camera, Vector3 camForward) const
 {
+    float now = GetTime();
     for (const auto &[id, player] : state.players) {
         (void)id;
-        Vector3 labelPos = getTilePosition(player.x, player.y, state, _theme.getPlayerLabelHeight());
+        Player::DisplayPosition displayPos = player.getDisplayPosition(now);
+        Vector3 labelPos = getTilePosition(displayPos.x, displayPos.y, state, _theme.getPlayerLabelHeight());
 
         auto screenPos = projectToScreen(labelPos, camera, camForward);
         if (!screenPos)
@@ -185,7 +188,8 @@ void Map::drawPlayerLabels(const GameState &state, Camera3D camera, Vector3 camF
 
 Vector3 Map::getPlayerWorldPos(const Player &player, const GameState &state) const
 {
-    return getTilePosition(player.x, player.y, state, 0.0f);
+    Player::DisplayPosition displayPos = player.getDisplayPosition(GetTime());
+    return getTilePosition(displayPos.x, displayPos.y, state, 0.0f);
 }
 
 void Map::drawLabels(const GameState &state, Camera3D camera) const
