@@ -60,16 +60,20 @@ Every pack must have a `manifest.json` at its root. This is what identifies a fo
     "level_up": 5,
     "walk": 6
   },
-  "playerRotation": { "x": 0, "y": 0, "z": 0 },
   "playerScale": 1.0,
+  "playerRotation": { "x": 0, "y": 0, "z": 0 },
+  "playerTranslation": { "x": 0, "y": 0, "z": 0 },
   "playerLabelHeight": 2.5,
   "playerLabelScale": 140.0,
   "eggScale": 1.0,
   "eggRotation": { "x": 0, "y": 0, "z": 0 },
+  "eggTranslation": { "x": 0, "y": 0, "z": 0 },
   "tileScale": 1.0,
   "tileRotation": { "x": 0, "y": 0, "z": 0 },
+  "tileTranslation": { "x": 0, "y": 0, "z": 0 },
   "resourceScale": 1.0,
   "resourceRotation": { "x": 0, "y": 0, "z": 0 },
+  "resourceTranslation": { "x": 0, "y": 0, "z": 0 },
   "backgroundColor": { "r": 0, "g": 82, "b": 172 }
 }
 ```
@@ -139,11 +143,11 @@ All assets are GLB (binary glTF) files. Asset filenames are fixed:
 
 ### `green_man`
 
-A GLB pack with a player model and egg model.
+A GLB pack with a player model (7 animation tracks) and an egg model.
 
 ### `penguin`
 
-A GLB pack with a player model and egg model.
+A full GLB pack with player (7 animation tracks), egg, tile, and all 7 resource models (food, linemate, deraumere, sibur, mendiane, thystame + crystal as an extra). Background is black.
 
 ## Using a Pack
 
