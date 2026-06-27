@@ -23,7 +23,6 @@ namespace Zappy::Client {
         static const std::unordered_map<std::string_view, CommandHandler> COMMAND_HANDLERS;
 
         Game::Player& m_Player;
-        std::chrono::duration<double, std::milli> m_Cooldown;
 
         public:
             PlayerRunState(Game::Player& player);
@@ -32,6 +31,8 @@ namespace Zappy::Client {
             void disconnect(Game::Game& game) override;
 
         private:
+            void addCooldown(std::chrono::duration<double, std::milli> duration);
+
             static void toLowercase(std::string& repr);
             void runCommand(Client& client, std::string& command);
 

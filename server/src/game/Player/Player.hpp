@@ -23,7 +23,7 @@ namespace Zappy::Game {
     };
 
     class Player {
-        using TTL = std::chrono::duration<double, std::milli>;
+        using Duration = std::chrono::duration<double, std::milli>;
 
         static int s_NextId;
 
@@ -33,15 +33,20 @@ namespace Zappy::Game {
         Orientation m_Orientation;
         unsigned char m_Level;
         Resources m_Inventory;
-        TTL m_TimeToLive;
+        Duration m_TimeToLive;
+        Duration m_Cooldown;
 
         public:
             Player() noexcept;
             Player(std::string_view team);
 
-            inline TTL timeToLive() const noexcept { return m_TimeToLive; }
-            inline TTL reduceTimeToLive(TTL amnt) noexcept { m_TimeToLive -= amnt; return m_TimeToLive; }
-            inline TTL addTimeToLive(TTL amnt) noexcept { m_TimeToLive += amnt; return m_TimeToLive; }
+            inline Duration timeToLive() const noexcept { return m_TimeToLive; }
+            inline Duration reduceTimeToLive(Duration amnt) noexcept { m_TimeToLive -= amnt; return m_TimeToLive; }
+            inline Duration addTimeToLive(Duration amnt) noexcept { m_TimeToLive += amnt; return m_TimeToLive; }
+
+            inline Duration cooldown() const noexcept { return m_Cooldown; }
+            inline Duration reduceCooldown(Duration amnt) noexcept { m_Cooldown -= amnt; return m_Cooldown; }
+            inline Duration addCooldown(Duration amnt) noexcept { m_Cooldown += amnt; return m_Cooldown; }
 
             std::string_view team() const noexcept { return m_TeamName; }
             inline int id() const noexcept { return m_Id; }

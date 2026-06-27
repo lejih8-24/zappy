@@ -36,7 +36,6 @@ const std::unordered_map<std::string_view, Zappy::Client::PlayerRunState::Comman
 Zappy::Client::PlayerRunState::PlayerRunState(Game::Player& player)
     : QueueState()
     , m_Player(player)
-    , m_Cooldown(0)
 {
 
 }
@@ -61,7 +60,7 @@ void Zappy::Client::PlayerRunState::update(Client& client, std::chrono::nanoseco
         game().playerFeed(m_Player);
     }
 
-    if (m_Cooldown > m_Cooldown.zero()) {
+    if (m_Player.cooldown() > 0.0ms) {
         // There are still some
         // messages queued, so skip
         // to next update to send
@@ -69,7 +68,7 @@ void Zappy::Client::PlayerRunState::update(Client& client, std::chrono::nanoseco
         // cooldown
         if (hasMessages())
             return;
-        client.setState(std::make_unique<PlayerWaitState>(m_Player, m_Cooldown));
+        client.setState(std::make_unique<PlayerWaitState>(m_Player, m_Player.cooldown()));
         return;
     }
 
@@ -87,6 +86,11 @@ void Zappy::Client::PlayerRunState::update(Client& client, std::chrono::nanoseco
 void Zappy::Client::PlayerRunState::disconnect(Game::Game& game)
 {
     game.killPlayer(m_Player);
+}
+
+void Zappy::Client::PlayerRunState::addCooldown(std::chrono::duration<double, std::milli> duration)
+{
+    m_Player.addCooldown(duration / game().gameSpeed());
 }
 
 void Zappy::Client::PlayerRunState::toLowercase(std::string& repr)
@@ -123,7 +127,7 @@ void Zappy::Client::PlayerRunState::forwardCommand(std::string_view, PlayerRunSt
     state.m_Player.moveForward(game.mapSize());
     state.queueMessage("ok\n");
     game.playerUpdatePosition(state.m_Player);
-    state.m_Cooldown = 7'000.0ms / game.gameSpeed();
+    state.addCooldown(7'000.0ms);
 }
 
 void Zappy::Client::PlayerRunState::rightCommand(std::string_view, PlayerRunState& state, Client& client, Game::Game& game)
@@ -131,7 +135,7 @@ void Zappy::Client::PlayerRunState::rightCommand(std::string_view, PlayerRunStat
     state.m_Player.turnRight();
     state.queueMessage("ok\n");
     game.playerUpdatePosition(state.m_Player);
-    state.m_Cooldown = 7'000.0ms / game.gameSpeed();
+    state.addCooldown(7'000.0ms);
 }
 
 void Zappy::Client::PlayerRunState::leftCommand(std::string_view, PlayerRunState& state, Client& client, Game::Game& game)
@@ -139,14 +143,14 @@ void Zappy::Client::PlayerRunState::leftCommand(std::string_view, PlayerRunState
     state.m_Player.turnLeft();
     state.queueMessage("ok\n");
     game.playerUpdatePosition(state.m_Player);
-    state.m_Cooldown = 7'000.0ms / game.gameSpeed();
+    state.addCooldown(7'000.0ms);
 }
 
 void Zappy::Client::PlayerRunState::lookCommand(std::string_view, PlayerRunState& state, Client& client, Game::Game& game)
 {
     std::string message = game.playerLook(state.m_Player);
     state.queueMessage(message + "\n");
-    state.m_Cooldown = 7'000.0ms / game.gameSpeed();
+    state.addCooldown(7'000.0ms);
 }
 
 void Zappy::Client::PlayerRunState::inventoryCommand(std::string_view, PlayerRunState& state, Client& client, Game::Game& game)
@@ -166,7 +170,7 @@ void Zappy::Client::PlayerRunState::inventoryCommand(std::string_view, PlayerRun
         << "]\n";
 
     state.queueMessage(msg.str());
-    state.m_Cooldown = 1'000.0ms / game.gameSpeed();
+    state.addCooldown(1'000.0ms);
 }
 
 void Zappy::Client::PlayerRunState::broadcastCommand(std::string_view, PlayerRunState& state, Client& client, Game::Game& game)
@@ -202,7 +206,7 @@ void Zappy::Client::PlayerRunState::takeCommand(std::string_view args, PlayerRun
 
     bool success = game.playerCollectResource(state.m_Player, *resourceType);
     state.queueMessage(success ? "ok\n" : "ko\n");
-    state.m_Cooldown = 7'000.0ms / game.gameSpeed();
+    state.addCooldown(7'000.0ms);
 }
 
 void Zappy::Client::PlayerRunState::setCommand(std::string_view args, PlayerRunState& state, Client& client, Game::Game& game)
@@ -216,7 +220,7 @@ void Zappy::Client::PlayerRunState::setCommand(std::string_view args, PlayerRunS
 
     bool success = game.playerDropResource(state.m_Player, *resourceType);
     state.queueMessage(success ? "ok\n" : "ko\n");
-    state.m_Cooldown = 7'000.0ms / game.gameSpeed();
+    state.addCooldown(7'000.0ms);
 }
 
 void Zappy::Client::PlayerRunState::incantationCommand(std::string_view, PlayerRunState& state, Client& client, Game::Game& game)
