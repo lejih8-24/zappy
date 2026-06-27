@@ -98,7 +98,7 @@ void Render::draw3DScene()
 
 void Render::drawFrame()
 {
-    _window.beginFrame();
+    _window.beginFrame(_themeManager.active().getBackgroundColor());
     DrawFPS(10, 10);
 
     draw3DScene();
