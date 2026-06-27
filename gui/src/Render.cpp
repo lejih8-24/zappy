@@ -11,6 +11,7 @@
 #include "UI/Scale.hpp"
 #include <networking.hpp>
 #include "raylib.h"
+#include "raymath.h"
 
 #include <string>
 #include <variant>
