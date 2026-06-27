@@ -13,19 +13,7 @@
 #include <string>
 #include <raymath.h>
 
-static constexpr float getResourceHeight(unsigned int quantity)
-{
-    if (quantity == 0)
-        return 0.0F;
-    const float height = 0.20F + 0.08F * static_cast<float>(quantity - 1);
-
-    return height < 0.70F ? height : 0.70F;
-}
-
-// Prevents compilation if height formula is edited and gives an unexpected number
-static_assert(getResourceHeight(0) == 0.0F); // No resource: nothing to draw
-static_assert(getResourceHeight(1) == 0.20F); // One resource: minimum height
-static_assert(getResourceHeight(100) == 0.70F); // Many resources: capped height
+static constexpr float RESOURCE_HEIGHT = 0.20F;
 
 namespace GUI {
 
@@ -70,12 +58,10 @@ void Map::draw(const GameState &state) const
 
         for (unsigned int quantity : tile.resources) {
             if (quantity > 0) {
-                const float height = getResourceHeight(quantity);
-                Vector3 pos = getTilePosition(tile.x, tile.y, state, height / 2.0F);
-
+                Vector3 pos = getTilePosition(tile.x, tile.y, state, RESOURCE_HEIGHT / 2.0F);
                 pos.x += resourceSlots[resourceIndex].x * _squareSize * resourceOffset;
                 pos.z += resourceSlots[resourceIndex].y * _squareSize * resourceOffset;
-                _theme.drawResource(resourceIndex, pos, height);
+                _theme.drawResource(resourceIndex, pos);
             }
             ++resourceIndex;
         }
