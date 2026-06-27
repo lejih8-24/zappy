@@ -123,9 +123,11 @@ void Zappy::Client::GuiState::mapContentsCommand(std::string_view, GuiState& sta
     }
 }
 
-void Zappy::Client::GuiState::teamNamesCommand(std::string_view args, GuiState& state, Client& client)
+void Zappy::Client::GuiState::teamNamesCommand(std::string_view, GuiState& state, Client&)
 {
-    // TODO: implement
+    for (const auto& [teamName, _] : state.game().teams()) {
+        state.queueMessage(Game::Event::teamName(teamName));
+    }
 }
 
 void Zappy::Client::GuiState::playerPositionCommand(std::string_view args, GuiState& state, Client& client)
