@@ -15,7 +15,7 @@
 
 
 Zappy::Server::Server(std::string_view ip, std::uint16_t port)
-    : Lattice::Server<Client>(ip, port)
+    : LatticeServer(ip, port)
     , m_Game()
     , m_UpdateDuration(-1)
     , m_UpdateStart(std::chrono::steady_clock::now())
@@ -26,7 +26,7 @@ Zappy::Server::Server(std::string_view ip, std::uint16_t port)
 }
 
 Zappy::Server::Server(Server&& other)
-    : Lattice::Server<Client>()
+    : LatticeServer()
     , m_Game()
 {
     swap(other);
@@ -55,7 +55,7 @@ void Zappy::Server::onShutdown()
     logger.info() << "server shutting down..." << std::endl;
 }
 
-void Zappy::Server::onClientAccepted(const Client& client)
+void Zappy::Server::onClientAccepted(Client& client)
 {
     logger.info() << client.name() << ": connected" << std::endl;
 
@@ -63,12 +63,13 @@ void Zappy::Server::onClientAccepted(const Client& client)
     m_UpdateDuration = 20'000ms / m_Game.gameSpeed();
 }
 
-void Zappy::Server::onClientDisconnected(const Client& client)
+void Zappy::Server::onClientDisconnected(Client& client)
 {
     logger.info() << client.name() << ": disconnected" << std::endl;
+    client.handleDisconnect(m_Game);
 }
 
-void Zappy::Server::updateServer()
+void Zappy::Server::updateStart()
 {
     auto currentTime = std::chrono::steady_clock::now();
     m_DeltaTime = currentTime - m_UpdateStart;

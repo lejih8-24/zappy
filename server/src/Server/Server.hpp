@@ -19,7 +19,9 @@
 
 
 namespace Zappy {
-    class Server : public Lattice::Server<Client::Client> {
+    using LatticeServer = Lattice::Server<Client::Client, Lattice::NonBlockingSocket, 50, true>;
+
+    class Server : public LatticeServer {
         using Client = Client::Client;
 
         static constexpr std::chrono::milliseconds DEFAULT_TIMEOUT { 20'000 };
@@ -44,17 +46,17 @@ namespace Zappy {
                 std::swap(m_UpdateStart, other.m_UpdateStart);
                 std::swap(m_DeltaTime, other.m_DeltaTime);
                 std::swap(m_EventQueue, other.m_EventQueue);
-                Lattice::Server<Client>::swap(other);
+                LatticeServer::swap(other);
             }
 
         private:
             void onStart() override;
             void onShutdown() override;
-            void onClientAccepted(const Client& client) override;
-            void onClientDisconnected(const Client& client) override;
+            void updateStart() override;
 
-            void updateServer() override;
             void updateClient(Client& client) override;
+            void onClientAccepted(Client& client) override;
+            void onClientDisconnected(Client& client) override;
 
             int pollTimeout(int previousTimeout) override;
 
