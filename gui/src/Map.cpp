@@ -185,11 +185,13 @@ void Map::drawResourceLabels(const GameState &state, Camera3D camera, Vector3 ca
 
 void Map::drawPlayerLabels(const GameState &state, Camera3D camera, Vector3 camForward) const
 {
+    auto stackIndex = buildStackIndex(state);
+    float stackSpacing = _theme.getPlayerLabelHeight();
     float now = GetTime();
     for (const auto &[id, player] : state.players) {
-        (void)id;
+        float height = static_cast<float>(stackIndex.at(id)) * stackSpacing + stackSpacing;
         Player::DisplayPosition displayPos = player.getDisplayPosition(now);
-        Vector3 labelPos = getTilePosition(displayPos.x, displayPos.y, state, _theme.getPlayerLabelHeight());
+        Vector3 labelPos = getTilePosition(displayPos.x, displayPos.y, state, height);
 
         auto screenPos = projectToScreen(labelPos, camera, camForward);
         if (!screenPos)
