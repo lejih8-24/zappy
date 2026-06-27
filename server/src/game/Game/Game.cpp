@@ -54,6 +54,17 @@ void Zappy::Game::Game::update(std::chrono::nanoseconds dt)
     }
 }
 
+std::size_t Zappy::Game::Game::activePlayers() const
+{
+    std::size_t total = 0;
+
+    for (const auto& [_, team] : m_Teams) {
+        total += team.members;
+    }
+
+    return total;
+}
+
 void Zappy::Game::Game::setTeams(std::span<std::string> names, std::size_t maxMembers)
 {
     m_Teams.clear();
