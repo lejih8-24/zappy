@@ -12,6 +12,16 @@
 int Zappy::Game::Player::s_NextId = 0;
 
 
+Zappy::Game::Player::Player() noexcept
+    : m_Id(-1)
+    , m_TeamName()
+    , m_Position{ 0, 0 }
+    , m_Orientation(Orientation::NORTH)
+    , m_Level(0)
+{
+
+}
+
 Zappy::Game::Player::Player(std::string_view team)
     : m_Id(s_NextId)
     , m_TeamName(team)
