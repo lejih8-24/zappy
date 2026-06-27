@@ -135,7 +135,7 @@ void Zappy::Client::GuiState::playerPositionCommand(std::string_view args, GuiSt
     auto playerId = parseId(args);
 
     if (!playerId || !state.game().players().contains(*playerId)) {
-        logger.warning() << std::string(client) << " (GUI): bad bct parameters: " << logger.escape(args, '\"') << std::endl;
+        logger.warning() << std::string(client) << " (GUI): bad ppo parameters: " << logger.escape(args, '\"') << std::endl;
         state.queueMessage("sbp\n");
         return;
     }
@@ -146,12 +146,30 @@ void Zappy::Client::GuiState::playerPositionCommand(std::string_view args, GuiSt
 
 void Zappy::Client::GuiState::playerLevelCommand(std::string_view args, GuiState& state, Client& client)
 {
-    // TODO: implement
+    auto playerId = parseId(args);
+
+    if (!playerId || !state.game().players().contains(*playerId)) {
+        logger.warning() << std::string(client) << " (GUI): bad plv parameters: " << logger.escape(args, '\"') << std::endl;
+        state.queueMessage("sbp\n");
+        return;
+    }
+
+    const auto& player = state.game().players().at(*playerId);
+    state.queueMessage(Game::Event::playerLevel(player.id(), player.level()));
 }
 
 void Zappy::Client::GuiState::playerInventoryCommand(std::string_view args, GuiState& state, Client& client)
 {
-    // TODO: implement
+    auto playerId = parseId(args);
+
+    if (!playerId || !state.game().players().contains(*playerId)) {
+        logger.warning() << std::string(client) << " (GUI): bad pin parameters: " << logger.escape(args, '\"') << std::endl;
+        state.queueMessage("sbp\n");
+        return;
+    }
+
+    const auto& player = state.game().players().at(*playerId);
+    state.queueMessage(Game::Event::playerInventory(player.id(), player.position(), player.inventory()));
 }
 
 void Zappy::Client::GuiState::serverGetTimeCommand(std::string_view args, GuiState& state, Client& client)
