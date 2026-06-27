@@ -19,7 +19,7 @@ namespace Zappy::Game {
 
 namespace Zappy::Client {
     class PlayerRunState : public QueueState<128> {
-        using CommandHandler = void(*)(PlayerRunState&, Client&, Game::Game&);
+        using CommandHandler = void(*)(std::string_view, PlayerRunState&, Client&, Game::Game&);
         static const std::unordered_map<std::string_view, CommandHandler> COMMAND_HANDLERS;
 
         Game::Player& m_Player;
@@ -35,20 +35,21 @@ namespace Zappy::Client {
             static void toLowercase(std::string& repr);
             void runCommand(Client& client, std::string& command);
 
-            static void forwardCommand(PlayerRunState& state, Client& client, Game::Game& game);
-            static void rightCommand(PlayerRunState& state, Client& client, Game::Game& game);
-            static void leftCommand(PlayerRunState& state, Client& client, Game::Game& game);
+            static void forwardCommand(std::string_view args, PlayerRunState& state, Client& client, Game::Game& game);
+            static void rightCommand(std::string_view args, PlayerRunState& state, Client& client, Game::Game& game);
+            static void leftCommand(std::string_view args, PlayerRunState& state, Client& client, Game::Game& game);
 
-            static void lookCommand(PlayerRunState& state, Client& client, Game::Game& game);
-            static void inventoryCommand(PlayerRunState& state, Client& client, Game::Game& game);
-            static void broadcastCommand(PlayerRunState& state, Client& client, Game::Game& game);
+            static void lookCommand(std::string_view args, PlayerRunState& state, Client& client, Game::Game& game);
+            static void inventoryCommand(std::string_view args, PlayerRunState& state, Client& client, Game::Game& game);
+            static void broadcastCommand(std::string_view args, PlayerRunState& state, Client& client, Game::Game& game);
 
-            static void connectNbrCommand(PlayerRunState& state, Client& client, Game::Game& game);
+            static void connectNbrCommand(std::string_view args, PlayerRunState& state, Client& client, Game::Game& game);
 
-            static void forkCommand(PlayerRunState& state, Client& client, Game::Game& game);
-            static void ejectCommand(PlayerRunState& state, Client& client, Game::Game& game);
+            static void forkCommand(std::string_view args, PlayerRunState& state, Client& client, Game::Game& game);
+            static void ejectCommand(std::string_view args, PlayerRunState& state, Client& client, Game::Game& game);
 
-            static void takeCommand(PlayerRunState& state, Client& client, Game::Game& game);
-            static void incantationCommand(PlayerRunState& state, Client& client, Game::Game& game);
+            static void takeCommand(std::string_view args, PlayerRunState& state, Client& client, Game::Game& game);
+            static void setCommand(std::string_view args, PlayerRunState& state, Client& client, Game::Game& game);
+            static void incantationCommand(std::string_view args, PlayerRunState& state, Client& client, Game::Game& game);
     };
 }

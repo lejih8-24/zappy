@@ -28,6 +28,7 @@ const std::unordered_map<std::string_view, Zappy::Client::PlayerRunState::Comman
     { "fork",        forkCommand },
     { "eject",       ejectCommand },
     { "take",        takeCommand },
+    { "set",         setCommand },
     { "incantation", incantationCommand },
 };
 
@@ -83,12 +84,17 @@ void Zappy::Client::PlayerRunState::toLowercase(std::string& repr)
     );
 }
 
-void Zappy::Client::PlayerRunState::runCommand(Client& client, std::string& command)
+void Zappy::Client::PlayerRunState::runCommand(Client& client, std::string& line)
 {
+    auto commandEnd = line.find(' ');
+    std::string_view lineView = line;
+    std::string_view command = lineView.substr(0, commandEnd);
+    std::string_view args = commandEnd + 1 >= lineView.size() ? std::string_view() : lineView.substr(commandEnd + 1);
+
     try {
         auto handler = COMMAND_HANDLERS.at(command);
         logger.info() << std::string(client) << ": running command " << command << std::endl;
-        handler(*this, client, game());
+        handler(args, *this, client, game());
     } catch (std::out_of_range) {
         logger.warning() << std::string(client) << ": unknown command " << std::quoted(command) << std::endl;
         queueMessage("ko\n");
@@ -96,33 +102,33 @@ void Zappy::Client::PlayerRunState::runCommand(Client& client, std::string& comm
     }
 }
 
-void Zappy::Client::PlayerRunState::forwardCommand(PlayerRunState& state, Client& client, Game::Game& game)
+void Zappy::Client::PlayerRunState::forwardCommand(std::string_view, PlayerRunState& state, Client& client, Game::Game& game)
 {
     state.m_Player.moveForward(game.mapSize());
     state.queueMessage("ok\n");
     state.m_Cooldown = 7'000.0ms / game.gameSpeed();
 }
 
-void Zappy::Client::PlayerRunState::rightCommand(PlayerRunState& state, Client& client, Game::Game& game)
+void Zappy::Client::PlayerRunState::rightCommand(std::string_view, PlayerRunState& state, Client& client, Game::Game& game)
 {
     state.m_Player.turnRight();
     state.queueMessage("ok\n");
     state.m_Cooldown = 7'000.0ms / game.gameSpeed();
 }
 
-void Zappy::Client::PlayerRunState::leftCommand(PlayerRunState& state, Client& client, Game::Game& game)
+void Zappy::Client::PlayerRunState::leftCommand(std::string_view, PlayerRunState& state, Client& client, Game::Game& game)
 {
     state.m_Player.turnLeft();
     state.queueMessage("ok\n");
     state.m_Cooldown = 7'000.0ms / game.gameSpeed();
 }
 
-void Zappy::Client::PlayerRunState::lookCommand(PlayerRunState& state, Client& client, Game::Game& game)
+void Zappy::Client::PlayerRunState::lookCommand(std::string_view, PlayerRunState& state, Client& client, Game::Game& game)
 {
     // TODO: implement
 }
 
-void Zappy::Client::PlayerRunState::inventoryCommand(PlayerRunState& state, Client& client, Game::Game& game)
+void Zappy::Client::PlayerRunState::inventoryCommand(std::string_view, PlayerRunState& state, Client& client, Game::Game& game)
 {
     const auto& inventory = state.m_Player.inventory();
 
@@ -142,34 +148,39 @@ void Zappy::Client::PlayerRunState::inventoryCommand(PlayerRunState& state, Clie
     state.m_Cooldown = 1'000.0ms / game.gameSpeed();
 }
 
-void Zappy::Client::PlayerRunState::broadcastCommand(PlayerRunState& state, Client& client, Game::Game& game)
+void Zappy::Client::PlayerRunState::broadcastCommand(std::string_view, PlayerRunState& state, Client& client, Game::Game& game)
 {
     // TODO: implement
 }
 
-void Zappy::Client::PlayerRunState::connectNbrCommand(PlayerRunState& state, Client& client, Game::Game& game)
+void Zappy::Client::PlayerRunState::connectNbrCommand(std::string_view, PlayerRunState& state, Client& client, Game::Game& game)
 {
     auto& team = game.playerTeam(state.m_Player);
 
     state.queueMessage(std::to_string(team.maxMembers - team.members) + "\n");
 }
 
-void Zappy::Client::PlayerRunState::forkCommand(PlayerRunState& state, Client& client, Game::Game& game)
+void Zappy::Client::PlayerRunState::forkCommand(std::string_view, PlayerRunState& state, Client& client, Game::Game& game)
 {
     // TODO: implement
 }
 
-void Zappy::Client::PlayerRunState::ejectCommand(PlayerRunState& state, Client& client, Game::Game& game)
+void Zappy::Client::PlayerRunState::ejectCommand(std::string_view, PlayerRunState& state, Client& client, Game::Game& game)
 {
     // TODO: implement
 }
 
-void Zappy::Client::PlayerRunState::takeCommand(PlayerRunState& state, Client& client, Game::Game& game)
+void Zappy::Client::PlayerRunState::takeCommand(std::string_view, PlayerRunState& state, Client& client, Game::Game& game)
+{
+
+}
+
+void Zappy::Client::PlayerRunState::setCommand(std::string_view, PlayerRunState& state, Client& client, Game::Game& game)
 {
     // TODO: implement
 }
 
-void Zappy::Client::PlayerRunState::incantationCommand(PlayerRunState& state, Client& client, Game::Game& game)
+void Zappy::Client::PlayerRunState::incantationCommand(std::string_view, PlayerRunState& state, Client& client, Game::Game& game)
 {
     // TODO: implement
 }
