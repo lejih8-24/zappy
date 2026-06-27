@@ -64,6 +64,8 @@ namespace Zappy::Game {
             void playerLayEgg(const Player& player);
             Player* hatchEgg(std::string_view team);
 
+            bool doPlayerIncantation(const Player& initiator);
+
             void killPlayer(const Player& player);
 
         private:

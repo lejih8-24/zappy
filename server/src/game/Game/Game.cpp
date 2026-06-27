@@ -14,22 +14,6 @@
 using std::chrono_literals::operator ""ms;
 
 
-static constexpr std::chrono::duration<double, std::milli> RESOURCE_RESPAWN_DELAY = 20'000ms;
-
-/**
- * Trantor resource densities.
- */
-static constexpr std::array<float, Zappy::Game::Resources::RESOURCE_COUNT> RESOURCE_DENSITIES = {{
-    /* [FOOD]      = */ 0.50f,
-    /* [LINEMATE]  = */ 0.30f,
-    /* [DERAUMERE] = */ 0.15f,
-    /* [SIBUR]     = */ 0.10f,
-    /* [MENDIANE]  = */ 0.10f,
-    /* [PHIRAS]    = */ 0.08f,
-    /* [THYSTAME]  = */ 0.05f,
-}};
-
-
 std::mt19937 Zappy::Game::Game::s_RNG(std::random_device{}());
 
 
@@ -112,6 +96,43 @@ auto Zappy::Game::Game::hatchEgg(std::string_view team) -> Player*
     }
 
     return nullptr;
+}
+
+bool Zappy::Game::Game::doPlayerIncantation(const Player& initiator)
+{
+    if (initiator.level() >= MAX_PLAYER_LEVEL)
+        return false;
+
+    auto& requirements = INCANTATION_REQUIREMENTS[initiator.level()];
+    auto& availableResources = m_Map[initiator.position()];
+
+    // The initiator's tile doesn't contain the
+    // required resources
+    if (!availableResources.contains(requirements.resources))
+        return false;
+
+    std::vector<Player*> involvedPlayers;
+
+    for (auto& [_, player] : m_Players) {
+        if (player.position() != initiator.position())
+            continue;
+        if (player.level() != initiator.level())
+            continue;
+
+        involvedPlayers.push_back(&player);
+    }
+
+    // Not enough participating players
+    if (involvedPlayers.size() < requirements.players)
+        return false;
+
+    // Consume the ritual's resources and level up
+    // all involved players
+    availableResources -= requirements.resources;
+    for (auto player : involvedPlayers)
+        player->levelUp();
+
+    return true;
 }
 
 void Zappy::Game::Game::killPlayer(const Player& player)

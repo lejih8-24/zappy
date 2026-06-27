@@ -44,6 +44,8 @@ namespace Zappy::Game {
             inline const Resources& inventory() const noexcept { return m_Inventory; }
             inline void moveTo(unsigned int x, unsigned int y) { m_Position = { x, y }; }
 
+            inline void levelUp() noexcept { m_Level++; }
+
             void moveForward(std::pair<unsigned int, unsigned int> size);
             void turnRight();
             void turnLeft();
