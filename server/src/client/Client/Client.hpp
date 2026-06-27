@@ -33,6 +33,7 @@ namespace Zappy::Client {
             Client(Client&& other);
 
             void update(Game::Game& game, std::chrono::nanoseconds dt);
+            void updatePost();
             void handleDisconnect(Game::Game& game);
 
             void setState(std::unique_ptr<IState>&& state) { m_NextState = std::move(state); }

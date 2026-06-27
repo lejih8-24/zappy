@@ -43,6 +43,11 @@ void Zappy::Client::Client::update(Game::Game& game, std::chrono::nanoseconds dt
     }
 }
 
+void Zappy::Client::Client::updatePost()
+{
+    m_State->postUpdate(*this);
+}
+
 void Zappy::Client::Client::handleDisconnect(Game::Game& game)
 {
     m_State->disconnect(game);
