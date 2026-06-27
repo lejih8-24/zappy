@@ -66,7 +66,7 @@ namespace Zappy::Game {
         inline ConstIterator cend() const { return end(); }
     };
 
-    std::optional<ResourceType> fromString(std::string_view repr);
+    std::optional<ResourceType> toResourceType(std::string_view repr);
 }
 
 std::ostream& operator<<(std::ostream& stream, const Zappy::Game::Resources& resources);

@@ -89,7 +89,7 @@ Zappy::Game::Resources::operator std::string() const
  * This assumes the string is all
  * lowercase.
  */
-auto Zappy::Game::fromString(std::string_view repr) -> std::optional<ResourceType>
+auto Zappy::Game::toResourceType(std::string_view repr) -> std::optional<ResourceType>
 {
     if (repr.empty())
         return std::nullopt;
