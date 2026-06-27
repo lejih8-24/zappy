@@ -9,6 +9,7 @@
 #pragma once
 
 #include "BaseState.hpp"
+#include "Client/Client.hpp"
 #include <deque>
 
 
@@ -25,9 +26,27 @@ namespace Zappy::Client {
             QueueState() noexcept : BaseState(), m_SendQueue() {}
 
         protected:
+            void sendQueuedMessages(Client& client)
+            {
+                if (m_SendQueue.empty())
+                    return;
+
+                std::string events = mergeEvents();
+
+                auto bytesSent = client.send(events);
+                if (bytesSent == events.length())
+                    return;  // everything sent; we're done here
+
+                // data partially sent; only queue remaining bytes
+                if (bytesSent > 0)
+                    events.erase(0, bytesSent);
+
+                // Re-queue events so they get sent next time
+                m_SendQueue.emplace_front(std::move(events));
+            }
+
             inline void queueMessage(const std::string& message) { m_SendQueue.emplace_back(message); }
             inline void queueMessage(std::string&& message) { m_SendQueue.emplace_back(message); }
-            inline std::string popMessages() noexcept { return mergeEvents(); }
             inline bool hasMessages() noexcept { return !m_SendQueue.empty(); }
 
         private:
