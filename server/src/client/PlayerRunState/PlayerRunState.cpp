@@ -106,6 +106,7 @@ void Zappy::Client::PlayerRunState::forwardCommand(std::string_view, PlayerRunSt
 {
     state.m_Player.moveForward(game.mapSize());
     state.queueMessage("ok\n");
+    game.playerUpdatePosition(state.m_Player);
     state.m_Cooldown = 7'000.0ms / game.gameSpeed();
 }
 
@@ -113,6 +114,7 @@ void Zappy::Client::PlayerRunState::rightCommand(std::string_view, PlayerRunStat
 {
     state.m_Player.turnRight();
     state.queueMessage("ok\n");
+    game.playerUpdatePosition(state.m_Player);
     state.m_Cooldown = 7'000.0ms / game.gameSpeed();
 }
 
@@ -120,6 +122,7 @@ void Zappy::Client::PlayerRunState::leftCommand(std::string_view, PlayerRunState
 {
     state.m_Player.turnLeft();
     state.queueMessage("ok\n");
+    game.playerUpdatePosition(state.m_Player);
     state.m_Cooldown = 7'000.0ms / game.gameSpeed();
 }
 

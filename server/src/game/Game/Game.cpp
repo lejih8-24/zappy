@@ -11,9 +11,6 @@
 #include <random>
 
 
-using std::chrono_literals::operator ""ms;
-
-
 std::mt19937 Zappy::Game::Game::s_RNG(std::random_device{}());
 
 
@@ -96,6 +93,11 @@ auto Zappy::Game::Game::hatchEgg(std::string_view team) -> Player*
     }
 
     return nullptr;
+}
+
+void Zappy::Game::Game::playerUpdatePosition(const Player& player)
+{
+    m_GraphicsEvents.emplace_back(Event::playerPosition(player.id(), player.position(), player.orientation()));
 }
 
 bool Zappy::Game::Game::collectResource(Player& player, ResourceType type)

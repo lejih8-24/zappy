@@ -53,6 +53,14 @@ std::string Zappy::Game::Event::playerDie(int playerId)
     return "pdi #" + std::to_string(playerId) + "\n";
 }
 
+std::string Zappy::Game::Event::playerPosition(int playerId, std::pair<unsigned int, unsigned int> pos, Orientation orientation)
+{
+    return "ppo #" + std::to_string(playerId) + " "
+                   + std::to_string(pos.first) + " "
+                   + std::to_string(pos.second) + " "
+                   + std::to_string(static_cast<unsigned int>(orientation)) + "\n";
+}
+
 std::string Zappy::Game::Event::playerCollect(int playerId, unsigned int resource)
 {
     return "pgt #" + std::to_string(playerId) + " " + std::to_string(resource) + "\n";
