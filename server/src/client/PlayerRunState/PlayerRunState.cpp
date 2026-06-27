@@ -87,10 +87,10 @@ void Zappy::Client::PlayerRunState::runCommand(Client& client, std::string& comm
 {
     try {
         auto handler = COMMAND_HANDLERS.at(command);
-        logger.debug() << std::string(client) << ": running command " << command << std::endl;
+        logger.info() << std::string(client) << ": running command " << command << std::endl;
         handler(*this, client, game());
     } catch (std::out_of_range) {
-        logger.debug() << std::string(client) << ": unknown command " << std::quoted(command) << std::endl;
+        logger.warning() << std::string(client) << ": unknown command " << std::quoted(command) << std::endl;
         queueMessage("ko\n");
         return;
     }

@@ -14,6 +14,7 @@ void run(int argc, char *argv[])
     #ifdef NDEBUG
     Zappy::logger.setLevel(Zappy::Utils::Logger::WARNING);
     #endif
+    Zappy::logger.setLevel(Zappy::Utils::Logger::INFO);  // FIXME: remove
 
     auto server = Zappy::Server::Builder()
         .fromArguments(argc, argv)
