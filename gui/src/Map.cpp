@@ -10,8 +10,10 @@
 
 #include <algorithm>
 #include <array>
+#include <map>
 #include <optional>
 #include <string>
+#include <unordered_map>
 #include <raymath.h>
 
 // Y size of every resource model - center at half height above tile surface
