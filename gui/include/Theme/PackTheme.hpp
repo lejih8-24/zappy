@@ -58,6 +58,7 @@ class PackTheme : public ITheme {
         float _playerScale = 1.0f;
         float _playerLabelHeight = 2.5f;
         float _playerLabelScale = 140.0f;
+        Vector3 _playerTranslation = {0.0f, 0.0f, 0.0f};
         Color _backgroundColor = DARKBLUE;
 };
 
