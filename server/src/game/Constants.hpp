@@ -19,6 +19,7 @@ namespace Zappy::Game {
     inline constexpr std::chrono::duration<double, std::milli> FOOD_ALIVE_TIME { 126'000 };  // 126 sec
     inline constexpr std::chrono::duration<double, std::milli> RESOURCE_RESPAWN_DELAY { 20'000 };
 
+
     /**
      * Trantor resource densities.
      */
@@ -51,4 +52,19 @@ namespace Zappy::Game {
         { .players = 6, .resources = { .food = 0, .linemate = 1, .deraumere = 2, .sibur = 3, .mendiane = 0, .phiras = 1, .thystame = 0 }},
         { .players = 6, .resources = { .food = 0, .linemate = 2, .deraumere = 2, .sibur = 2, .mendiane = 2, .phiras = 2, .thystame = 1 }},
     }};
+
+    /**
+     * Player Cooldowns
+     */
+    inline constexpr std::chrono::duration<double, std::milli> PLAYER_FORWARD_COOLDOWN     { 7'000 };
+    inline constexpr std::chrono::duration<double, std::milli> PLAYER_RIGHT_COOLDOWN       { 7'000 };
+    inline constexpr std::chrono::duration<double, std::milli> PLAYER_LEFT_COOLDOWN        { 7'000 };
+    inline constexpr std::chrono::duration<double, std::milli> PLAYER_LOOK_COOLDOWN        { 300'000 };
+    inline constexpr std::chrono::duration<double, std::milli> PLAYER_INVENTORY_COOLDOWN   { 1'000 };
+    inline constexpr std::chrono::duration<double, std::milli> PLAYER_BROADCAST_COOLDOWN   { 7'000 };
+    inline constexpr std::chrono::duration<double, std::milli> PLAYER_FORK_COOLDOWN        { 42'000 };
+    inline constexpr std::chrono::duration<double, std::milli> PLAYER_EJECT_COOLDOWN       { 7'000 };
+    inline constexpr std::chrono::duration<double, std::milli> PLAYER_TAKE_COOLDOWN        { 7'000 };
+    inline constexpr std::chrono::duration<double, std::milli> PLAYER_SET_COOLDOWN         { 7'000 };
+    inline constexpr std::chrono::duration<double, std::milli> PLAYER_INCANTATION_COOLDOWN { 300'000 };
 }

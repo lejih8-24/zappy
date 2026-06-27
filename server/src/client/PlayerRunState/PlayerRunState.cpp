@@ -127,7 +127,7 @@ void Zappy::Client::PlayerRunState::forwardCommand(std::string_view, PlayerRunSt
     state.m_Player.moveForward(game.mapSize());
     state.queueMessage("ok\n");
     game.playerUpdatePosition(state.m_Player);
-    state.addCooldown(7'000.0ms);
+    state.addCooldown(Game::PLAYER_FORWARD_COOLDOWN);
 }
 
 void Zappy::Client::PlayerRunState::rightCommand(std::string_view, PlayerRunState& state, Client& client, Game::Game& game)
@@ -135,7 +135,7 @@ void Zappy::Client::PlayerRunState::rightCommand(std::string_view, PlayerRunStat
     state.m_Player.turnRight();
     state.queueMessage("ok\n");
     game.playerUpdatePosition(state.m_Player);
-    state.addCooldown(7'000.0ms);
+    state.addCooldown(Game::PLAYER_RIGHT_COOLDOWN);
 }
 
 void Zappy::Client::PlayerRunState::leftCommand(std::string_view, PlayerRunState& state, Client& client, Game::Game& game)
@@ -143,14 +143,14 @@ void Zappy::Client::PlayerRunState::leftCommand(std::string_view, PlayerRunState
     state.m_Player.turnLeft();
     state.queueMessage("ok\n");
     game.playerUpdatePosition(state.m_Player);
-    state.addCooldown(7'000.0ms);
+    state.addCooldown(Game::PLAYER_LEFT_COOLDOWN);
 }
 
 void Zappy::Client::PlayerRunState::lookCommand(std::string_view, PlayerRunState& state, Client& client, Game::Game& game)
 {
     std::string message = game.playerLook(state.m_Player);
     state.queueMessage(message + "\n");
-    state.addCooldown(7'000.0ms);
+    state.addCooldown(Game::PLAYER_LOOK_COOLDOWN);
 }
 
 void Zappy::Client::PlayerRunState::inventoryCommand(std::string_view, PlayerRunState& state, Client& client, Game::Game& game)
@@ -170,12 +170,13 @@ void Zappy::Client::PlayerRunState::inventoryCommand(std::string_view, PlayerRun
         << "]\n";
 
     state.queueMessage(msg.str());
-    state.addCooldown(1'000.0ms);
+    state.addCooldown(Game::PLAYER_INVENTORY_COOLDOWN);
 }
 
 void Zappy::Client::PlayerRunState::broadcastCommand(std::string_view, PlayerRunState& state, Client& client, Game::Game& game)
 {
     // TODO: implement
+    state.addCooldown(Game::PLAYER_BROADCAST_COOLDOWN);
 }
 
 void Zappy::Client::PlayerRunState::connectNbrCommand(std::string_view, PlayerRunState& state, Client& client, Game::Game& game)
@@ -188,11 +189,13 @@ void Zappy::Client::PlayerRunState::connectNbrCommand(std::string_view, PlayerRu
 void Zappy::Client::PlayerRunState::forkCommand(std::string_view, PlayerRunState& state, Client& client, Game::Game& game)
 {
     // TODO: implement
+    state.addCooldown(Game::PLAYER_FORK_COOLDOWN);
 }
 
 void Zappy::Client::PlayerRunState::ejectCommand(std::string_view, PlayerRunState& state, Client& client, Game::Game& game)
 {
     // TODO: implement
+    state.addCooldown(Game::PLAYER_EJECT_COOLDOWN);
 }
 
 void Zappy::Client::PlayerRunState::takeCommand(std::string_view args, PlayerRunState& state, Client& client, Game::Game& game)
@@ -206,7 +209,7 @@ void Zappy::Client::PlayerRunState::takeCommand(std::string_view args, PlayerRun
 
     bool success = game.playerCollectResource(state.m_Player, *resourceType);
     state.queueMessage(success ? "ok\n" : "ko\n");
-    state.addCooldown(7'000.0ms);
+    state.addCooldown(Game::PLAYER_TAKE_COOLDOWN);
 }
 
 void Zappy::Client::PlayerRunState::setCommand(std::string_view args, PlayerRunState& state, Client& client, Game::Game& game)
@@ -220,10 +223,13 @@ void Zappy::Client::PlayerRunState::setCommand(std::string_view args, PlayerRunS
 
     bool success = game.playerDropResource(state.m_Player, *resourceType);
     state.queueMessage(success ? "ok\n" : "ko\n");
-    state.addCooldown(7'000.0ms);
+    state.addCooldown(Game::PLAYER_SET_COOLDOWN);
 }
 
 void Zappy::Client::PlayerRunState::incantationCommand(std::string_view, PlayerRunState& state, Client& client, Game::Game& game)
 {
     // TODO: implement
+
+    // Don't add cooldown, since the game already
+    // adds it to all involved players
 }
