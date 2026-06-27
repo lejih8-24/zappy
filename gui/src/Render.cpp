@@ -115,6 +115,7 @@ void Render::drawFrame()
     draw3DScene();
     _map.drawLabels(_state, _camera.get());
     _hud.draw(_state, _window);
+    drawSelectedPlayerPanel();
     drawCrosshair();
     drawFocusOverlay();
     drawCameraLockLabel();
@@ -137,6 +138,28 @@ void Render::handleGameInput()
         _hud.update(HudAction::ScrollDown);
     if (IsKeyPressed(KEY_UP))
         _hud.update(HudAction::ScrollUp);
+
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && _camera.isCursorLocked()) {
+        Vector2 center = { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f };
+        Ray ray = GetMouseRay(center, _camera.get());
+        int selected = -1;
+        float closestDist = 1000.0f;
+
+        for (const auto &[id, player] : _state.players) {
+            Vector3 pos = _map.getPlayerWorldPos(player, _state);
+            pos.y += 0.6f;
+            RayCollision hit = GetRayCollisionSphere(ray, pos, 0.6f);
+            if (hit.hit && hit.distance < closestDist) {
+                closestDist = hit.distance;
+                selected = id;
+            }
+        }
+        _selectedPlayerId = (selected != -1 && _selectedPlayerId != selected)
+            ? std::optional<int>{selected} : std::optional<int>{};
+    }
+
+    if (_selectedPlayerId.has_value() && _state.players.find(*_selectedPlayerId) == _state.players.end())
+        _selectedPlayerId = {};
 }
 
 void Render::pollServerEvents(Zappy::Networking::GraphicsClient &client)
