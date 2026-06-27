@@ -128,14 +128,12 @@ void Map::drawPlayerLabels(const GameState &state, Camera3D camera, Vector3 camF
             continue;
 
         Vector2 screenPos = GetWorldToScreen(labelPos, camera);
-
         if (screenPos.x < 0 || screenPos.x > static_cast<float>(GetScreenWidth()) ||
             screenPos.y < 0 || screenPos.y > static_cast<float>(GetScreenHeight()))
             continue;
 
         float dist = Vector3Distance(camera.position, labelPos);
         int fontSize = std::clamp(static_cast<int>(_theme.getPlayerLabelScale() / dist), 8, 22);
-
         std::string label = player.teamName + " L" + std::to_string(player.level);
         int textWidth = MeasureText(label.c_str(), fontSize);
         int sx = static_cast<int>(screenPos.x) - textWidth / 2;
@@ -144,6 +142,13 @@ void Map::drawPlayerLabels(const GameState &state, Camera3D camera, Vector3 camF
         DrawText(label.c_str(), sx + 1, sy + 1, fontSize, BLACK);
         DrawText(label.c_str(), sx, sy, fontSize, RAYWHITE);
     }
+}
+
+void Map::drawLabels(const GameState &state, Camera3D camera) const
+{
+    Vector3 camForward = Vector3Normalize(Vector3Subtract(camera.target, camera.position));
+    drawResourceLabels(state, camera, camForward);
+    drawPlayerLabels(state, camera, camForward);
 }
 
 }
