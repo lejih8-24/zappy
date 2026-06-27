@@ -32,6 +32,7 @@ class Render {
     private:
         void update(Zappy::Networking::GraphicsClient &client);
         void pollServerEvents(Zappy::Networking::GraphicsClient &client);
+        void cleanupDeadPlayers();
         void handleGameInput();
         void drawFrame();
         void draw3DScene();

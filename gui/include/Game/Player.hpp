@@ -42,6 +42,7 @@ class Player : public Entity {
         Zappy::Game::Resources inventory = {};
         bool alive = true;
         AnimState animState = AnimState::Idle;
+        float animStateStartTime = 0.0F;
         float animStateEndTime = 0.0f;
         DisplayPosition movementStart = {};
         DisplayPosition movementTarget = {};
@@ -49,10 +50,12 @@ class Player : public Entity {
         float movementEndTime = 0.0F;
 
         bool isMoving(float currentTime) const;
+        void setAnimState(AnimState state, float currentTime, float duration = 0.0F);
         void snapDisplayPosition(int newX, int newY);
         void startMovement(float currentTime, DisplayPosition start, DisplayPosition target, float duration);
         DisplayPosition getDisplayPosition(float currentTime) const;
         AnimState getEffectiveAnimState(float currentTime) const;
+        float getAnimationElapsed(float currentTime, AnimState effectiveState) const;
 
     public:
         Player(int id = 0, int x = 0, int y = 0, std::size_t level = 1, const std::string &teamName = "");

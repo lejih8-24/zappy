@@ -26,6 +26,21 @@ static constexpr std::array<const char *, 7> RESOURCE_FILES = {
     "mendiane.glb", "phiras.glb", "thystame.glb"
 };
 
+static const char *getPlayerAnimName(GUI::Player::AnimState state)
+{
+    switch (state) {
+        case GUI::Player::AnimState::Idle:        return "idle";
+        case GUI::Player::AnimState::Walk:        return "walk";
+        case GUI::Player::AnimState::Incantation: return "incantation";
+        case GUI::Player::AnimState::Dead:        return "dead";
+        case GUI::Player::AnimState::Broadcast:   return "broadcast";
+        case GUI::Player::AnimState::LayingEgg:   return "laying_egg";
+        case GUI::Player::AnimState::LevelUp:     return "level_up";
+        case GUI::Player::AnimState::Eject:       return "eject";
+    }
+    return "idle";
+}
+
 // raylib converts u32 (UNSIGNED_INT) mesh indices to u16, corrupting any index > 65535.
 // Calling LoadModel on such a file causes a segfault inside raylib's skin processor.
 // We pre-check the GLB JSON chunk for componentType 5125 (UNSIGNED_INT) and refuse to
@@ -390,33 +405,29 @@ void PackTheme::drawResource(std::size_t resourceIndex, Vector3 pos) const
     _fallback.drawResource(resourceIndex, pos);
 }
 
-void PackTheme::drawPlayer(Vector3 pos, float rotationDeg, Player::AnimState state) const
+void PackTheme::drawPlayer(Vector3 pos, float rotationDeg, Player::AnimState state,
+    float animationElapsed) const
 {
     if (_player) {
-        static const std::unordered_map<Player::AnimState, std::string> stateNames = {
-            {Player::AnimState::Idle,        "idle"},
-            {Player::AnimState::Walk,        "walk"},
-            {Player::AnimState::Incantation, "incantation"},
-            {Player::AnimState::Dead,        "dead"},
-            {Player::AnimState::Broadcast,   "broadcast"},
-            {Player::AnimState::LayingEgg,   "laying_egg"},
-            {Player::AnimState::LevelUp,     "level_up"},
-            {Player::AnimState::Eject,       "eject"},
-        };
-        auto nameIt = stateNames.find(state);
-        const std::string &name = (nameIt != stateNames.end()) ? nameIt->second : "idle";
         int walkIdx = getAnimIndex("walk", 0);
         int animIdx = (state == Player::AnimState::Idle)
             ? walkIdx
-            : getAnimIndex(name, walkIdx);
-        float frame = (state == Player::AnimState::Idle)
-            ? 0.0f
-            : std::fmod(GetTime() * ANIM_FPS, _player->getAnimationFrameCount(animIdx));
+            : getAnimIndex(getPlayerAnimName(state), walkIdx);
+        int frameCount = _player->getAnimationFrameCount(animIdx);
+        float frame = 0.0F;
+
+        if (state != Player::AnimState::Idle && frameCount > 0) {
+            frame = animationElapsed * ANIM_FPS;
+            if (state == Player::AnimState::Dead)
+                frame = std::min(frame, static_cast<float>(frameCount - 1));
+            else
+                frame = std::fmod(frame, static_cast<float>(frameCount));
+        }
         Vector3 translatedPos = { pos.x + _playerTranslation.x, pos.y + _playerTranslation.y, pos.z + _playerTranslation.z };
         _player->draw(translatedPos, rotationDeg, animIdx, frame, _playerScale);
         return;
     }
-    _fallback.drawPlayer(pos, rotationDeg, state);
+    _fallback.drawPlayer(pos, rotationDeg, state, animationElapsed);
 }
 
 void PackTheme::drawEgg(Vector3 pos) const
@@ -436,6 +447,18 @@ float PackTheme::getPlayerLabelHeight() const
 float PackTheme::getPlayerLabelScale() const
 {
     return _playerLabelScale;
+}
+
+float PackTheme::getPlayerAnimationDuration(Player::AnimState state) const
+{
+    if (!_player)
+        return _fallback.getPlayerAnimationDuration(state);
+
+    int walkIdx = getAnimIndex("walk", 0);
+    int animIdx = (state == Player::AnimState::Idle)
+        ? walkIdx
+        : getAnimIndex(getPlayerAnimName(state), walkIdx);
+    return static_cast<float>(_player->getAnimationFrameCount(animIdx)) / ANIM_FPS;
 }
 
 Color PackTheme::getBackgroundColor() const

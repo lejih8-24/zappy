@@ -92,12 +92,16 @@ void GameStateEventHandler::operator()(const Zappy::Networking::PlayerPosition &
 
     if (hasMoved) {
         Player::DisplayPosition start = player->second.getDisplayPosition(now);
+        float duration = getMovementDuration(_state);
         Player::DisplayPosition target = {
             getClosestWrappedTarget(start.x, event.x, _state.mapWidth),
             getClosestWrappedTarget(start.y, event.y, _state.mapHeight),
         };
 
-        player->second.startMovement(now, start, target, getMovementDuration(_state));
+        player->second.startMovement(now, start, target, duration);
+        Player::AnimState currentState = player->second.getEffectiveAnimState(now);
+        if (currentState == Player::AnimState::Idle || currentState == Player::AnimState::Walk)
+            player->second.setAnimState(Player::AnimState::Walk, now, duration);
     }
     player->second.x = event.x;
     player->second.y = event.y;
@@ -111,8 +115,7 @@ void GameStateEventHandler::operator()(const Zappy::Networking::PlayerLevel &eve
     if (player == _state.players.end())
         return;
     player->second.level = event.level;
-    player->second.animState = Player::AnimState::LevelUp;
-    player->second.animStateEndTime = GetTime() + 2.5f;
+    player->second.setAnimState(Player::AnimState::LevelUp, GetTime(), 2.5F);
 }
 
 void GameStateEventHandler::operator()(const Zappy::Networking::PlayerInventory &event)
@@ -160,8 +163,7 @@ void GameStateEventHandler::operator()(const Zappy::Networking::PlayerDie &event
     if (player == _state.players.end())
         return;
     player->second.alive = false;
-    player->second.animState = Player::AnimState::Dead;
-    player->second.animStateEndTime = 0.0f;
+    player->second.setAnimState(Player::AnimState::Dead, GetTime());
 }
 
 void GameStateEventHandler::operator()(const Zappy::Networking::EggCreate &event)
@@ -188,8 +190,7 @@ void GameStateEventHandler::operator()(const Zappy::Networking::PlayerIncantatio
     for (int id : event.playerIds) {
         auto player = _state.players.find(id);
         if (player != _state.players.end()) {
-            player->second.animState = Player::AnimState::Incantation;
-            player->second.animStateEndTime = 0.0f;
+            player->second.setAnimState(Player::AnimState::Incantation, GetTime());
         }
     }
 }
@@ -212,7 +213,7 @@ void GameStateEventHandler::operator()(const Zappy::Networking::PlayerIncantatio
     for (int id : incantation->playerIds) {
         auto player = _state.players.find(id);
         if (player != _state.players.end())
-            player->second.animState = Player::AnimState::Idle;
+            player->second.setAnimState(Player::AnimState::Idle, GetTime());
     }
 }
 
@@ -238,8 +239,7 @@ void GameStateEventHandler::operator()(const Zappy::Networking::PlayerBroadcast 
 
     if (player == _state.players.end())
         return;
-    player->second.animState = Player::AnimState::Broadcast;
-    player->second.animStateEndTime = GetTime() + 2.0f;
+    player->second.setAnimState(Player::AnimState::Broadcast, GetTime(), 2.0F);
 }
 
 void GameStateEventHandler::operator()(const Zappy::Networking::PlayerExpulsion &event)
@@ -248,8 +248,7 @@ void GameStateEventHandler::operator()(const Zappy::Networking::PlayerExpulsion 
 
     if (player == _state.players.end())
         return;
-    player->second.animState = Player::AnimState::Eject;
-    player->second.animStateEndTime = GetTime() + 1.0f;
+    player->second.setAnimState(Player::AnimState::Eject, GetTime(), 1.0F);
 }
 
 void GameStateEventHandler::operator()(const Zappy::Networking::PlayerLayEgg &event)
@@ -258,8 +257,7 @@ void GameStateEventHandler::operator()(const Zappy::Networking::PlayerLayEgg &ev
 
     if (player == _state.players.end())
         return;
-    player->second.animState = Player::AnimState::LayingEgg;
-    player->second.animStateEndTime = GetTime() + 1.5f;
+    player->second.setAnimState(Player::AnimState::LayingEgg, GetTime(), 1.5F);
 }
 
 }

@@ -96,7 +96,8 @@ void Map::drawPlayers(const GameState &state) const
         (void)id;
         Player::DisplayPosition displayPos = player.getDisplayPosition(now);
         Vector3 pos = getTilePosition(displayPos.x, displayPos.y, state, 0.0f);
-        _theme.drawPlayer(pos, player.rotationDeg, player.getEffectiveAnimState(now));
+        Player::AnimState animState = player.getEffectiveAnimState(now);
+        _theme.drawPlayer(pos, player.rotationDeg, animState, player.getAnimationElapsed(now, animState));
     }
 }
 

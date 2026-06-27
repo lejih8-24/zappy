@@ -24,6 +24,13 @@ bool Player::isMoving(float currentTime) const
     return movementEndTime > movementStartTime && currentTime < movementEndTime;
 }
 
+void Player::setAnimState(AnimState state, float currentTime, float duration)
+{
+    animState = state;
+    animStateStartTime = currentTime;
+    animStateEndTime = duration > 0.0F ? currentTime + duration : 0.0F;
+}
+
 void Player::snapDisplayPosition(int newX, int newY)
 {
     DisplayPosition position = {static_cast<float>(newX), static_cast<float>(newY)};
@@ -67,6 +74,13 @@ Player::AnimState Player::getEffectiveAnimState(float currentTime) const
         return AnimState::Idle;
     }
     return animState;
+}
+
+float Player::getAnimationElapsed(float currentTime, AnimState effectiveState) const
+{
+    if (effectiveState == AnimState::Walk && isMoving(currentTime))
+        return currentTime - movementStartTime;
+    return currentTime - animStateStartTime;
 }
 
 }
