@@ -132,7 +132,16 @@ void Zappy::Client::GuiState::teamNamesCommand(std::string_view, GuiState& state
 
 void Zappy::Client::GuiState::playerPositionCommand(std::string_view args, GuiState& state, Client& client)
 {
-    // TODO: implement
+    auto playerId = parseId(args);
+
+    if (!playerId || !state.game().players().contains(*playerId)) {
+        logger.warning() << std::string(client) << " (GUI): bad bct parameters: " << logger.escape(args, '\"') << std::endl;
+        state.queueMessage("sbp\n");
+        return;
+    }
+
+    const auto& player = state.game().players().at(*playerId);
+    state.queueMessage(Game::Event::playerPosition(player.id(), player.position(), player.orientation()));
 }
 
 void Zappy::Client::GuiState::playerLevelCommand(std::string_view args, GuiState& state, Client& client)
@@ -155,7 +164,7 @@ void Zappy::Client::GuiState::serverSetTimeCommand(std::string_view args, GuiSta
     // TODO: implement
 }
 
-std::optional<std::pair<unsigned int, unsigned int>> Zappy::Client::GuiState::parsePosition(std::string_view& str)
+std::optional<std::pair<unsigned int, unsigned int>> Zappy::Client::GuiState::parsePosition(std::string_view str)
 {
     auto wordEnd = str.find(' ');
     if (wordEnd + 1 >= str.length())
@@ -170,6 +179,21 @@ std::optional<std::pair<unsigned int, unsigned int>> Zappy::Client::GuiState::pa
     auto [ptr2, ec2] = std::from_chars(yRepr.begin(), yRepr.end(), result->second);
 
     if (ec1 != std::errc() || ec2 != std::errc())
+        return std::nullopt;
+
+    return result;
+}
+
+std::optional<int> Zappy::Client::GuiState::parseId(std::string_view str)
+{
+    if (str.empty() || str[0] != '#')
+        return std::nullopt;
+    str = str.substr(1);  // remove '#'
+
+    std::optional<int> result = 0;
+
+    auto [ptr, ec] = std::from_chars(str.begin(), str.end(), *result);
+    if (ec != std::errc())
         return std::nullopt;
 
     return result;
