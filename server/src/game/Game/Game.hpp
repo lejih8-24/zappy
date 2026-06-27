@@ -22,6 +22,8 @@
 
 namespace Zappy::Game {
     class Game {
+        using LookOffset = std::pair<int, int>(*)(int, int);
+
         static std::mt19937 s_RNG;
 
         public:
@@ -65,6 +67,7 @@ namespace Zappy::Game {
             Player* hatchEgg(std::string_view team);
 
             void playerUpdatePosition(const Player& player);
+            std::string playerLook(const Player& player);
             bool playerCollectResource(Player& player, ResourceType resource);
             bool playerDropResource(Player& player, ResourceType resource);
             bool doPlayerIncantation(const Player& initiator);
@@ -77,6 +80,8 @@ namespace Zappy::Game {
             void regenerateResources();
             void regenerateResource(ResourceType type, unsigned int amount);
             std::pair<unsigned int, unsigned int> randomTileResourcePosition() const;
+
+            LookOffset lookOffsetFnc(Orientation orientation);
 
             template <std::integral T>
             static T random(T start, std::type_identity_t<T> end)

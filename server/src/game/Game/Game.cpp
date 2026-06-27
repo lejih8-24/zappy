@@ -32,6 +32,7 @@ void Zappy::Game::Game::update(std::chrono::nanoseconds dt)
 
     if (m_TimeSinceResourceRespawn >= RESOURCE_RESPAWN_DELAY / m_GameSpeed) {
         regenerateResources();
+        m_TimeSinceResourceRespawn = m_TimeSinceResourceRespawn.zero();
     }
 }
 
@@ -99,6 +100,51 @@ auto Zappy::Game::Game::hatchEgg(std::string_view team) -> Player*
 void Zappy::Game::Game::playerUpdatePosition(const Player& player)
 {
     m_GraphicsEvents.emplace_back(Event::playerPosition(player.id(), player.position(), player.orientation()));
+}
+
+std::string Zappy::Game::Game::playerLook(const Player& player)
+{
+    std::string result = "[";
+    auto computeOffset = lookOffsetFnc(player.orientation());
+
+    auto [mapX, mapY] = m_Map.size();
+    auto [x, y] = player.position();
+
+    for (unsigned int i = 0; i <= player.level(); i++) {
+        unsigned int limit = 2 * i + 1;
+
+        for (unsigned int j = 0; j < limit; j++) {
+            auto [offsetX, offsetY] = computeOffset(i, j);
+            std::pair<unsigned int, unsigned int> pos = {
+                (mapX + offsetX + x) % mapX,
+                (mapY + offsetY + y) % mapY,
+            };
+
+            // Check for players
+            for (const auto& [_, player] : m_Players) {
+                if (player.position() != pos)
+                    continue;
+                result += " player";
+                break;
+            }
+
+            // Check for resources
+            auto& resources = m_Map[pos];
+            for (unsigned int i = 0; i < Resources::RESOURCE_COUNT; i++) {
+                ResourceType type = static_cast<ResourceType>(i);
+                if (resources[type] == 0)
+                    continue;
+                result.append(" ").append(to_string(type));
+            }
+
+            if (i != player.level() || j != limit - 1)
+                result += ',';
+
+        }
+    }
+
+    result += " ]";
+    return result;
 }
 
 bool Zappy::Game::Game::playerCollectResource(Player& player, ResourceType type)
@@ -209,8 +255,6 @@ void Zappy::Game::Game::regenerateResources()
 
         regenerateResource(static_cast<ResourceType>(type), targetResourceAmnt - currentResourceAmount);
     }
-
-    m_TimeSinceResourceRespawn = m_TimeSinceResourceRespawn.zero();
 }
 
 void Zappy::Game::Game::regenerateResource(ResourceType type, unsigned int amount)
@@ -242,4 +286,44 @@ std::pair<unsigned int, unsigned int> Zappy::Game::Game::randomTileResourcePosit
     }
 
     return randPos;
+}
+
+/**
+ * Returns a function pointer that
+ * computes the offset of the look
+ * position based on the given orientation.
+ *
+ * North / Up:
+ * i = 0 =>                                  (-i+j;-i)
+ * i = 1 =>                       (-1+j;-i), (-i+j;-i), (-i+j;-i)
+ * i = 2 =>            (-i+j;-i), (-i+j;-i), (-i+j;-i), (-i+j;-i), (-i+j;-i)
+ * i = 3 => (-i+j;-i), (-i+j;-i), (-i+j;-i), (-i+j;-i), (-i+j;-i), (-i+j;-i), (-i+j;-i)
+ *
+ * South / Down:
+ * i = 0 =>                               (i-j;-i)
+ * i = 1 =>                     (i-j;-i), (i-j;-i), (i-j;-i)
+ * i = 2 =>           (i-j;-i), (i-j;-i), (i-j;-i), (i-j;-i), (i-j;-i)
+ * i = 3 => (i-j;-i), (i-j;-i), (i-j;-i), (i-j;-i), (i-j;-i), (i-j;-i), (i-j;-i)
+ *
+ * East / Right:
+ * i = 0 =>                               (i;-i+j)
+ * i = 1 =>                     (i;-i+j), (i;-i+j), (i;-i+j)
+ * i = 2 =>           (i;-i+j), (i;-i+j), (i;-i+j), (i;-i+j), (i;-i+j)
+ * i = 3 => (i;-i+j), (i;-i+j), (i;-i+j), (i;-i+j), (i;-i+j), (i;-i+j), (i;-i+j)
+ *
+ * West / Left:
+ * i = 0 =>                               (-i;i-j)
+ * i = 1 =>                     (-i;i-j), (-i;i-j), (-i;i-j)
+ * i = 2 =>           (-i;i-j), (-i;i-j), (-i;i-j), (-i;i-j), (-i;i-j)
+ * i = 3 => (-i;i-j), (-i;i-j), (-i;i-j), (-i;i-j), (-i;i-j), (-i;i-j), (-i;i-j)
+ */
+auto Zappy::Game::Game::lookOffsetFnc(Orientation orientation) -> LookOffset
+{
+    switch (orientation) {
+        case Orientation::NORTH: return [](int i, int j) -> std::pair<int, int> { return { -i + j, -i }; };
+        case Orientation::SOUTH: return [](int i, int j) -> std::pair<int, int> { return {  i - j,  i }; };
+        case Orientation::EAST:  return [](int i, int j) -> std::pair<int, int> { return {  i, -i + j }; };
+        case Orientation::WEST:  return [](int i, int j) -> std::pair<int, int> { return { -i,  i - j }; };
+        default: return nullptr;
+    }
 }
