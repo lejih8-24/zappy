@@ -63,6 +63,9 @@ void Zappy::Client::GuiState::postUpdate(Client& client)
     std::string command;
     if (client.readline(command))
         handleCommand(command, client);
+
+    if (hasMessages())
+        client.refresh();
 }
 
 void Zappy::Client::GuiState::handleCommand(std::string_view command, Client& client)
