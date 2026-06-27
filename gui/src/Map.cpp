@@ -10,10 +10,25 @@
 
 #include <algorithm>
 #include <array>
+#include <optional>
 #include <string>
 #include <raymath.h>
 
+// Y size of every resource model - center at half height above tile surface
 static constexpr float RESOURCE_HEIGHT = 0.20F;
+
+// Returns nullopt if worldPos is behind the camera or outside screen bounds
+static std::optional<Vector2> projectToScreen(Vector3 worldPos, Camera3D camera, Vector3 camForward)
+{
+    // dot product <= 0 means the point is behind or perpendicular to the camera
+    if (Vector3DotProduct(camForward, Vector3Subtract(worldPos, camera.position)) <= 0)
+        return {};
+    Vector2 screen = GetWorldToScreen(worldPos, camera);
+    if (screen.x < 0 || screen.x > static_cast<float>(GetScreenWidth()) ||
+        screen.y < 0 || screen.y > static_cast<float>(GetScreenHeight()))
+        return {};
+    return screen;
+}
 
 namespace GUI {
 
