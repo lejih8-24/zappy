@@ -10,12 +10,31 @@
 
 #include <algorithm>
 #include <array>
+#include <map>
 #include <optional>
 #include <string>
+#include <unordered_map>
 #include <raymath.h>
 
 // Y size of every resource model - center at half height above tile surface
 static constexpr float RESOURCE_HEIGHT = 0.20F;
+
+// Returns player_id -> stack slot index (0 = ground, 1 = above, ...).
+// Players on the same tile are sorted by ID for a stable, deterministic order.
+static std::unordered_map<int, int> buildStackIndex(const GUI::GameState &state)
+{
+    std::map<std::pair<int, int>, std::vector<int>> groups;
+    for (const auto &[id, player] : state.players)
+        groups[{player.x, player.y}].push_back(id);
+
+    std::unordered_map<int, int> index;
+    for (auto &[pos, ids] : groups) {
+        std::sort(ids.begin(), ids.end());
+        for (int i = 0; i < static_cast<int>(ids.size()); ++i)
+            index[ids[i]] = i;
+    }
+    return index;
+}
 
 // Returns nullopt if worldPos is behind the camera or outside screen bounds
 static std::optional<Vector2> projectToScreen(Vector3 worldPos, Camera3D camera, Vector3 camForward)
@@ -91,11 +110,13 @@ void Map::drawResources(const GameState &state) const
 
 void Map::drawPlayers(const GameState &state) const
 {
+    auto stackIndex = buildStackIndex(state);
+    float stackSpacing = _theme.getPlayerLabelHeight();
     float now = GetTime();
     for (const auto &[id, player] : state.players) {
-        (void)id;
+        float height = static_cast<float>(stackIndex.at(id)) * stackSpacing;
         Player::DisplayPosition displayPos = player.getDisplayPosition(now);
-        Vector3 pos = getTilePosition(displayPos.x, displayPos.y, state, 0.0f);
+        Vector3 pos = getTilePosition(displayPos.x, displayPos.y, state, height);
         Player::AnimState animState = player.getEffectiveAnimState(now);
         _theme.drawPlayer(pos, player.rotationDeg, animState, player.getAnimationElapsed(now, animState));
     }
@@ -164,11 +185,13 @@ void Map::drawResourceLabels(const GameState &state, Camera3D camera, Vector3 ca
 
 void Map::drawPlayerLabels(const GameState &state, Camera3D camera, Vector3 camForward) const
 {
+    auto stackIndex = buildStackIndex(state);
+    float stackSpacing = _theme.getPlayerLabelHeight();
     float now = GetTime();
     for (const auto &[id, player] : state.players) {
-        (void)id;
+        float height = static_cast<float>(stackIndex.at(id)) * stackSpacing + stackSpacing;
         Player::DisplayPosition displayPos = player.getDisplayPosition(now);
-        Vector3 labelPos = getTilePosition(displayPos.x, displayPos.y, state, _theme.getPlayerLabelHeight());
+        Vector3 labelPos = getTilePosition(displayPos.x, displayPos.y, state, height);
 
         auto screenPos = projectToScreen(labelPos, camera, camForward);
         if (!screenPos)
@@ -189,8 +212,10 @@ void Map::drawPlayerLabels(const GameState &state, Camera3D camera, Vector3 camF
 
 Vector3 Map::getPlayerWorldPos(const Player &player, const GameState &state) const
 {
+    auto stackIndex = buildStackIndex(state);
+    float height = static_cast<float>(stackIndex.at(player.id)) * _theme.getPlayerLabelHeight();
     Player::DisplayPosition displayPos = player.getDisplayPosition(GetTime());
-    return getTilePosition(displayPos.x, displayPos.y, state, 0.0f);
+    return getTilePosition(displayPos.x, displayPos.y, state, height);
 }
 
 void Map::drawLabels(const GameState &state, Camera3D camera) const
