@@ -39,6 +39,16 @@ namespace Zappy::Client {
             static void rightCommand(PlayerRunState& state, Client& client, Game::Game& game);
             static void leftCommand(PlayerRunState& state, Client& client, Game::Game& game);
 
+            static void lookCommand(PlayerRunState& state, Client& client, Game::Game& game);
+            static void inventoryCommand(PlayerRunState& state, Client& client, Game::Game& game);
+            static void broadcastCommand(PlayerRunState& state, Client& client, Game::Game& game);
+
             static void connectNbrCommand(PlayerRunState& state, Client& client, Game::Game& game);
+
+            static void forkCommand(PlayerRunState& state, Client& client, Game::Game& game);
+            static void ejectCommand(PlayerRunState& state, Client& client, Game::Game& game);
+
+            static void takeCommand(PlayerRunState& state, Client& client, Game::Game& game);
+            static void incantationCommand(PlayerRunState& state, Client& client, Game::Game& game);
     };
 }

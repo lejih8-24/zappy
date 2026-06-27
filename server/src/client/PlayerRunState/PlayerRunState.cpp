@@ -15,10 +15,17 @@
 
 
 const std::unordered_map<std::string_view, Zappy::Client::PlayerRunState::CommandHandler> Zappy::Client::PlayerRunState::COMMAND_HANDLERS = {
-    { "forward", forwardCommand },
-    { "right",   rightCommand },
-    { "left",    leftCommand },
+    { "forward",     forwardCommand },
+    { "right",       rightCommand },
+    { "left",        leftCommand },
+    { "look",        lookCommand },
+    { "inventory",   lookCommand },
+    { "broadcast",   lookCommand },
     { "connect_nbr", connectNbrCommand },
+    { "fork",        forkCommand },
+    { "eject",       ejectCommand },
+    { "take",        takeCommand },
+    { "incantation", incantationCommand },
 };
 
 
@@ -113,9 +120,45 @@ void Zappy::Client::PlayerRunState::leftCommand(PlayerRunState& state, Client& c
     state.m_Cooldown = 7'000.0ms / game.gameSpeed();
 }
 
+void Zappy::Client::PlayerRunState::lookCommand(PlayerRunState& state, Client& client, Game::Game& game)
+{
+    // TODO: implement
+}
+
+void Zappy::Client::PlayerRunState::inventoryCommand(PlayerRunState& state, Client& client, Game::Game& game)
+{
+
+    // TODO: implement
+}
+
+void Zappy::Client::PlayerRunState::broadcastCommand(PlayerRunState& state, Client& client, Game::Game& game)
+{
+    // TODO: implement
+}
+
 void Zappy::Client::PlayerRunState::connectNbrCommand(PlayerRunState& state, Client& client, Game::Game& game)
 {
     auto& team = game.playerTeam(state.m_Player);
 
     state.queueMessage(std::to_string(team.maxMembers - team.members) + "\n");
+}
+
+void Zappy::Client::PlayerRunState::forkCommand(PlayerRunState& state, Client& client, Game::Game& game)
+{
+    // TODO: implement
+}
+
+void Zappy::Client::PlayerRunState::ejectCommand(PlayerRunState& state, Client& client, Game::Game& game)
+{
+    // TODO: implement
+}
+
+void Zappy::Client::PlayerRunState::takeCommand(PlayerRunState& state, Client& client, Game::Game& game)
+{
+    // TODO: implement
+}
+
+void Zappy::Client::PlayerRunState::incantationCommand(PlayerRunState& state, Client& client, Game::Game& game)
+{
+    // TODO: implement
 }
