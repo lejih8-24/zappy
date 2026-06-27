@@ -17,6 +17,7 @@
 #include <random>
 #include <chrono>
 #include <span>
+#include <map>
 
 
 namespace Zappy::Game {
@@ -25,7 +26,7 @@ namespace Zappy::Game {
 
         public:
             Utils::Array2D<Resources> m_Map;
-            std::vector<Player> m_Players;
+            std::map<int, Player> m_Players;
             std::vector<Egg> m_Eggs;
             std::unordered_map<std::string, Team> m_Teams;
 
@@ -42,7 +43,7 @@ namespace Zappy::Game {
 
             // Game resources
             const Utils::Array2D<Resources>& tiles() const noexcept { return m_Map; }
-            std::span<const Player> players() const noexcept { return m_Players; }
+            const std::map<int, Player>& players() const noexcept { return m_Players; }
             std::span<const Egg> eggs() const noexcept { return m_Eggs; }
             const std::unordered_map<std::string, Team>& teams() const noexcept { return m_Teams; }
             inline std::span<const std::string> graphicsEvents() const noexcept { return m_GraphicsEvents; }
@@ -64,6 +65,8 @@ namespace Zappy::Game {
             void killPlayer(const Player& player);
 
         private:
+            Player& emplacePlayer(std::string_view team);
+
             void regenerateResources();
             void regenerateResource(ResourceType type, unsigned int amount);
             std::pair<unsigned int, unsigned int> randomTileResourcePosition() const;

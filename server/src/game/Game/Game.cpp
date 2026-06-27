@@ -85,18 +85,18 @@ auto Zappy::Game::Game::hatchEgg(std::string_view team) -> Player*
 
         auto [x, y] = it->getPosition();
 
-        auto& player = m_Players.emplace_back(team);
+        Player& player = emplacePlayer(team);
         player.moveTo(x, y);
-
         m_GraphicsEvents.emplace_back(
             Event::playerNew(
                 player.id(), player.position(),
-                static_cast<int>(player.orientation()),
+                player.orientation(),
                 player.level(), player.team()
         ));
-        m_GraphicsEvents.emplace_back(Event::eggHatch(it->id()));
 
+        m_GraphicsEvents.emplace_back(Event::eggHatch(it->id()));
         m_Eggs.erase(it);
+
         return &player;
     }
 
@@ -111,6 +111,23 @@ void Zappy::Game::Game::killPlayer(const Player& player)
     team.maxMembers--;
 
     m_GraphicsEvents.emplace_back(Event::playerDie(player.id()));
+
+    auto it = m_Players.find(player.id());
+    if (it == m_Players.end())
+        return;
+    m_Players.erase(it);
+}
+
+auto Zappy::Game::Game::emplacePlayer(std::string_view teamName) -> Player&
+{
+    Player newPlayer(teamName);
+    auto& player = m_Players[newPlayer.id()];
+    player = std::move(newPlayer);
+
+    Team& team = m_Teams.at(std::string(teamName));
+    team.members++;
+
+    return player;
 }
 
 void Zappy::Game::Game::regenerateResources()
