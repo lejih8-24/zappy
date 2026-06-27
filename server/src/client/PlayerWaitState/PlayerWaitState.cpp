@@ -11,11 +11,10 @@
 #include <zappy/game.hpp>
 
 
-Zappy::Client::PlayerWaitState::PlayerWaitState(Game::Player& player, std::chrono::duration<double, std::milli> period, std::string_view endMessage)
+Zappy::Client::PlayerWaitState::PlayerWaitState(Game::Player& player, std::chrono::duration<double, std::milli> period)
     : QueueState()
     , m_Player(player)
     , m_WaitDuration(period)
-    , m_EndMessage(endMessage)
 {
 
 }
@@ -26,9 +25,6 @@ void Zappy::Client::PlayerWaitState::update(Client& client, std::chrono::nanosec
 
     if (m_WaitDuration >= m_WaitDuration.zero())
         return;
-
-    if (!m_EndMessage.empty())
-        client.send(m_EndMessage);
 
     client.setState(std::make_unique<PlayerRunState>(m_Player));
 }
