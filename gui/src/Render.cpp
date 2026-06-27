@@ -42,6 +42,7 @@ void Render::drawHelpText() const
         "[F11] fullscreen",
         "[H] HUD",
         "[Arrows] HUD pages/scroll",
+        "[LClick] select player",
         "[X] quit",
         "[ESC] lock camera/settings",
     };
