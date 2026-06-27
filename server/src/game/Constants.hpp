@@ -14,7 +14,9 @@
 
 namespace Zappy::Game {
     inline constexpr unsigned char MAX_PLAYER_LEVEL = 8;
+    inline constexpr Resources::Quantity INITIAL_PLAYER_FOOD = 10;
 
+    inline constexpr std::chrono::duration<double, std::milli> FOOD_ALIVE_TIME { 126'000 };  // 126 sec
     inline constexpr std::chrono::duration<double, std::milli> RESOURCE_RESPAWN_DELAY { 20'000 };
 
     /**
