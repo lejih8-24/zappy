@@ -220,6 +220,7 @@ PackTheme::PackTheme(std::string_view packName)
             Vector3 rot = parseRotation(packName, "playerRotation");
             if (rot.x != 0 || rot.y != 0 || rot.z != 0)
                 _player->applyRotation(rot.x, rot.y, rot.z);
+            _playerTranslation = parseRotation(packName, "playerTranslation");
         } catch (...) {
             _player = nullptr;
         }
@@ -308,7 +309,8 @@ void PackTheme::drawPlayer(Vector3 pos, float rotationDeg, Player::AnimState sta
         float frame = (state == Player::AnimState::Idle)
             ? 0.0f
             : std::fmod(GetTime() * ANIM_FPS, _player->getAnimationFrameCount(animIdx));
-        _player->draw(pos, rotationDeg, animIdx, frame, _playerScale);
+        Vector3 translatedPos = { pos.x + _playerTranslation.x, pos.y + _playerTranslation.y, pos.z + _playerTranslation.z };
+        _player->draw(translatedPos, rotationDeg, animIdx, frame, _playerScale);
         return;
     }
     _fallback.drawPlayer(pos, rotationDeg, state);
