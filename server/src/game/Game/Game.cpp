@@ -126,6 +126,9 @@ bool Zappy::Game::Game::doPlayerIncantation(const Player& initiator)
     if (involvedPlayers.size() < requirements.players)
         return false;
 
+    // TODO: ensure pic level is current and not next level
+    m_GraphicsEvents.emplace_back(Event::playerIncantationStart(initiator.position(), initiator.level(), involvedPlayers));
+
     // Consume the ritual's resources and level up
     // all involved players
     availableResources -= requirements.resources;

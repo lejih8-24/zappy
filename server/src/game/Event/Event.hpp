@@ -9,11 +9,13 @@
 #pragma once
 
 #include <string>
+#include <span>
 
 
 namespace Zappy::Game {
     enum class Orientation;
     struct Resources;
+    class Player;
 
     class Event {
         public:
@@ -24,6 +26,8 @@ namespace Zappy::Game {
 
             static std::string playerNew(int playerId, std::pair<unsigned int, unsigned int> pos, Orientation orientation, int level, std::string_view team);
             static std::string playerDie(int playerId);
+            static std::string playerIncantationStart(std::pair<unsigned int, unsigned int> pos, unsigned int level, std::span<Player*> players);
+            static std::string playerIncantationStart(std::pair<unsigned int, unsigned int> pos, unsigned int level, std::string_view playerIds);
 
             static std::string eggNew(int eggId, int playerId, std::pair<unsigned int, unsigned int> pos);
             static std::string eggHatch(int eggId);

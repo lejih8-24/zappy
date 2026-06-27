@@ -53,6 +53,25 @@ std::string Zappy::Game::Event::playerDie(int playerId)
     return "pdi #" + std::to_string(playerId) + "\n";
 }
 
+std::string Zappy::Game::Event::playerIncantationStart(std::pair<unsigned int, unsigned int> pos, unsigned int level, std::span<Player*> players)
+{
+    std::string ids;
+
+    for (auto player : players) {
+        ids += std::to_string(player->id()) + " ";
+    }
+
+    return playerIncantationStart(pos, level, ids);
+}
+
+std::string Zappy::Game::Event::playerIncantationStart(std::pair<unsigned int, unsigned int> pos, unsigned int level, std::string_view playerIds)
+{
+    return "pic " + std::to_string(pos.first)  + " "
+                  + std::to_string(pos.second) + " "
+                  + std::to_string(level)      + " "
+                  + std::string(playerIds)     + "\n";
+}
+
 std::string Zappy::Game::Event::eggNew(int eggId, int playerId, std::pair<unsigned int, unsigned int> pos)
 {
     return "enw "s + "#" + std::to_string(eggId)    + " "
