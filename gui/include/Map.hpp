@@ -25,6 +25,8 @@ class Map {
 
     private:
         Vector3 getTilePosition(int x, int y, const GameState &state, float height = 0.0f) const;
+        void drawPlayerLabels(const GameState &state, Camera3D camera, Vector3 camForward) const;
+        void drawResourceLabels(const GameState &state, Camera3D camera, Vector3 camForward) const;
 
         ITheme &_theme;
         float _squareSize;

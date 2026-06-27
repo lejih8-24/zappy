@@ -81,10 +81,45 @@ void Map::draw(const GameState &state) const
     }
 }
 
-void Map::drawLabels(const GameState &state, Camera3D camera) const
+void Map::drawResourceLabels(const GameState &state, Camera3D camera, Vector3 camForward) const
 {
-    Vector3 camForward = Vector3Normalize(Vector3Subtract(camera.target, camera.position));
+    static constexpr float resourceOffset = 0.28F;
+    static constexpr std::array<Vector2, Zappy::Game::Resources::RESOURCE_COUNT> resourceSlots = {
+        Vector2{-1.0F, -1.0F}, Vector2{0.0F, -1.0F}, Vector2{1.0F, -1.0F},
+        Vector2{-1.0F, 0.0F},  Vector2{1.0F, 0.0F},
+        Vector2{-1.0F, 1.0F},  Vector2{0.0F, 1.0F},
+    };
 
+    for (const Tile &tile : state.tiles) {
+        std::size_t resourceIndex = 0;
+        for (unsigned int quantity : tile.resources) {
+            if (quantity > 1) {
+                Vector3 worldPos = getTilePosition(tile.x, tile.y, state, RESOURCE_HEIGHT + 0.3f);
+                worldPos.x += resourceSlots[resourceIndex].x * _squareSize * resourceOffset;
+                worldPos.z += resourceSlots[resourceIndex].y * _squareSize * resourceOffset;
+
+                if (Vector3DotProduct(camForward, Vector3Subtract(worldPos, camera.position)) > 0) {
+                    Vector2 screenPos = GetWorldToScreen(worldPos, camera);
+                    if (screenPos.x >= 0 && screenPos.x <= static_cast<float>(GetScreenWidth()) &&
+                        screenPos.y >= 0 && screenPos.y <= static_cast<float>(GetScreenHeight())) {
+                        float dist = Vector3Distance(camera.position, worldPos);
+                        int fontSize = std::clamp(static_cast<int>(80.0f / dist), 6, 16);
+                        std::string label = "x" + std::to_string(quantity);
+                        int textWidth = MeasureText(label.c_str(), fontSize);
+                        int sx = static_cast<int>(screenPos.x) - textWidth / 2;
+                        int sy = static_cast<int>(screenPos.y);
+                        DrawText(label.c_str(), sx + 1, sy + 1, fontSize, BLACK);
+                        DrawText(label.c_str(), sx, sy, fontSize, YELLOW);
+                    }
+                }
+            }
+            ++resourceIndex;
+        }
+    }
+}
+
+void Map::drawPlayerLabels(const GameState &state, Camera3D camera, Vector3 camForward) const
+{
     for (const auto &[id, player] : state.players) {
         (void)id;
         Vector3 labelPos = getTilePosition(player.x, player.y, state, _theme.getPlayerLabelHeight());
