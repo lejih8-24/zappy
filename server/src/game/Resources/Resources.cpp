@@ -11,6 +11,7 @@
 #include <sstream>
 
 
+
 /**
  * Determines if the specified
  * resource amounts are all present
@@ -78,6 +79,31 @@ Zappy::Game::Resources::operator std::string() const
     std::ostringstream repr;
     repr << *this;
     return repr.str();
+}
+
+/**
+ * Returns a resource type based
+ * on a provided string.
+ *
+ * Note:
+ * This assumes the string is all
+ * lowercase.
+ */
+auto Zappy::Game::fromString(std::string_view repr) -> std::optional<ResourceType>
+{
+    if (repr.empty())
+        return std::nullopt;
+
+    switch (repr[0]) {
+        case 'f': return repr == "food"      ? std::make_optional(ResourceType::FOOD)      : std::nullopt;
+        case 'l': return repr == "linemate"  ? std::make_optional(ResourceType::LINEMATE)  : std::nullopt;
+        case 'd': return repr == "deraumere" ? std::make_optional(ResourceType::DERAUMERE) : std::nullopt;
+        case 's': return repr == "sibur"     ? std::make_optional(ResourceType::SIBUR)     : std::nullopt;
+        case 'm': return repr == "mendiane"  ? std::make_optional(ResourceType::MENDIANE)  : std::nullopt;
+        case 'p': return repr == "phiras"    ? std::make_optional(ResourceType::PHIRAS)    : std::nullopt;
+        case 't': return repr == "thystame"  ? std::make_optional(ResourceType::THYSTAME)  : std::nullopt;
+        default: return std::nullopt;
+    }
 }
 
 /**

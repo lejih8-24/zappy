@@ -10,6 +10,7 @@
 
 #include <ostream>
 #include <string>
+#include <optional>
 
 
 namespace Zappy::Game {
@@ -64,6 +65,8 @@ namespace Zappy::Game {
         inline ConstIterator cbegin() const { return begin(); }
         inline ConstIterator cend() const { return end(); }
     };
+
+    std::optional<ResourceType> fromString(std::string_view repr);
 }
 
 std::ostream& operator<<(std::ostream& stream, const Zappy::Game::Resources& resources);
