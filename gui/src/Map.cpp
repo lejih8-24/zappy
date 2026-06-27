@@ -38,6 +38,7 @@ Map::Map(ITheme &theme, float squareSize)
 {
 }
 
+// Centers the grid on the world origin so the map is symmetrical around (0,0)
 Vector3 Map::getTilePosition(int x, int y, const GameState &state, float height) const
 {
     return {
@@ -73,19 +74,11 @@ void Map::drawResources(const GameState &state) const
         Vector2{0.0F, 1.0F},   //? Thystame
     };
 
-    for (std::size_t row = 0; row < state.mapHeight; ++row) {
-        for (std::size_t col = 0; col < state.mapWidth; ++col) {
-            Vector3 pos = getTilePosition(static_cast<int>(col), static_cast<int>(row), state, -0.1f);
-            Vector3 size = { _squareSize - 0.1f, 0.2f, _squareSize - 0.1f };
-            _theme.drawTile(pos, size, (col + row) % 2 == 0);
-        }
-    }
-
     for (const Tile &tile : state.tiles) {
         std::size_t resourceIndex = 0;
-
         for (unsigned int quantity : tile.resources) {
             if (quantity > 0) {
+                // Y = half height so the model sits on the tile surface
                 Vector3 pos = getTilePosition(tile.x, tile.y, state, RESOURCE_HEIGHT / 2.0F);
                 pos.x += resourceSlots[resourceIndex].x * _squareSize * resourceOffset;
                 pos.z += resourceSlots[resourceIndex].y * _squareSize * resourceOffset;
