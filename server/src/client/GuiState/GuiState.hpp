@@ -38,5 +38,6 @@ namespace Zappy::Client {
 
             static std::optional<std::pair<unsigned int, unsigned int>> parsePosition(std::string_view str);
             static std::optional<int> parseId(std::string_view str);
+            static std::optional<int> parseValue(std::string_view str);
     };
 }

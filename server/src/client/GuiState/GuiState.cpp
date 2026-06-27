@@ -172,14 +172,23 @@ void Zappy::Client::GuiState::playerInventoryCommand(std::string_view args, GuiS
     state.queueMessage(Game::Event::playerInventory(player.id(), player.position(), player.inventory()));
 }
 
-void Zappy::Client::GuiState::serverGetTimeCommand(std::string_view args, GuiState& state, Client& client)
+void Zappy::Client::GuiState::serverGetTimeCommand(std::string_view, GuiState& state, Client&)
 {
-    // TODO: implement
+    state.queueMessage(Game::Event::serverGetTime(state.game().gameSpeed()));
 }
 
 void Zappy::Client::GuiState::serverSetTimeCommand(std::string_view args, GuiState& state, Client& client)
 {
-    // TODO: implement
+    auto newTime = parseValue(args);
+
+    if (!newTime || *newTime <= 0 || *newTime > 1'000) {
+        logger.warning() << std::string(client) << " (GUI): bad sst parameters: " << logger.escape(args, '\"') << std::endl;
+        state.queueMessage("sbp\n");
+        return;
+    }
+
+    state.game().setGameSpeed(*newTime);
+    state.queueMessage(Game::Event::serverSetTime(*newTime));
 }
 
 std::optional<std::pair<unsigned int, unsigned int>> Zappy::Client::GuiState::parsePosition(std::string_view str)
@@ -208,6 +217,11 @@ std::optional<int> Zappy::Client::GuiState::parseId(std::string_view str)
         return std::nullopt;
     str = str.substr(1);  // remove '#'
 
+    return parseValue(str);
+}
+
+std::optional<int> Zappy::Client::GuiState::parseValue(std::string_view str)
+{
     std::optional<int> result = 0;
 
     auto [ptr, ec] = std::from_chars(str.begin(), str.end(), *result);
