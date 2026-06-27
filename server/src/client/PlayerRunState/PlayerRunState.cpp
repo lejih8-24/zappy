@@ -45,6 +45,22 @@ void Zappy::Client::PlayerRunState::update(Client& client, std::chrono::nanoseco
 {
     sendQueuedMessages(client);
 
+    if (m_Player.inventory().food == 0 && m_Player.timeToLive() <= 0.0ms) {
+        if (!hasMessages())
+            client.close();
+        return;
+    }
+
+    auto ttl = m_Player.reduceTimeToLive(dt);
+    if (ttl <= 0.0ms) {
+        if (m_Player.inventory().food == 0) {
+            queueMessage("dead\n");
+            return;
+        }
+
+        game().playerFeed(m_Player);
+    }
+
     if (m_Cooldown > m_Cooldown.zero()) {
         // There are still some
         // messages queued, so skip

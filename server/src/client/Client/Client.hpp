@@ -52,6 +52,7 @@ namespace Zappy::Client {
             inline int fileno() const { return m_Socket.fileno(); }
             inline bool isOpen() const { return m_Socket.isOpen(); }
             inline void refresh() noexcept { m_Socket.refresh(); }
+            inline void close() noexcept { m_Socket.close(); }
 
         private:
             void nextState(Game::Game& game);
