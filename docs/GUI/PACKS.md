@@ -60,16 +60,20 @@ Every pack must have a `manifest.json` at its root. This is what identifies a fo
     "level_up": 5,
     "walk": 6
   },
-  "playerRotation": { "x": 0, "y": 0, "z": 0 },
   "playerScale": 1.0,
+  "playerRotation": { "x": 0, "y": 0, "z": 0 },
+  "playerTranslation": { "x": 0, "y": 0, "z": 0 },
   "playerLabelHeight": 2.5,
   "playerLabelScale": 140.0,
   "eggScale": 1.0,
   "eggRotation": { "x": 0, "y": 0, "z": 0 },
+  "eggTranslation": { "x": 0, "y": 0, "z": 0 },
   "tileScale": 1.0,
   "tileRotation": { "x": 0, "y": 0, "z": 0 },
+  "tileTranslation": { "x": 0, "y": 0, "z": 0 },
   "resourceScale": 1.0,
   "resourceRotation": { "x": 0, "y": 0, "z": 0 },
+  "resourceTranslation": { "x": 0, "y": 0, "z": 0 },
   "backgroundColor": { "r": 0, "g": 82, "b": 172 }
 }
 ```
@@ -83,6 +87,7 @@ Every pack must have a `manifest.json` at its root. This is what identifies a fo
 | `animations` | no | `{}` | - | Maps animation state names to track indices in `player.glb`. Keys: `broadcast`, `dead`, `eject`, `incantation`, `laying_egg`, `level_up`, `walk`. Any omitted state falls back to `idle` (frozen at frame 0 of the walk track). |
 | `playerRotation` | no | `{0,0,0}` | any angle | Euler angles (degrees) to correct the player model orientation. Any axis can be omitted. |
 | `playerScale` | no | 1.0 | 0.001 - 100.0 | Uniform scale applied to player models. Use when the GLB was exported at a different unit scale. |
+| `playerTranslation` | no | `{0,0,0}` | any value | World-space XYZ offset applied to the player position after scale and rotation. |
 | `playerLabelHeight` | no | 2.5 | 0.0 - 20.0 | World-space height at which the player name/level label is drawn above the model. |
 | `playerLabelScale` | no | 140.0 | 10.0 - 500.0 | Label font size factor: `fontSize = clamp(playerLabelScale / cameraDistance, 8, 22)`. Higher = readable from further away. |
 | `eggScale` | no | 1.0 | 0.000001 - 100.0 | Uniform scale applied to `egg.glb`. Use when the GLB was exported at a different unit scale. |
@@ -94,9 +99,34 @@ Every pack must have a `manifest.json` at its root. This is what identifies a fo
 | `resourceScale` | no | 1.0 | 0.000001 - 100.0 | Uniform scale applied to all resource models (`food.glb`, `linemate.glb`, etc.). |
 | `resourceRotation` | no | `{0,0,0}` | any angle | Euler angles (degrees) applied to all resource models. Any axis can be omitted. |
 | `resourceTranslation` | no | `{0,0,0}` | any value | World-space XYZ offset applied to all resource positions after scale and rotation. |
+| `food` / `linemate` / ... | no | - | - | Per-resource override block. See below. |
 | `backgroundColor` | no | `{0,82,172}` | 0-255 per channel | RGB background/sky color. Any channel can be omitted (defaults to DARKBLUE). |
 
 Values outside the listed range are silently clamped to the nearest bound. Rotation angles are unclamped (any positive or negative degree value is valid).
+
+### Per-resource overrides
+
+Each resource type can have its own config block that overrides the global `resource*` fields on a per-field basis:
+
+```json
+"food":      { "scale": 0.05, "translation": { "y": 0.5 } },
+"linemate":  { "scale": 0.03, "rotation": { "x": -90 } },
+"deraumere": { "scale": 0.04 },
+"sibur":     { "scale": 0.03 },
+"mendiane":  { "scale": 0.04 },
+"phiras":    { "scale": 0.03 },
+"thystame":  { "scale": 0.05 }
+```
+
+Each block supports the same three keys as the global fields:
+
+| Key | Global equivalent | Description |
+|---|---|---|
+| `scale` | `resourceScale` | Override uniform scale for this resource only |
+| `rotation` | `resourceRotation` | Override Euler rotation for this resource only |
+| `translation` | `resourceTranslation` | Override world-space offset for this resource only |
+
+Fallback chain per field: per-resource block > global `resource*` field > code default. Omitting a key in the per-resource block falls back to the global value, not to the code default.
 
 ## Player Animation States
 
@@ -138,11 +168,11 @@ All assets are GLB (binary glTF) files. Asset filenames are fixed:
 
 ### `green_man`
 
-A GLB pack with a player model and egg model.
+A GLB pack with a player model (7 animation tracks) and an egg model.
 
 ### `penguin`
 
-A GLB pack with a player model and egg model.
+A full GLB pack with player (7 animation tracks), egg, tile, and all 7 resource models (food, linemate, deraumere, sibur, mendiane, thystame + crystal as an extra). Background is black.
 
 ## Using a Pack
 

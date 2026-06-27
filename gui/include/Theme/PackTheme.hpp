@@ -28,7 +28,7 @@ class PackTheme : public ITheme {
         ~PackTheme();
 
         void drawTile(Vector3 pos, Vector3 size, bool isLight) const override;
-        void drawResource(std::size_t resourceIndex, Vector3 pos, float height) const override;
+        void drawResource(std::size_t resourceIndex, Vector3 pos) const override;
         void drawPlayer(Vector3 pos, float rotationDeg, Player::AnimState state) const override;
         void drawEgg(Vector3 pos) const override;
 
@@ -37,6 +37,12 @@ class PackTheme : public ITheme {
         float getPlayerLabelHeight() const override;
         float getPlayerLabelScale() const override;
         Color getBackgroundColor() const override;
+
+        struct ResourceOverride {
+            std::optional<float> scale;
+            std::optional<Matrix> correction;
+            std::optional<Vector3> translation;
+        };
 
     private:
         std::unordered_map<std::string, int> _animations;
@@ -54,10 +60,12 @@ class PackTheme : public ITheme {
         float _resourceScale = 1.0f;
         Matrix _resourceCorrection{};
         Vector3 _resourceTranslation = {0.0f, 0.0f, 0.0f};
+        std::array<ResourceOverride, 7> _resourceOverrides{};
 
         float _playerScale = 1.0f;
         float _playerLabelHeight = 2.5f;
         float _playerLabelScale = 140.0f;
+        Vector3 _playerTranslation = {0.0f, 0.0f, 0.0f};
         Color _backgroundColor = DARKBLUE;
 };
 
