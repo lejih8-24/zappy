@@ -8,14 +8,10 @@
 #include "Theme/PackTheme.hpp"
 
 #include <algorithm>
-#include <array>
 #include <cmath>
-#include <cstdint>
+#include <cstdlib>
 #include <filesystem>
-#include <fstream>
 #include <iostream>
-#include <regex>
-#include <sstream>
 #include <string>
 
 static constexpr float ANIM_FPS = 24.0f;
@@ -40,276 +36,39 @@ static const char *getPlayerAnimName(GUI::Player::AnimState state)
     return "idle";
 }
 
-// The model backend converts u32 (UNSIGNED_INT) mesh indices to u16, corrupting any index > 65535.
-// Loading such a file causes a segfault inside the skin processor.
-// We pre-check the GLB JSON chunk for componentType 5125 (UNSIGNED_INT) and refuse to
-// load the file if found, falling back to primitives instead of crashing.
-static bool glbHasU32Indices(const std::string &path)
-{
-    std::ifstream file(path, std::ios::binary);
-    if (!file)
-        return false;
-    uint32_t magic = 0, chunkLen = 0, chunkType = 0;
-    file.read(reinterpret_cast<char *>(&magic), 4);
-    if (magic != 0x46546C67u) // GLB magic: 'glTF' in little-endian ASCII
-        return false;
-    file.seekg(12); // skip 12-byte GLB header: magic(4) + version(4) + totalLength(4)
-    file.read(reinterpret_cast<char *>(&chunkLen), 4);
-    file.read(reinterpret_cast<char *>(&chunkType), 4);
-    if (chunkType != 0x4E4F534Au) // chunk type must be 'JSON' in little-endian ASCII
-        return false;
-    std::string json(chunkLen, '\0');
-    file.read(json.data(), chunkLen);
-    // 5125 = UNSIGNED_INT in the glTF accessor.componentType spec
-    return json.find("\"componentType\":5125") != std::string::npos
-        || json.find("\"componentType\": 5125") != std::string::npos;
-}
-
 static std::string resolvePath(std::string_view packName, const char *filename)
 {
     std::string path = std::string(PACKS_DIR) + std::string(packName) + "/" + filename;
     return std::filesystem::exists(path) ? path : std::string{};
 }
 
-static GUI::Vec3 parseRotation(std::string_view packName, const char *blockName)
-{
-    std::string manifestPath = std::string(PACKS_DIR) + std::string(packName) + "/manifest.json";
-    if (!std::filesystem::exists(manifestPath))
-        return {0, 0, 0};
-
-    std::ifstream file(manifestPath);
-    std::ostringstream buf;
-    buf << file.rdbuf();
-    std::string json = buf.str();
-
-    auto blockStart = json.find(std::string("\"") + blockName + "\"");
-    if (blockStart == std::string::npos)
-        return {0, 0, 0};
-    // clamp search to the {...} block so later fields with the same axis keys don't overwrite
-    auto blockOpen = json.find('{', blockStart);
-    auto blockClose = json.find('}', blockOpen);
-    if (blockOpen == std::string::npos || blockClose == std::string::npos)
-        return {0, 0, 0};
-
-    GUI::Vec3 rot = {0, 0, 0};
-    // matches `"x": 180` or `"z": -90.5`; group 1 = axis letter, group 2 = signed float
-    std::regex axis("\"([xyz])\"\\s*:\\s*(-?\\d+(?:\\.\\d+)?)");
-    std::sregex_iterator it(json.cbegin() + blockOpen, json.cbegin() + blockClose, axis);
-    std::sregex_iterator end;
-    for (; it != end; ++it) {
-        char a = (*it)[1].str()[0];
-        float v = std::stof((*it)[2].str());
-        if (a == 'x') rot.x = v;
-        else if (a == 'y') rot.y = v;
-        else if (a == 'z') rot.z = v;
-    }
-    return rot;
-}
-
-static GUI::Color parseBackgroundColor(std::string_view packName)
-{
-    std::string manifestPath = std::string(PACKS_DIR) + std::string(packName) + "/manifest.json";
-    if (!std::filesystem::exists(manifestPath))
-        return GUI::Colors::DarkBlue;
-
-    std::ifstream file(manifestPath);
-    std::ostringstream buf;
-    buf << file.rdbuf();
-    std::string json = buf.str();
-
-    auto blockStart = json.find("\"backgroundColor\"");
-    if (blockStart == std::string::npos)
-        return GUI::Colors::DarkBlue;
-    auto blockOpen = json.find('{', blockStart);
-    auto blockClose = json.find('}', blockOpen);
-    if (blockOpen == std::string::npos || blockClose == std::string::npos)
-        return GUI::Colors::DarkBlue;
-
-    GUI::Color c = GUI::Colors::DarkBlue;
-    std::regex channel("\"([rgb])\"\\s*:\\s*(\\d+)");
-    std::sregex_iterator it(json.cbegin() + blockOpen, json.cbegin() + blockClose, channel);
-    std::sregex_iterator end;
-    for (; it != end; ++it) {
-        char ch = (*it)[1].str()[0];
-        int v = std::clamp(std::stoi((*it)[2].str()), 0, 255);
-        if (ch == 'r') c.r = static_cast<unsigned char>(v);
-        else if (ch == 'g') c.g = static_cast<unsigned char>(v);
-        else if (ch == 'b') c.b = static_cast<unsigned char>(v);
-    }
-    c.a = 255;
-    return c;
-}
-
-static constexpr std::array<const char *, 7> RESOURCE_NAMES = {
-    "food", "linemate", "deraumere", "sibur", "mendiane", "phiras", "thystame"
-};
-
-static std::size_t findMatchingBrace(const std::string &json, std::size_t openPos)
-{
-    int depth = 0;
-    for (std::size_t i = openPos; i < json.size(); ++i) {
-        if (json[i] == '{') ++depth;
-        else if (json[i] == '}') { --depth; if (depth == 0) return i; }
-    }
-    return std::string::npos;
-}
-
-static std::string parseResourceBlock(const std::string &json, std::string_view resourceName)
-{
-    std::string key = std::string("\"") + std::string(resourceName) + "\"";
-    auto pos = json.find(key);
-    if (pos == std::string::npos)
-        return {};
-    auto open = json.find('{', pos + key.size());
-    if (open == std::string::npos)
-        return {};
-    auto close = findMatchingBrace(json, open);
-    if (close == std::string::npos)
-        return {};
-    return json.substr(open + 1, close - open - 1);
-}
-
-static std::unordered_map<std::string, int> parseAnimations(std::string_view packName)
-{
-    std::unordered_map<std::string, int> result;
-
-    std::string manifestPath = std::string(PACKS_DIR) + std::string(packName) + "/manifest.json";
-    if (!std::filesystem::exists(manifestPath))
-        return result;
-
-    std::ifstream file(manifestPath);
-    std::ostringstream buf;
-    buf << file.rdbuf();
-    std::string json = buf.str();
-
-    auto animStart = json.find("\"animations\"");
-    if (animStart == std::string::npos)
-        return result;
-    auto blockStart = json.find('{', animStart);
-    auto blockEnd = json.find('}', blockStart);
-    if (blockStart == std::string::npos || blockEnd == std::string::npos)
-        return result;
-
-    std::string block = json.substr(blockStart + 1, blockEnd - blockStart - 1);
-    std::regex entry("\"([^\"]+)\"\\s*:\\s*(\\d+)");
-    std::sregex_iterator it(block.begin(), block.end(), entry);
-    std::sregex_iterator end;
-    for (; it != end; ++it)
-        result[(*it)[1].str()] = std::stoi((*it)[2].str());
-
-    return result;
-}
-
-static float parseManifestFloat(std::string_view packName, const char *key, float defaultValue,
-    float minValue = -1e30f, float maxValue = 1e30f)
-{
-    // clamp the default too so a bad default can't bypass the range check
-    defaultValue = std::clamp(defaultValue, minValue, maxValue);
-
-    std::string manifestPath = std::string(PACKS_DIR) + std::string(packName) + "/manifest.json";
-    if (!std::filesystem::exists(manifestPath))
-        return defaultValue;
-
-    std::ifstream file(manifestPath);
-    std::ostringstream buf;
-    buf << file.rdbuf();
-    std::string json = buf.str();
-
-    std::regex r(std::string("\"") + key + "\"\\s*:\\s*(\\d+(?:\\.\\d+)?)");
-    std::smatch m;
-    if (std::regex_search(json, m, r))
-        return std::clamp(std::stof(m[1].str()), minValue, maxValue);
-    return defaultValue;
-}
-
-static std::array<GUI::PackTheme::ResourceOverride, 7> parseResourceOverrides(std::string_view packName)
-{
-    std::array<GUI::PackTheme::ResourceOverride, 7> result{};
-
-    std::string manifestPath = std::string(PACKS_DIR) + std::string(packName) + "/manifest.json";
-    if (!std::filesystem::exists(manifestPath))
-        return result;
-
-    std::ifstream file(manifestPath);
-    std::ostringstream buf;
-    buf << file.rdbuf();
-    std::string json = buf.str();
-
-    std::regex scaleRe("\"scale\"\\s*:\\s*(\\d+(?:\\.\\d+)?)");
-    std::regex axisRe("\"([xyz])\"\\s*:\\s*(-?\\d+(?:\\.\\d+)?)");
-
-    for (std::size_t i = 0; i < RESOURCE_NAMES.size(); ++i) {
-        std::string block = parseResourceBlock(json, RESOURCE_NAMES[i]);
-        if (block.empty())
-            continue;
-
-        std::smatch sm;
-        if (std::regex_search(block, sm, scaleRe))
-            result[i].scale = std::clamp(std::stof(sm[1].str()), 0.000001f, 100.0f);
-
-        auto parseSubBlock = [&](const char *subKey) -> std::string {
-            auto pos = block.find(std::string("\"") + subKey + "\"");
-            if (pos == std::string::npos) return {};
-            auto open = block.find('{', pos);
-            if (open == std::string::npos) return {};
-            auto close = findMatchingBrace(block, open);
-            if (close == std::string::npos) return {};
-            return block.substr(open + 1, close - open - 1);
-        };
-
-        std::string rotBlock = parseSubBlock("rotation");
-        if (!rotBlock.empty()) {
-            GUI::Vec3 rot = {0, 0, 0};
-            std::sregex_iterator it(rotBlock.begin(), rotBlock.end(), axisRe);
-            for (; it != std::sregex_iterator{}; ++it) {
-                char a = (*it)[1].str()[0];
-                float v = std::stof((*it)[2].str());
-                if (a == 'x') rot.x = v;
-                else if (a == 'y') rot.y = v;
-                else if (a == 'z') rot.z = v;
-            }
-            result[i].rotation = rot;
-        }
-
-        std::string transBlock = parseSubBlock("translation");
-        if (!transBlock.empty()) {
-            GUI::Vec3 trans = {0, 0, 0};
-            std::sregex_iterator it(transBlock.begin(), transBlock.end(), axisRe);
-            for (; it != std::sregex_iterator{}; ++it) {
-                char a = (*it)[1].str()[0];
-                float v = std::stof((*it)[2].str());
-                if (a == 'x') trans.x = v;
-                else if (a == 'y') trans.y = v;
-                else if (a == 'z') trans.z = v;
-            }
-            result[i].translation = trans;
-        }
-    }
-    return result;
-}
-
 namespace GUI {
 
 PackTheme::PackTheme(std::string_view packName)
-    : _animations(parseAnimations(packName))
-    , _playerScale(parseManifestFloat(packName, "playerScale", 1.0f, 0.001f, 100.0f))
-    , _playerLabelHeight(parseManifestFloat(packName, "playerLabelHeight", 2.5f, 0.0f, 20.0f))
-    , _playerLabelScale(parseManifestFloat(packName, "playerLabelScale", 140.0f, 10.0f, 500.0f))
-    , _backgroundColor(parseBackgroundColor(packName))
 {
     std::string packDir = std::string(PACKS_DIR) + std::string(packName);
     if (!std::filesystem::exists(packDir) || !std::filesystem::is_directory(packDir)) {
         std::cerr << "ERROR: Pack '" << packName << "' not found at " << packDir << "\n";
         std::exit(1);
     }
+
+    const PackManifest manifest(packName);
+    _animations = manifest.animations();
+    _playerScale = manifest.number("playerScale", 1.0f, 0.001f, 100.0f);
+    _playerLabelHeight = manifest.number("playerLabelHeight", 2.5f, 0.0f, 20.0f);
+    _playerLabelScale = manifest.number("playerLabelScale", 140.0f, 10.0f, 500.0f);
+    _backgroundColor = manifest.backgroundColor();
+
     std::string playerPath = resolvePath(packName, "player.glb");
-    if (!playerPath.empty() && !glbHasU32Indices(playerPath)) {
+    if (!playerPath.empty()) {
+        // CharacterModel throws on GLB files the skinning backend can't load (u32 indices),
+        // so a bad/unsupported player model just falls through to the primitive fallback.
         try {
             _player = std::make_unique<CharacterModel>(playerPath, !_animations.empty());
-            Vec3 rot = parseRotation(packName, "playerRotation");
+            Vec3 rot = manifest.rotation("playerRotation");
             if (rot.x != 0 || rot.y != 0 || rot.z != 0)
                 _player->applyRotation(rot.x, rot.y, rot.z);
-            _playerTranslation = parseRotation(packName, "playerTranslation");
+            _playerTranslation = manifest.rotation("playerTranslation");
         } catch (...) {
             _player = nullptr;
         }
@@ -318,23 +77,23 @@ PackTheme::PackTheme(std::string_view packName)
     std::string eggPath = resolvePath(packName, "egg.glb");
     if (!eggPath.empty()) {
         _egg.emplace(eggPath);
-        _eggScale = parseManifestFloat(packName, "eggScale", 1.0f, 0.000001f, 100.0f);
-        _eggRotation = parseRotation(packName, "eggRotation");
-        _eggTranslation = parseRotation(packName, "eggTranslation");
+        _eggScale = manifest.number("eggScale", 1.0f, 0.000001f, 100.0f);
+        _eggRotation = manifest.rotation("eggRotation");
+        _eggTranslation = manifest.rotation("eggTranslation");
     }
 
     std::string tilePath = resolvePath(packName, "tile.glb");
     if (!tilePath.empty()) {
         _tile.emplace(tilePath);
-        _tileScale = parseManifestFloat(packName, "tileScale", 1.0f, 0.000001f, 100.0f);
-        _tileRotation = parseRotation(packName, "tileRotation");
-        _tileTranslation = parseRotation(packName, "tileTranslation");
+        _tileScale = manifest.number("tileScale", 1.0f, 0.000001f, 100.0f);
+        _tileRotation = manifest.rotation("tileRotation");
+        _tileTranslation = manifest.rotation("tileTranslation");
     }
 
-    _resourceScale = parseManifestFloat(packName, "resourceScale", 1.0f, 0.000001f, 100.0f);
-    _resourceRotation = parseRotation(packName, "resourceRotation");
-    _resourceTranslation = parseRotation(packName, "resourceTranslation");
-    _resourceOverrides = parseResourceOverrides(packName);
+    _resourceScale = manifest.number("resourceScale", 1.0f, 0.000001f, 100.0f);
+    _resourceRotation = manifest.rotation("resourceRotation");
+    _resourceTranslation = manifest.rotation("resourceTranslation");
+    _resourceOverrides = manifest.resourceOverrides();
     for (std::size_t i = 0; i < RESOURCE_FILES.size(); ++i) {
         std::string rPath = resolvePath(packName, RESOURCE_FILES[i]);
         if (!rPath.empty())

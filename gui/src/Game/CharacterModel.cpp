@@ -10,11 +10,38 @@
 #include "raylib.h"
 #include "raymath.h"
 
+#include <cstdint>
+#include <fstream>
 #include <memory>
 #include <stdexcept>
 #include <string>
 
 static constexpr const char *DEFAULT_MODEL_PATH = PACKS_DIR "penguin/player.glb";
+
+// The model backend converts u32 (UNSIGNED_INT) mesh indices to u16, corrupting any index > 65535.
+// Loading such a file causes a segfault inside the skin processor.
+// We pre-check the GLB JSON chunk for componentType 5125 (UNSIGNED_INT) and refuse to
+// load the file if found, so callers can fall back to primitives instead of crashing.
+static bool glbHasU32Indices(const std::string &path)
+{
+    std::ifstream file(path, std::ios::binary);
+    if (!file)
+        return false;
+    uint32_t magic = 0, chunkLen = 0, chunkType = 0;
+    file.read(reinterpret_cast<char *>(&magic), 4);
+    if (magic != 0x46546C67u) // GLB magic: 'glTF' in little-endian ASCII
+        return false;
+    file.seekg(12); // skip 12-byte GLB header: magic(4) + version(4) + totalLength(4)
+    file.read(reinterpret_cast<char *>(&chunkLen), 4);
+    file.read(reinterpret_cast<char *>(&chunkType), 4);
+    if (chunkType != 0x4E4F534Au) // chunk type must be 'JSON' in little-endian ASCII
+        return false;
+    std::string json(chunkLen, '\0');
+    file.read(json.data(), chunkLen);
+    // 5125 = UNSIGNED_INT in the glTF accessor.componentType spec
+    return json.find("\"componentType\":5125") != std::string::npos
+        || json.find("\"componentType\": 5125") != std::string::npos;
+}
 
 struct GUI::CharacterModel::ModelData {
     Model model;
@@ -30,6 +57,8 @@ GUI::CharacterModel::CharacterModel() : CharacterModel(DEFAULT_MODEL_PATH)
 GUI::CharacterModel::CharacterModel(std::string_view path, bool loadAnimations)
     : _modelData(std::make_unique<ModelData>())
 {
+    if (glbHasU32Indices(std::string(path)))
+        throw std::runtime_error("model uses u32 mesh indices - unsupported by the skinning backend");
     _modelData->model = LoadModel(std::string(path).c_str());
     for (int i = 0; i < _modelData->model.meshCount; i++) {
         // raylib stores indices as u16 internally; a mesh exceeding 65535 vertices would
