@@ -7,6 +7,7 @@
 */
 
 #include "GuiState.hpp"
+#include <charconv>
 #include <zappy/client.hpp>
 #include <zappy/game.hpp>
 
@@ -46,6 +47,11 @@ void Zappy::Client::GuiState::init()
 
     for (const auto& [teamName, _] : game().teams()) {
         queueMessage(Game::Event::teamName(teamName));
+    }
+
+    for (const auto& [_, player] : game().players()) {
+        queueMessage(Game::Event::playerNew(player.id(), player.position(), player.orientation(), player.level(), player.team()));
+        queueMessage(Game::Event::playerInventory(player.id(), player.position(), player.inventory()));
     }
 
     for (const auto& egg : game().eggs()) {
@@ -92,12 +98,29 @@ void Zappy::Client::GuiState::mapSizeCommand(std::string_view, GuiState& state, 
 
 void Zappy::Client::GuiState::tileContentsCommand(std::string_view args, GuiState& state, Client& client)
 {
-    // TODO: implement
+    auto [mapX, mapY] = state.game().mapSize();
+    auto pos = parsePosition(args);
+
+    if (!pos || pos->first >= mapX || pos->second >= mapY) {
+        logger.warning() << std::string(client) << " (GUI): bad bct parameters: " << logger.escape(args, '\"') << std::endl;
+        state.queueMessage("sbp\n");
+        return;
+    }
+
+    const auto& resources = state.game().tiles().at(*pos);
+    state.queueMessage(Game::Event::tileContents(pos->first, pos->second, resources));
 }
 
-void Zappy::Client::GuiState::mapContentsCommand(std::string_view args, GuiState& state, Client& client)
+void Zappy::Client::GuiState::mapContentsCommand(std::string_view, GuiState& state, Client&)
 {
-    // TODO: implement
+    auto [mapX, mapY] = state.game().mapSize();
+
+    for (unsigned int y = 0; y < mapY; y++) {
+        for (unsigned int x = 0; x < mapX; x++) {
+            const auto& resources = state.game().tiles().at(x, y);
+            state.queueMessage(Game::Event::tileContents(x, y, resources));
+        }
+    }
 }
 
 void Zappy::Client::GuiState::teamNamesCommand(std::string_view args, GuiState& state, Client& client)
@@ -128,4 +151,24 @@ void Zappy::Client::GuiState::serverGetTimeCommand(std::string_view args, GuiSta
 void Zappy::Client::GuiState::serverSetTimeCommand(std::string_view args, GuiState& state, Client& client)
 {
     // TODO: implement
+}
+
+std::optional<std::pair<unsigned int, unsigned int>> Zappy::Client::GuiState::parsePosition(std::string_view& str)
+{
+    auto wordEnd = str.find(' ');
+    if (wordEnd + 1 >= str.length())
+        return std::nullopt;
+
+    std::string_view xRepr = str.substr(0, wordEnd);
+    std::string_view yRepr = str.substr(wordEnd + 1);
+
+    std::optional<std::pair<unsigned int, unsigned int>> result = {{ 0, 0 }};
+
+    auto [ptr1, ec1] = std::from_chars(xRepr.begin(), xRepr.end(), result->first);
+    auto [ptr2, ec2] = std::from_chars(yRepr.begin(), yRepr.end(), result->second);
+
+    if (ec1 != std::errc() || ec2 != std::errc())
+        return std::nullopt;
+
+    return result;
 }

@@ -35,5 +35,7 @@ namespace Zappy::Client {
             static void playerInventoryCommand(std::string_view args, GuiState& state, Client& client);
             static void serverGetTimeCommand(std::string_view args, GuiState& state, Client& client);
             static void serverSetTimeCommand(std::string_view args, GuiState& state, Client& client);
+
+            static std::optional<std::pair<unsigned int, unsigned int>> parsePosition(std::string_view& str);
     };
 }
