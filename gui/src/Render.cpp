@@ -97,6 +97,15 @@ void Render::draw3DScene()
     _camera.end3D();
 }
 
+void Render::drawSelectedPlayerPanel() const
+{
+    if (!_selectedPlayerId.has_value())
+        return;
+    auto it = _state.players.find(*_selectedPlayerId);
+    if (it != _state.players.end())
+        _playerInfoPanel.draw(it->second);
+}
+
 void Render::drawFrame()
 {
     _window.beginFrame(_themeManager.active().getBackgroundColor());
