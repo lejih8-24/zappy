@@ -29,9 +29,9 @@ void DefaultTheme::drawTile(Vector3 pos, Vector3 size, bool isLight) const
     DrawCubeWiresV(pos, size, BLACK);
 }
 
-void DefaultTheme::drawResource(std::size_t resourceIndex, Vector3 pos, float height) const
+void DefaultTheme::drawResource(std::size_t resourceIndex, Vector3 pos) const
 {
-    DrawCubeV(pos, { 0.32F, height, 0.32F }, RESOURCE_COLORS[resourceIndex]);
+    DrawCubeV(pos, { 0.32F, 0.20F, 0.32F }, RESOURCE_COLORS[resourceIndex]);
 }
 
 void DefaultTheme::drawPlayer(Vector3 pos, float rotationDeg, Player::AnimState state) const
