@@ -31,19 +31,31 @@ class Player : public Entity {
     public:
         enum class AnimState { Idle, Walk, Incantation, Dead, Broadcast, LayingEgg, LevelUp, Eject };
 
+        struct DisplayPosition {
+            float x = 0.0F;
+            float y = 0.0F;
+        };
+
         float rotationDeg = 0.0F;
         std::size_t level = 1;
         std::string teamName;
         Zappy::Game::Resources inventory = {};
         bool alive = true;
         AnimState animState = AnimState::Idle;
+        float animStateStartTime = 0.0F;
         float animStateEndTime = 0.0f;
+        DisplayPosition movementStart = {};
+        DisplayPosition movementTarget = {};
+        float movementStartTime = 0.0F;
+        float movementEndTime = 0.0F;
 
-        AnimState getEffectiveAnimState(float currentTime) const {
-            if (animStateEndTime > 0.0f && currentTime > animStateEndTime)
-                return AnimState::Idle;
-            return animState;
-        }
+        bool isMoving(float currentTime) const;
+        void setAnimState(AnimState state, float currentTime, float duration = 0.0F);
+        void snapDisplayPosition(int newX, int newY);
+        void startMovement(float currentTime, DisplayPosition start, DisplayPosition target, float duration);
+        DisplayPosition getDisplayPosition(float currentTime) const;
+        AnimState getEffectiveAnimState(float currentTime) const;
+        float getAnimationElapsed(float currentTime, AnimState effectiveState) const;
 
     public:
         Player(int id = 0, int x = 0, int y = 0, std::size_t level = 1, const std::string &teamName = "");

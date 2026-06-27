@@ -19,11 +19,13 @@ class ITheme {
 
         virtual void drawTile(Vector3 pos, Vector3 size, bool isLight) const = 0;
         virtual void drawResource(std::size_t resourceIndex, Vector3 pos) const = 0;
-        virtual void drawPlayer(Vector3 pos, float rotationDeg, Player::AnimState state) const = 0;
+        virtual void drawPlayer(Vector3 pos, float rotationDeg, Player::AnimState state,
+            float animationElapsed = 0.0F) const = 0;
         virtual void drawEgg(Vector3 pos) const = 0;
 
         virtual float getPlayerLabelHeight() const = 0;
         virtual float getPlayerLabelScale() const = 0;
+        virtual float getPlayerAnimationDuration(Player::AnimState state) const = 0;
         virtual Color getBackgroundColor() const = 0;
 };
 

@@ -34,10 +34,12 @@ void DefaultTheme::drawResource(std::size_t resourceIndex, Vector3 pos) const
     DrawCubeV(pos, { 0.32F, 0.20F, 0.32F }, RESOURCE_COLORS[resourceIndex]);
 }
 
-void DefaultTheme::drawPlayer(Vector3 pos, float rotationDeg, Player::AnimState state) const
+void DefaultTheme::drawPlayer(Vector3 pos, float rotationDeg, Player::AnimState state,
+    float animationElapsed) const
 {
     (void)rotationDeg;
     (void)state;
+    (void)animationElapsed;
     DrawCubeV(pos, { 0.75f, 1.1f, 0.75f }, BLUE);
 }
 
@@ -54,6 +56,12 @@ float DefaultTheme::getPlayerLabelHeight() const
 float DefaultTheme::getPlayerLabelScale() const
 {
     return 140.0f;
+}
+
+float DefaultTheme::getPlayerAnimationDuration(Player::AnimState state) const
+{
+    (void)state;
+    return 1.0F;
 }
 
 Color DefaultTheme::getBackgroundColor() const

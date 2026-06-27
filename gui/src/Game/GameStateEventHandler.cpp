@@ -25,6 +25,31 @@ static GUI::Tile &getTile(GUI::GameState &state, int x, int y)
     return *tile;
 }
 
+static float getMovementDuration(const GUI::GameState &state)
+{
+    if (state.timeUnit <= 0)
+        return 0.35F;
+    return std::max(7.0F / static_cast<float>(state.timeUnit), 0.20F);
+}
+
+static float getClosestWrappedTarget(float current, int target, std::size_t mapSize)
+{
+    if (mapSize == 0)
+        return static_cast<float>(target);
+
+    // Zappy maps wrap around: choose the closest visual target so 0 -> width - 1
+    // moves through the border instead of crossing the whole map
+    float mapSizeF = static_cast<float>(mapSize);
+    float wrappedTarget = static_cast<float>(target);
+    float delta = wrappedTarget - current;
+
+    if (delta > mapSizeF / 2.0F)
+        wrappedTarget -= mapSizeF;
+    else if (delta < -mapSizeF / 2.0F)
+        wrappedTarget += mapSizeF;
+    return wrappedTarget;
+}
+
 namespace GUI {
 
 GameStateEventHandler::GameStateEventHandler(GameState &state)
@@ -64,6 +89,25 @@ void GameStateEventHandler::operator()(const Zappy::Networking::PlayerPosition &
 
     if (player == _state.players.end())
         return;
+    bool hasMoved = player->second.x != event.x || player->second.y != event.y;
+    float now = GetTime();
+
+    if (hasMoved) {
+        // Start from the currently displayed position, not the old tile, to avoid a jump
+        // when a new ppo arrives while the previous interpolation is still running
+        Player::DisplayPosition start = player->second.getDisplayPosition(now);
+        float duration = getMovementDuration(_state);
+        Player::DisplayPosition target = {
+            getClosestWrappedTarget(start.x, event.x, _state.mapWidth),
+            getClosestWrappedTarget(start.y, event.y, _state.mapHeight),
+        };
+
+        player->second.startMovement(now, start, target, duration);
+        // Special states like Dead/Incantation/Broadcast keep priority over Walk
+        Player::AnimState currentState = player->second.getEffectiveAnimState(now);
+        if (currentState == Player::AnimState::Idle || currentState == Player::AnimState::Walk)
+            player->second.setAnimState(Player::AnimState::Walk, now, duration);
+    }
     player->second.x = event.x;
     player->second.y = event.y;
     player->second.rotationDeg = event.rotationDeg;
@@ -76,8 +120,7 @@ void GameStateEventHandler::operator()(const Zappy::Networking::PlayerLevel &eve
     if (player == _state.players.end())
         return;
     player->second.level = event.level;
-    player->second.animState = Player::AnimState::LevelUp;
-    player->second.animStateEndTime = GetTime() + 2.5f;
+    player->second.setAnimState(Player::AnimState::LevelUp, GetTime(), 2.5F);
 }
 
 void GameStateEventHandler::operator()(const Zappy::Networking::PlayerInventory &event)
@@ -86,8 +129,12 @@ void GameStateEventHandler::operator()(const Zappy::Networking::PlayerInventory 
 
     if (player == _state.players.end())
         return;
-    player->second.x = event.x;
-    player->second.y = event.y;
+    // pin (player inventory) is a state sync, not a movement event: snap if the server position differs
+    if (player->second.x != event.x || player->second.y != event.y) {
+        player->second.x = event.x;
+        player->second.y = event.y;
+        player->second.snapDisplayPosition(event.x, event.y);
+    }
     player->second.inventory = event.inventory;
 }
 
@@ -122,8 +169,7 @@ void GameStateEventHandler::operator()(const Zappy::Networking::PlayerDie &event
     if (player == _state.players.end())
         return;
     player->second.alive = false;
-    player->second.animState = Player::AnimState::Dead;
-    player->second.animStateEndTime = 0.0f;
+    player->second.setAnimState(Player::AnimState::Dead, GetTime());
 }
 
 void GameStateEventHandler::operator()(const Zappy::Networking::EggCreate &event)
@@ -150,8 +196,7 @@ void GameStateEventHandler::operator()(const Zappy::Networking::PlayerIncantatio
     for (int id : event.playerIds) {
         auto player = _state.players.find(id);
         if (player != _state.players.end()) {
-            player->second.animState = Player::AnimState::Incantation;
-            player->second.animStateEndTime = 0.0f;
+            player->second.setAnimState(Player::AnimState::Incantation, GetTime());
         }
     }
 }
@@ -174,7 +219,7 @@ void GameStateEventHandler::operator()(const Zappy::Networking::PlayerIncantatio
     for (int id : incantation->playerIds) {
         auto player = _state.players.find(id);
         if (player != _state.players.end())
-            player->second.animState = Player::AnimState::Idle;
+            player->second.setAnimState(Player::AnimState::Idle, GetTime());
     }
 }
 
@@ -200,8 +245,7 @@ void GameStateEventHandler::operator()(const Zappy::Networking::PlayerBroadcast 
 
     if (player == _state.players.end())
         return;
-    player->second.animState = Player::AnimState::Broadcast;
-    player->second.animStateEndTime = GetTime() + 2.0f;
+    player->second.setAnimState(Player::AnimState::Broadcast, GetTime(), 2.0F);
 }
 
 void GameStateEventHandler::operator()(const Zappy::Networking::PlayerExpulsion &event)
@@ -210,8 +254,7 @@ void GameStateEventHandler::operator()(const Zappy::Networking::PlayerExpulsion 
 
     if (player == _state.players.end())
         return;
-    player->second.animState = Player::AnimState::Eject;
-    player->second.animStateEndTime = GetTime() + 1.0f;
+    player->second.setAnimState(Player::AnimState::Eject, GetTime(), 1.0F);
 }
 
 void GameStateEventHandler::operator()(const Zappy::Networking::PlayerLayEgg &event)
@@ -220,8 +263,7 @@ void GameStateEventHandler::operator()(const Zappy::Networking::PlayerLayEgg &ev
 
     if (player == _state.players.end())
         return;
-    player->second.animState = Player::AnimState::LayingEgg;
-    player->second.animStateEndTime = GetTime() + 1.5f;
+    player->second.setAnimState(Player::AnimState::LayingEgg, GetTime(), 1.5F);
 }
 
 }

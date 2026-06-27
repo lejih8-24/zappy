@@ -170,9 +170,31 @@ void Render::pollServerEvents(Zappy::Networking::GraphicsClient &client)
         std::visit(handler, *event);
 }
 
+void Render::cleanupDeadPlayers()
+{
+    float now = GetTime();
+
+    for (auto player = _state.players.begin(); player != _state.players.end();) {
+        if (!player->second.alive && player->second.animState == Player::AnimState::Dead) {
+            if (player->second.animStateEndTime <= 0.0F) {
+                player->second.animStateEndTime = player->second.animStateStartTime
+                    + _themeManager.active().getPlayerAnimationDuration(Player::AnimState::Dead);
+            }
+            if (now >= player->second.animStateEndTime) {
+                if (_selectedPlayerId.has_value() && *_selectedPlayerId == player->first)
+                    _selectedPlayerId = {};
+                player = _state.players.erase(player);
+                continue;
+            }
+        }
+        ++player;
+    }
+}
+
 void Render::update(Zappy::Networking::GraphicsClient &client)
 {
     pollServerEvents(client);
+    cleanupDeadPlayers();
     handleGameInput();
     _camera.update();
 }

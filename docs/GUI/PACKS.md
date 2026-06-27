@@ -189,15 +189,23 @@ If the pack directory does not exist, the GUI prints an error and exits.
 
 ## Preparing 3D Models
 
-All models must be in GLB (binary glTF) format. If you have FBX source files, use the conversion script:
+All models must be in GLB (binary glTF) format. If you have FBX source files, use the pipeline scripts under `tools/`. See [docs/TOOLS.md](../TOOLS.md) for full usage.
 
 ```sh
-python3 tools/convert_fbx_to_glb.py <input.fbx> <output.glb>
+# Retarget Mixamo animations onto a custom rig and export a combined player.glb:
+blender --background --python tools/convert_fbx_to_glb.py -- \
+    --input-dir models/ \
+    --player-source models/player.glb \
+    --output gui/packs/<your-pack>/player.glb
+
+# Or, for Mixamo-compatible rigs (no retargeting needed):
+blender --background --python tools/combine_mixamo_fbx_to_glb.py -- \
+    --input-dir models/ \
+    --output gui/packs/<your-pack>/player.glb \
+    --fbx2gltf tools/FBX2glTF
 ```
 
-The script lives at `tools/convert_fbx_to_glb.py`. The original FBX source files are not tracked in the repository - only the converted GLBs in `models/glb/` are committed.
-
-To combine multiple single-animation GLBs into one multi-track GLB for use as `player.glb`, open them in Blender, merge the armature actions into one file, and re-export. The track order in the exported GLB determines the indices used in the manifest `animations` block.
+The track order in the exported GLB determines the indices used in the manifest `animations` block.
 
 ## Model Limitations
 
