@@ -98,6 +98,19 @@ auto Zappy::Game::Game::hatchEgg(std::string_view team) -> Player*
     return nullptr;
 }
 
+bool Zappy::Game::Game::collectResource(Player& player, ResourceType type)
+{
+    auto& resource = m_Map[player.position()][type];
+    if (resource == 0)
+        return false;
+
+    resource--;
+    player.inventory()[type]++;
+    m_GraphicsEvents.emplace_back(Event::playerCollect(player.id(), static_cast<unsigned int>(type)));
+
+    return true;
+}
+
 bool Zappy::Game::Game::doPlayerIncantation(const Player& initiator)
 {
     if (initiator.level() >= MAX_PLAYER_LEVEL)
