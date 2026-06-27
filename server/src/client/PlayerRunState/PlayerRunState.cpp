@@ -131,7 +131,6 @@ void Zappy::Client::PlayerRunState::lookCommand(std::string_view, PlayerRunState
     std::string message = game.playerLook(state.m_Player);
     state.queueMessage(message + "\n");
     state.m_Cooldown = 7'000.0ms / game.gameSpeed();
-    // TODO: implement
 }
 
 void Zappy::Client::PlayerRunState::inventoryCommand(std::string_view, PlayerRunState& state, Client& client, Game::Game& game)
