@@ -7,6 +7,7 @@
 */
 
 #include "Player.hpp"
+#include <zappy/game.hpp>
 
 
 int Zappy::Game::Player::s_NextId = 0;
@@ -31,9 +32,10 @@ Zappy::Game::Player::Player(std::string_view team)
     , m_Orientation(Orientation::NORTH)
     , m_Level(1)
     , m_Inventory{ 0 }
-    , m_TimeToLive()  // FIXME: default value
+    , m_TimeToLive(0)
 {
     s_NextId++;
+    m_Inventory.food = INITIAL_PLAYER_FOOD;
 }
 
 void Zappy::Game::Player::moveForward(std::pair<unsigned int, unsigned int> size)

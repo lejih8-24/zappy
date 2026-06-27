@@ -23,6 +23,8 @@ namespace Zappy::Game {
     };
 
     class Player {
+        using TTL = std::chrono::duration<double, std::milli>;
+
         static int s_NextId;
 
         int m_Id;
@@ -31,11 +33,15 @@ namespace Zappy::Game {
         Orientation m_Orientation;
         unsigned char m_Level;
         Resources m_Inventory;
-        std::chrono::duration<double, std::milli> m_TimeToLive;
+        TTL m_TimeToLive;
 
         public:
             Player() noexcept;
             Player(std::string_view team);
+
+            inline TTL timeToLive() const noexcept { return m_TimeToLive; }
+            inline TTL reduceTimeToLive(TTL amnt) noexcept { m_TimeToLive -= amnt; return m_TimeToLive; }
+            inline TTL addTimeToLive(TTL amnt) noexcept { m_TimeToLive += amnt; return m_TimeToLive; }
 
             std::string_view team() const noexcept { return m_TeamName; }
             inline int id() const noexcept { return m_Id; }
