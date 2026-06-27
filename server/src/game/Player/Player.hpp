@@ -11,6 +11,7 @@
 #include "../Resources/Resources.hpp"
 #include <string_view>
 #include <string>
+#include <chrono>
 
 
 namespace Zappy::Game {
@@ -30,6 +31,7 @@ namespace Zappy::Game {
         Orientation m_Orientation;
         unsigned char m_Level;
         Resources m_Inventory;
+        std::chrono::duration<double, std::milli> m_TimeToLive;
 
         public:
             Player() noexcept;

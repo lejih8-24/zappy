@@ -262,6 +262,7 @@ void Zappy::Game::Game::regenerateResource(ResourceType type, unsigned int amoun
     for (unsigned int i = 0; i < amount; i++) {
         auto tilePos = randomTileResourcePosition();
         m_Map[tilePos][type]++;
+        m_GraphicsEvents.emplace_back(Event::tileContents(tilePos.first, tilePos.second, m_Map[tilePos]));
     }
 }
 

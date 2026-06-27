@@ -19,6 +19,7 @@ Zappy::Game::Player::Player() noexcept
     , m_Orientation(Orientation::NORTH)
     , m_Level(0)
     , m_Inventory{ 0 }
+    , m_TimeToLive(0)
 {
 
 }
@@ -30,6 +31,7 @@ Zappy::Game::Player::Player(std::string_view team)
     , m_Orientation(Orientation::NORTH)
     , m_Level(1)
     , m_Inventory{ 0 }
+    , m_TimeToLive()  // FIXME: default value
 {
     s_NextId++;
 }
