@@ -147,6 +147,17 @@ std::string Zappy::Game::Game::playerLook(const Player& player)
     return result;
 }
 
+void Zappy::Game::Game::playerFeed(Player& player)
+{
+    if (player.inventory().food == 0)
+        return;
+
+    player.inventory().food--;
+    player.addTimeToLive(FOOD_ALIVE_TIME / m_GameSpeed);
+
+    m_GraphicsEvents.emplace_back(Event::playerInventory(player.id(), player.position(), player.inventory()));
+}
+
 bool Zappy::Game::Game::playerCollectResource(Player& player, ResourceType type)
 {
     auto& resource = m_Map[player.position()][type];

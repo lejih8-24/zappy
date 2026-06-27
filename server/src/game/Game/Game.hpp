@@ -68,6 +68,7 @@ namespace Zappy::Game {
 
             void playerUpdatePosition(const Player& player);
             std::string playerLook(const Player& player);
+            void playerFeed(Player& player);
             bool playerCollectResource(Player& player, ResourceType resource);
             bool playerDropResource(Player& player, ResourceType resource);
             bool doPlayerIncantation(const Player& initiator);
