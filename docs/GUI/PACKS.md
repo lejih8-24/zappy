@@ -83,6 +83,7 @@ Every pack must have a `manifest.json` at its root. This is what identifies a fo
 | `animations` | no | `{}` | - | Maps animation state names to track indices in `player.glb`. Keys: `broadcast`, `dead`, `eject`, `incantation`, `laying_egg`, `level_up`, `walk`. Any omitted state falls back to `idle` (frozen at frame 0 of the walk track). |
 | `playerRotation` | no | `{0,0,0}` | any angle | Euler angles (degrees) to correct the player model orientation. Any axis can be omitted. |
 | `playerScale` | no | 1.0 | 0.001 - 100.0 | Uniform scale applied to player models. Use when the GLB was exported at a different unit scale. |
+| `playerTranslation` | no | `{0,0,0}` | any value | World-space XYZ offset applied to the player position after scale and rotation. |
 | `playerLabelHeight` | no | 2.5 | 0.0 - 20.0 | World-space height at which the player name/level label is drawn above the model. |
 | `playerLabelScale` | no | 140.0 | 10.0 - 500.0 | Label font size factor: `fontSize = clamp(playerLabelScale / cameraDistance, 8, 22)`. Higher = readable from further away. |
 | `eggScale` | no | 1.0 | 0.000001 - 100.0 | Uniform scale applied to `egg.glb`. Use when the GLB was exported at a different unit scale. |
