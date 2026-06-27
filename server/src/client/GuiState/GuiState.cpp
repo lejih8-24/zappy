@@ -36,7 +36,7 @@ void Zappy::Client::GuiState::init()
     auto [mapX, mapY] = game().mapSize();
 
     queueMessage(Game::Event::mapSize(mapX, mapY));
-    queueMessage(Game::Event::serverGameSpeed(game().gameSpeed()));
+    queueMessage(Game::Event::serverGetTime(game().gameSpeed()));
 
     for (std::size_t y = 0; y < mapY; y++) {
         for (std::size_t x = 0; x < mapX; x++) {

@@ -37,6 +37,7 @@ namespace Zappy::Game {
             static std::string eggNew(int eggId, int playerId, std::pair<unsigned int, unsigned int> pos);
             static std::string eggHatch(int eggId);
 
-            static std::string serverGameSpeed(unsigned int speed);
+            static std::string serverGetTime(unsigned int speed);
+            static std::string serverSetTime(unsigned int speed);
     };
 }

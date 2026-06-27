@@ -122,7 +122,12 @@ std::string Zappy::Game::Event::eggHatch(int eggId)
     return "ebo #" + std::to_string(eggId) + "\n";
 }
 
-std::string Zappy::Game::Event::serverGameSpeed(unsigned int speed)
+std::string Zappy::Game::Event::serverGetTime(unsigned int speed)
 {
   return "sgt " + std::to_string(speed) + "\n";
+}
+
+std::string Zappy::Game::Event::serverSetTime(unsigned int speed)
+{
+  return "sst " + std::to_string(speed) + "\n";
 }
