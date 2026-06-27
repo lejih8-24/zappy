@@ -144,6 +144,11 @@ void Map::drawPlayerLabels(const GameState &state, Camera3D camera, Vector3 camF
     }
 }
 
+Vector3 Map::getPlayerWorldPos(const Player &player, const GameState &state) const
+{
+    return getTilePosition(player.x, player.y, state, 0.0f);
+}
+
 void Map::drawLabels(const GameState &state, Camera3D camera) const
 {
     Vector3 camForward = Vector3Normalize(Vector3Subtract(camera.target, camera.position));

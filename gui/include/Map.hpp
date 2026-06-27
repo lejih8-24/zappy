@@ -20,8 +20,8 @@ class Map {
         ~Map() = default;
 
         void draw(const GameState &state) const;
-
         void drawLabels(const GameState &state, Camera3D camera) const;
+        Vector3 getPlayerWorldPos(const Player &player, const GameState &state) const;
 
     private:
         Vector3 getTilePosition(int x, int y, const GameState &state, float height = 0.0f) const;
