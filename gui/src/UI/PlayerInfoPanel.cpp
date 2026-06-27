@@ -7,9 +7,6 @@
 
 #include "UI/PlayerInfoPanel.hpp"
 #include "Game/ResourceColors.hpp"
-#include "UI/Scale.hpp"
-
-#include "raylib.h"
 
 #include <array>
 #include <string>
@@ -35,47 +32,49 @@ static const char *animStateName(GUI::Player::AnimState state)
 
 namespace GUI {
 
-void PlayerInfoPanel::draw(const Player &player) const
+void PlayerInfoPanel::draw(const Canvas &canvas, const Player &player, float currentTime) const
 {
-    const int padding    = UI::scaleSize(12);
-    const int fontSize   = UI::scaleSize(20);
-    const int lineHeight = UI::scaleSize(26);
-    const int margin     = UI::scaleSize(16);
-    const int panelWidth = UI::scaleSize(260);
+    const int padding = canvas.scaleSize(12);
+    const int fontSize = canvas.scaleSize(20);
+    const int lineHeight = canvas.scaleSize(26);
+    const int margin = canvas.scaleSize(16);
+    const int panelWidth = canvas.scaleSize(260);
     const int panelHeight = padding * 2 + 5 * lineHeight + lineHeight / 2 + 7 * lineHeight;
     const int x = margin;
-    const int y = GetScreenHeight() - panelHeight - margin;
+    const int y = canvas.height() - panelHeight - margin;
     const int textX = x + padding;
 
-    DrawRectangle(x, y, panelWidth, panelHeight, Fade(BLACK, 0.70F));
-    DrawRectangleLines(x, y, panelWidth, panelHeight, DARKGRAY);
+    canvas.drawRectangle(x, y, panelWidth, panelHeight, canvas.fade(Colors::Black, 0.70F));
+    canvas.drawRectangleLines(x, y, panelWidth, panelHeight, Colors::DarkGray);
 
     int textY = y + padding;
 
-    DrawText(("Player #" + std::to_string(player.id)).c_str(), textX, textY, fontSize, YELLOW);
+    canvas.drawText("Player #" + std::to_string(player.id), textX, textY, fontSize, Colors::Yellow);
     textY += lineHeight;
 
-    DrawText((player.teamName + "  L" + std::to_string(player.level)).c_str(), textX, textY, fontSize, RAYWHITE);
+    canvas.drawText(player.teamName + "  L" + std::to_string(player.level), textX, textY, fontSize,
+        Colors::RayWhite);
     textY += lineHeight;
 
-    DrawText(("Pos: (" + std::to_string(player.x) + ", " + std::to_string(player.y) + ")").c_str(),
-        textX, textY, fontSize, LIGHTGRAY);
+    canvas.drawText("Pos: (" + std::to_string(player.x) + ", " + std::to_string(player.y) + ")",
+        textX, textY, fontSize, Colors::LightGray);
     textY += lineHeight;
 
-    DrawText(("Dir: " + std::to_string(static_cast<int>(player.rotationDeg)) + " deg").c_str(),
-        textX, textY, fontSize, LIGHTGRAY);
+    canvas.drawText("Dir: " + std::to_string(static_cast<int>(player.rotationDeg)) + " deg",
+        textX, textY, fontSize, Colors::LightGray);
     textY += lineHeight;
 
-    DrawText((std::string("State: ") + animStateName(player.getEffectiveAnimState(GetTime()))).c_str(),
-        textX, textY, fontSize, GREEN);
+    canvas.drawText(std::string("State: ") + animStateName(player.getEffectiveAnimState(currentTime)),
+        textX, textY, fontSize, Colors::Green);
     textY += lineHeight;
 
-    DrawLine(textX, textY + lineHeight / 4, x + panelWidth - padding, textY + lineHeight / 4, DARKGRAY);
+    canvas.drawLine(textX, textY + lineHeight / 4, x + panelWidth - padding, textY + lineHeight / 4,
+        Colors::DarkGray);
     textY += lineHeight / 2;
 
     std::size_t i = 0;
     for (unsigned int qty : player.inventory) {
-        DrawText((std::string(RESOURCE_NAMES[i]) + ": " + std::to_string(qty)).c_str(),
+        canvas.drawText(std::string(RESOURCE_NAMES[i]) + ": " + std::to_string(qty),
             textX, textY, fontSize, ResourceColors[i]);
         textY += lineHeight;
         ++i;

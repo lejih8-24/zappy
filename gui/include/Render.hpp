@@ -9,6 +9,7 @@
 
 #include "Camera.hpp"
 #include "Game/GameState.hpp"
+#include "Graphics/Canvas.hpp"
 #include "Map.hpp"
 #include "Theme/ThemeManager.hpp"
 #include "UI/Hud.hpp"
@@ -45,6 +46,7 @@ class Render {
         GameState _state;
         Window _window;
         ThemeManager _themeManager;
+        Canvas _canvas;
         Map _map;
         GameCamera _camera;
         Hud _hud;

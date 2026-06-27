@@ -17,7 +17,6 @@
 #include <regex>
 #include <sstream>
 #include <string>
-#include "raymath.h"
 
 static constexpr float ANIM_FPS = 24.0f;
 
@@ -41,8 +40,8 @@ static const char *getPlayerAnimName(GUI::Player::AnimState state)
     return "idle";
 }
 
-// raylib converts u32 (UNSIGNED_INT) mesh indices to u16, corrupting any index > 65535.
-// Calling LoadModel on such a file causes a segfault inside raylib's skin processor.
+// The model backend converts u32 (UNSIGNED_INT) mesh indices to u16, corrupting any index > 65535.
+// Loading such a file causes a segfault inside the skin processor.
 // We pre-check the GLB JSON chunk for componentType 5125 (UNSIGNED_INT) and refuse to
 // load the file if found, falling back to primitives instead of crashing.
 static bool glbHasU32Indices(const std::string &path)
@@ -72,7 +71,7 @@ static std::string resolvePath(std::string_view packName, const char *filename)
     return std::filesystem::exists(path) ? path : std::string{};
 }
 
-static Vector3 parseRotation(std::string_view packName, const char *blockName)
+static GUI::Vec3 parseRotation(std::string_view packName, const char *blockName)
 {
     std::string manifestPath = std::string(PACKS_DIR) + std::string(packName) + "/manifest.json";
     if (!std::filesystem::exists(manifestPath))
@@ -92,7 +91,7 @@ static Vector3 parseRotation(std::string_view packName, const char *blockName)
     if (blockOpen == std::string::npos || blockClose == std::string::npos)
         return {0, 0, 0};
 
-    Vector3 rot = {0, 0, 0};
+    GUI::Vec3 rot = {0, 0, 0};
     // matches `"x": 180` or `"z": -90.5`; group 1 = axis letter, group 2 = signed float
     std::regex axis("\"([xyz])\"\\s*:\\s*(-?\\d+(?:\\.\\d+)?)");
     std::sregex_iterator it(json.cbegin() + blockOpen, json.cbegin() + blockClose, axis);
@@ -107,11 +106,11 @@ static Vector3 parseRotation(std::string_view packName, const char *blockName)
     return rot;
 }
 
-static Color parseBackgroundColor(std::string_view packName)
+static GUI::Color parseBackgroundColor(std::string_view packName)
 {
     std::string manifestPath = std::string(PACKS_DIR) + std::string(packName) + "/manifest.json";
     if (!std::filesystem::exists(manifestPath))
-        return DARKBLUE;
+        return GUI::Colors::DarkBlue;
 
     std::ifstream file(manifestPath);
     std::ostringstream buf;
@@ -120,13 +119,13 @@ static Color parseBackgroundColor(std::string_view packName)
 
     auto blockStart = json.find("\"backgroundColor\"");
     if (blockStart == std::string::npos)
-        return DARKBLUE;
+        return GUI::Colors::DarkBlue;
     auto blockOpen = json.find('{', blockStart);
     auto blockClose = json.find('}', blockOpen);
     if (blockOpen == std::string::npos || blockClose == std::string::npos)
-        return DARKBLUE;
+        return GUI::Colors::DarkBlue;
 
-    Color c = DARKBLUE;
+    GUI::Color c = GUI::Colors::DarkBlue;
     std::regex channel("\"([rgb])\"\\s*:\\s*(\\d+)");
     std::sregex_iterator it(json.cbegin() + blockOpen, json.cbegin() + blockClose, channel);
     std::sregex_iterator end;
@@ -139,25 +138,6 @@ static Color parseBackgroundColor(std::string_view packName)
     }
     c.a = 255;
     return c;
-}
-
-static Matrix parseRotationMatrix(std::string_view packName, const char *blockName)
-{
-    Vector3 rot = parseRotation(packName, blockName);
-    Matrix rx = MatrixRotateX(DEG2RAD * rot.x);
-    Matrix ry = MatrixRotateY(DEG2RAD * rot.y);
-    Matrix rz = MatrixRotateZ(DEG2RAD * rot.z);
-    return MatrixMultiply(MatrixMultiply(rx, ry), rz);
-}
-
-static void drawStaticModel(const Model &model, Vector3 pos, float scale, const Matrix &correction,
-    Vector3 offset = {0.0f, 0.0f, 0.0f})
-{
-    Matrix s = MatrixScale(scale, scale, scale);
-    Matrix t = MatrixTranslate(pos.x + offset.x, pos.y + offset.y, pos.z + offset.z);
-    Matrix transform = MatrixMultiply(MatrixMultiply(s, correction), t);
-    for (int i = 0; i < model.meshCount; i++)
-        DrawMesh(model.meshes[i], model.materials[model.meshMaterial[i]], transform);
 }
 
 static constexpr std::array<const char *, 7> RESOURCE_NAMES = {
@@ -279,7 +259,7 @@ static std::array<GUI::PackTheme::ResourceOverride, 7> parseResourceOverrides(st
 
         std::string rotBlock = parseSubBlock("rotation");
         if (!rotBlock.empty()) {
-            Vector3 rot = {0, 0, 0};
+            GUI::Vec3 rot = {0, 0, 0};
             std::sregex_iterator it(rotBlock.begin(), rotBlock.end(), axisRe);
             for (; it != std::sregex_iterator{}; ++it) {
                 char a = (*it)[1].str()[0];
@@ -288,15 +268,12 @@ static std::array<GUI::PackTheme::ResourceOverride, 7> parseResourceOverrides(st
                 else if (a == 'y') rot.y = v;
                 else if (a == 'z') rot.z = v;
             }
-            Matrix rx = MatrixRotateX(DEG2RAD * rot.x);
-            Matrix ry = MatrixRotateY(DEG2RAD * rot.y);
-            Matrix rz = MatrixRotateZ(DEG2RAD * rot.z);
-            result[i].correction = MatrixMultiply(MatrixMultiply(rx, ry), rz);
+            result[i].rotation = rot;
         }
 
         std::string transBlock = parseSubBlock("translation");
         if (!transBlock.empty()) {
-            Vector3 trans = {0, 0, 0};
+            GUI::Vec3 trans = {0, 0, 0};
             std::sregex_iterator it(transBlock.begin(), transBlock.end(), axisRe);
             for (; it != std::sregex_iterator{}; ++it) {
                 char a = (*it)[1].str()[0];
@@ -315,7 +292,6 @@ namespace GUI {
 
 PackTheme::PackTheme(std::string_view packName)
     : _animations(parseAnimations(packName))
-    , _eggCorrection(MatrixIdentity())
     , _playerScale(parseManifestFloat(packName, "playerScale", 1.0f, 0.001f, 100.0f))
     , _playerLabelHeight(parseManifestFloat(packName, "playerLabelHeight", 2.5f, 0.0f, 20.0f))
     , _playerLabelScale(parseManifestFloat(packName, "playerLabelScale", 140.0f, 10.0f, 500.0f))
@@ -330,7 +306,7 @@ PackTheme::PackTheme(std::string_view packName)
     if (!playerPath.empty() && !glbHasU32Indices(playerPath)) {
         try {
             _player = std::make_unique<CharacterModel>(playerPath, !_animations.empty());
-            Vector3 rot = parseRotation(packName, "playerRotation");
+            Vec3 rot = parseRotation(packName, "playerRotation");
             if (rot.x != 0 || rot.y != 0 || rot.z != 0)
                 _player->applyRotation(rot.x, rot.y, rot.z);
             _playerTranslation = parseRotation(packName, "playerTranslation");
@@ -341,40 +317,33 @@ PackTheme::PackTheme(std::string_view packName)
 
     std::string eggPath = resolvePath(packName, "egg.glb");
     if (!eggPath.empty()) {
-        _egg = LoadModel(eggPath.c_str());
+        _egg.emplace(eggPath);
         _eggScale = parseManifestFloat(packName, "eggScale", 1.0f, 0.000001f, 100.0f);
-        _eggCorrection = parseRotationMatrix(packName, "eggRotation");
+        _eggRotation = parseRotation(packName, "eggRotation");
         _eggTranslation = parseRotation(packName, "eggTranslation");
     }
 
     std::string tilePath = resolvePath(packName, "tile.glb");
     if (!tilePath.empty()) {
-        _tile = LoadModel(tilePath.c_str());
+        _tile.emplace(tilePath);
         _tileScale = parseManifestFloat(packName, "tileScale", 1.0f, 0.000001f, 100.0f);
-        _tileCorrection = parseRotationMatrix(packName, "tileRotation");
+        _tileRotation = parseRotation(packName, "tileRotation");
         _tileTranslation = parseRotation(packName, "tileTranslation");
     }
 
     _resourceScale = parseManifestFloat(packName, "resourceScale", 1.0f, 0.000001f, 100.0f);
-    _resourceCorrection = parseRotationMatrix(packName, "resourceRotation");
+    _resourceRotation = parseRotation(packName, "resourceRotation");
     _resourceTranslation = parseRotation(packName, "resourceTranslation");
     _resourceOverrides = parseResourceOverrides(packName);
     for (std::size_t i = 0; i < RESOURCE_FILES.size(); ++i) {
         std::string rPath = resolvePath(packName, RESOURCE_FILES[i]);
         if (!rPath.empty())
-            _resources[i] = LoadModel(rPath.c_str());
+            _resources[i].emplace(rPath);
     }
 }
 
 PackTheme::~PackTheme()
 {
-    if (_egg.has_value())
-        UnloadModel(*_egg);
-    if (_tile.has_value())
-        UnloadModel(*_tile);
-    for (auto &r : _resources)
-        if (r.has_value())
-            UnloadModel(*r);
 }
 
 int PackTheme::getAnimIndex(const std::string &name, int defaultIndex) const
@@ -383,29 +352,29 @@ int PackTheme::getAnimIndex(const std::string &name, int defaultIndex) const
     return it != _animations.end() ? it->second : defaultIndex;
 }
 
-void PackTheme::drawTile(Vector3 pos, Vector3 size, bool isLight) const
+void PackTheme::drawTile(const Canvas &canvas, Vec3 pos, Vec3 size, bool isLight) const
 {
     if (_tile.has_value()) {
-        drawStaticModel(*_tile, pos, _tileScale, _tileCorrection, _tileTranslation);
+        _tile->draw(pos, _tileScale, _tileRotation, _tileTranslation);
         return;
     }
-    _fallback.drawTile(pos, size, isLight);
+    _fallback.drawTile(canvas, pos, size, isLight);
 }
 
-void PackTheme::drawResource(std::size_t resourceIndex, Vector3 pos) const
+void PackTheme::drawResource(const Canvas &canvas, std::size_t resourceIndex, Vec3 pos) const
 {
     if (resourceIndex < _resources.size() && _resources[resourceIndex].has_value()) {
         const auto &ov = _resourceOverrides[resourceIndex];
         float scale = ov.scale.value_or(_resourceScale);
-        Matrix corr = ov.correction.value_or(_resourceCorrection);
-        Vector3 trans = ov.translation.value_or(_resourceTranslation);
-        drawStaticModel(*_resources[resourceIndex], pos, scale, corr, trans);
+        Vec3 rotation = ov.rotation.value_or(_resourceRotation);
+        Vec3 trans = ov.translation.value_or(_resourceTranslation);
+        _resources[resourceIndex]->draw(pos, scale, rotation, trans);
         return;
     }
-    _fallback.drawResource(resourceIndex, pos);
+    _fallback.drawResource(canvas, resourceIndex, pos);
 }
 
-void PackTheme::drawPlayer(Vector3 pos, float rotationDeg, Player::AnimState state,
+void PackTheme::drawPlayer(const Canvas &canvas, Vec3 pos, float rotationDeg, Player::AnimState state,
     float animationElapsed) const
 {
     if (_player) {
@@ -423,20 +392,20 @@ void PackTheme::drawPlayer(Vector3 pos, float rotationDeg, Player::AnimState sta
             else
                 frame = std::fmod(frame, static_cast<float>(frameCount));
         }
-        Vector3 translatedPos = { pos.x + _playerTranslation.x, pos.y + _playerTranslation.y, pos.z + _playerTranslation.z };
+        Vec3 translatedPos = { pos.x + _playerTranslation.x, pos.y + _playerTranslation.y, pos.z + _playerTranslation.z };
         _player->draw(translatedPos, rotationDeg, animIdx, frame, _playerScale);
         return;
     }
-    _fallback.drawPlayer(pos, rotationDeg, state, animationElapsed);
+    _fallback.drawPlayer(canvas, pos, rotationDeg, state, animationElapsed);
 }
 
-void PackTheme::drawEgg(Vector3 pos) const
+void PackTheme::drawEgg(const Canvas &canvas, Vec3 pos) const
 {
     if (_egg.has_value()) {
-        drawStaticModel(*_egg, pos, _eggScale, _eggCorrection, _eggTranslation);
+        _egg->draw(pos, _eggScale, _eggRotation, _eggTranslation);
         return;
     }
-    _fallback.drawEgg(pos);
+    _fallback.drawEgg(canvas, pos);
 }
 
 float PackTheme::getPlayerLabelHeight() const

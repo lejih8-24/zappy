@@ -7,45 +7,43 @@
 
 #include "Theme/DefaultTheme.hpp"
 
-#include "raylib.h"
-
 #include <array>
 
-static constexpr std::array<Color, 7> RESOURCE_COLORS = {
-    BROWN,     // Food
-    LIGHTGRAY, // Linemate
-    VIOLET,    // Deraumere
-    YELLOW,    // Sibur
-    ORANGE,    // Mendiane
-    SKYBLUE,   // Phiras
-    MAGENTA,   // Thystame
+static constexpr std::array<GUI::Color, 7> RESOURCE_COLORS = {
+    GUI::Colors::Brown,     // Food
+    GUI::Colors::LightGray, // Linemate
+    GUI::Colors::Violet,    // Deraumere
+    GUI::Colors::Yellow,    // Sibur
+    GUI::Colors::Orange,    // Mendiane
+    GUI::Colors::SkyBlue,   // Phiras
+    GUI::Colors::Magenta,   // Thystame
 };
 
 namespace GUI {
 
-void DefaultTheme::drawTile(Vector3 pos, Vector3 size, bool isLight) const
+void DefaultTheme::drawTile(const Canvas &canvas, Vec3 pos, Vec3 size, bool isLight) const
 {
-    DrawCubeV(pos, size, isLight ? GREEN : DARKGREEN);
-    DrawCubeWiresV(pos, size, BLACK);
+    canvas.drawCube(pos, size, isLight ? Colors::Green : Colors::DarkGreen);
+    canvas.drawCubeWires(pos, size, Colors::Black);
 }
 
-void DefaultTheme::drawResource(std::size_t resourceIndex, Vector3 pos) const
+void DefaultTheme::drawResource(const Canvas &canvas, std::size_t resourceIndex, Vec3 pos) const
 {
-    DrawCubeV(pos, { 0.32F, 0.20F, 0.32F }, RESOURCE_COLORS[resourceIndex]);
+    canvas.drawCube(pos, {0.32F, 0.20F, 0.32F}, RESOURCE_COLORS[resourceIndex]);
 }
 
-void DefaultTheme::drawPlayer(Vector3 pos, float rotationDeg, Player::AnimState state,
+void DefaultTheme::drawPlayer(const Canvas &canvas, Vec3 pos, float rotationDeg, Player::AnimState state,
     float animationElapsed) const
 {
     (void)rotationDeg;
     (void)state;
     (void)animationElapsed;
-    DrawCubeV(pos, { 0.75f, 1.1f, 0.75f }, BLUE);
+    canvas.drawCube(pos, {0.75f, 1.1f, 0.75f}, Colors::Blue);
 }
 
-void DefaultTheme::drawEgg(Vector3 pos) const
+void DefaultTheme::drawEgg(const Canvas &canvas, Vec3 pos) const
 {
-    DrawSphere(pos, 0.35f, RAYWHITE);
+    canvas.drawSphere(pos, 0.35f, Colors::RayWhite);
 }
 
 float DefaultTheme::getPlayerLabelHeight() const
@@ -66,7 +64,7 @@ float DefaultTheme::getPlayerAnimationDuration(Player::AnimState state) const
 
 Color DefaultTheme::getBackgroundColor() const
 {
-    return DARKBLUE;
+    return Colors::DarkBlue;
 }
 
 }

@@ -2,15 +2,41 @@
 ** EPITECH PROJECT, 2026
 ** Project - Zappy
 ** File description:
-** Window wrapper around raylib
+** Window wrapper
 */
 
 #pragma once
 
-#include "raylib.h"
+#include "Graphics/Types.hpp"
 #include <string>
 
 namespace GUI {
+
+enum class Key {
+    Escape,
+    F11,
+    H,
+    Right,
+    Left,
+    Down,
+    Up,
+    R,
+    W,
+    A,
+    S,
+    D,
+    Space,
+    LeftControl,
+    LeftShift,
+    RightShift,
+    KeypadAdd,
+    KeypadSubtract,
+};
+
+enum class MouseButton {
+    Left,
+    Middle,
+};
 
 class Window {
     public:
@@ -22,12 +48,23 @@ class Window {
     
         bool shouldClose() const;
     
-        void beginFrame(Color background = DARKBLUE);
+        static void disableLogs();
+
+        void beginFrame(Color background = Colors::DarkBlue);
         void endFrame();
         void toggleFullscreen();
-    
-        int getWidth()  const { return GetScreenWidth();  }
-        int getHeight() const { return GetScreenHeight(); }
+
+        float now() const;
+        float frameTime() const;
+        bool isKeyPressed(Key key) const;
+        bool isKeyDown(Key key) const;
+        bool isMouseButtonPressed(MouseButton button) const;
+        bool isMouseButtonDown(MouseButton button) const;
+        Vec2 mouseDelta() const;
+        float mouseWheel() const;
+        void hideCursor() const;
+        void showCursor() const;
+        bool isCursorHidden() const;
 };
 
 }

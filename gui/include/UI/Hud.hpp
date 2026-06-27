@@ -8,8 +8,7 @@
 #pragma once
 
 #include "Game/GameState.hpp"
-#include "Window.hpp"
-#include "raylib.h"
+#include "Graphics/Canvas.hpp"
 
 #include <cstddef>
 #include <string>
@@ -32,7 +31,7 @@ class Hud {
         ~Hud() = default;
 
         void update(HudAction action);
-        void draw(const GameState &state, const Window &window);
+        void draw(const Canvas &canvas, const GameState &state, float currentTime);
 
     private:
         struct HudSegment {
@@ -48,16 +47,17 @@ class Hud {
         std::string getTeamLevels(const GameState &state, std::string_view teamName) const;
         std::string getTeamLevelMinMax(const GameState &state, std::string_view teamName) const;
         Color getTeamColor(const GameState &state, std::string_view teamName) const;
-        void addPlayerFlagSegments(HudLine &line, const Player &player) const;
+        void addPlayerFlagSegments(HudLine &line, const Player &player, float currentTime) const;
         void addOverviewLines(const GameState &state, HudLines &lines) const;
         void addTeamsLines(const GameState &state, HudLines &lines) const;
-        void addPlayersForTeam(const GameState &state, HudLines &lines, std::string_view teamName) const;
-        void addPlayersLines(const GameState &state, HudLines &lines) const;
+        void addPlayersForTeam(const GameState &state, HudLines &lines, std::string_view teamName,
+            float currentTime) const;
+        void addPlayersLines(const GameState &state, HudLines &lines, float currentTime) const;
         void addResourceLine(HudLines &lines, std::string_view name, Color color, unsigned int mapQuantity,
             unsigned int playerQuantity) const;
         void addResourcesLines(const GameState &state, HudLines &lines) const;
-        HudLines getLines(const GameState &state) const;
-        void drawLine(const HudLine &line, int x, int y, int fontSize) const;
+        HudLines getLines(const GameState &state, float currentTime) const;
+        void drawLine(const Canvas &canvas, const HudLine &line, int x, int y, int fontSize) const;
 
         bool _visible = true;
         std::size_t _page = 0;

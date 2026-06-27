@@ -8,12 +8,13 @@
 #pragma once
 
 #include "Game/Player.hpp"
+#include "Graphics/Canvas.hpp"
 
 namespace GUI {
 
 class PlayerInfoPanel {
     public:
-        void draw(const Player &player) const;
+        void draw(const Canvas &canvas, const Player &player, float currentTime) const;
 };
 
 }

@@ -10,8 +10,7 @@
 #include "Theme/ITheme.hpp"
 #include "Theme/DefaultTheme.hpp"
 #include "Game/CharacterModel.hpp"
-
-#include "raylib.h"
+#include "Game/StaticModel.hpp"
 
 #include <array>
 #include <memory>
@@ -27,11 +26,11 @@ class PackTheme : public ITheme {
         explicit PackTheme(std::string_view packName);
         ~PackTheme();
 
-        void drawTile(Vector3 pos, Vector3 size, bool isLight) const override;
-        void drawResource(std::size_t resourceIndex, Vector3 pos) const override;
-        void drawPlayer(Vector3 pos, float rotationDeg, Player::AnimState state,
+        void drawTile(const Canvas &canvas, Vec3 pos, Vec3 size, bool isLight) const override;
+        void drawResource(const Canvas &canvas, std::size_t resourceIndex, Vec3 pos) const override;
+        void drawPlayer(const Canvas &canvas, Vec3 pos, float rotationDeg, Player::AnimState state,
             float animationElapsed = 0.0F) const override;
-        void drawEgg(Vector3 pos) const override;
+        void drawEgg(const Canvas &canvas, Vec3 pos) const override;
 
         int getAnimIndex(const std::string &name, int defaultIndex = 0) const;
 
@@ -42,33 +41,33 @@ class PackTheme : public ITheme {
 
         struct ResourceOverride {
             std::optional<float> scale;
-            std::optional<Matrix> correction;
-            std::optional<Vector3> translation;
+            std::optional<Vec3> rotation;
+            std::optional<Vec3> translation;
         };
 
     private:
         std::unordered_map<std::string, int> _animations;
         DefaultTheme _fallback;
         std::unique_ptr<CharacterModel> _player;
-        std::optional<Model> _egg;
+        std::optional<StaticModel> _egg;
         float _eggScale = 1.0f;
-        Matrix _eggCorrection{};
-        Vector3 _eggTranslation = {0.0f, 0.0f, 0.0f};
-        std::optional<Model> _tile;
+        Vec3 _eggRotation = {};
+        Vec3 _eggTranslation = {};
+        std::optional<StaticModel> _tile;
         float _tileScale = 1.0f;
-        Matrix _tileCorrection{};
-        Vector3 _tileTranslation = {0.0f, 0.0f, 0.0f};
-        std::array<std::optional<Model>, 7> _resources;
+        Vec3 _tileRotation = {};
+        Vec3 _tileTranslation = {};
+        std::array<std::optional<StaticModel>, 7> _resources;
         float _resourceScale = 1.0f;
-        Matrix _resourceCorrection{};
-        Vector3 _resourceTranslation = {0.0f, 0.0f, 0.0f};
+        Vec3 _resourceRotation = {};
+        Vec3 _resourceTranslation = {};
         std::array<ResourceOverride, 7> _resourceOverrides{};
 
         float _playerScale = 1.0f;
         float _playerLabelHeight = 2.5f;
         float _playerLabelScale = 140.0f;
-        Vector3 _playerTranslation = {0.0f, 0.0f, 0.0f};
-        Color _backgroundColor = DARKBLUE;
+        Vec3 _playerTranslation = {};
+        Color _backgroundColor = Colors::DarkBlue;
 };
 
 }
