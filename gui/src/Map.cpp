@@ -47,8 +47,21 @@ Vector3 Map::getTilePosition(int x, int y, const GameState &state, float height)
     };
 }
 
-void Map::draw(const GameState &state) const
+void Map::drawTiles(const GameState &state) const
 {
+    for (std::size_t row = 0; row < state.mapHeight; ++row) {
+        for (std::size_t col = 0; col < state.mapWidth; ++col) {
+            // Y = -0.1f so the tile sits just below Y=0 where players stand
+            Vector3 pos = getTilePosition(static_cast<int>(col), static_cast<int>(row), state, -0.1f);
+            Vector3 size = { _squareSize - 0.1f, 0.2f, _squareSize - 0.1f };
+            _theme.drawTile(pos, size, (col + row) % 2 == 0);
+        }
+    }
+}
+
+void Map::drawResources(const GameState &state) const
+{
+    // Fraction of squareSize used to spread each resource slot from tile center
     static constexpr float resourceOffset = 0.28F;
     static constexpr std::array<Vector2, Zappy::Game::Resources::RESOURCE_COUNT> resourceSlots = {
         Vector2{-1.0F, -1.0F}, //? Food
