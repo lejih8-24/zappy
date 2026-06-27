@@ -14,6 +14,7 @@
   },
   "playerScale": 0.5,
   "playerRotation": { "x": 0, "y": 180, "z": 0 },
+  "playerTranslation": { "y": -0.5 },
   "playerLabelHeight": 2,
 
   "eggScale": 0.03,
