@@ -24,5 +24,5 @@
   "tileScale": 0.0016,
   "tileTranslation": { "x": -4.5, "y": -1.5, "z": -3.5},
 
-  "backgroundColor": { "r": 0, "g": 0, "b": 0 }
+  "backgroundColor": { "r": 180, "g": 180, "b": 255 }
 }

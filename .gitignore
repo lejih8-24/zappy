@@ -77,3 +77,6 @@ ai.logs
 
 # GUI build directory
 build_gui/
+
+#heavy tool
+FBX2glTF
