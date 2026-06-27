@@ -31,6 +31,7 @@ void Player::setAnimState(AnimState state, float currentTime, float duration)
     animStateEndTime = duration > 0.0F ? currentTime + duration : 0.0F;
 }
 
+// Force the rendered position to match the logical tile and cancel any interpolation
 void Player::snapDisplayPosition(int newX, int newY)
 {
     DisplayPosition position = {static_cast<float>(newX), static_cast<float>(newY)};

@@ -21,6 +21,7 @@
 - Les joueurs sont affichés en cubes.
 - Les œufs sont affichés en sphères.
 - Le centre des tuiles reste libre pour éviter les superpositions.
+- Détails animations : [ANIMATIONS.MD](ANIMATIONS.MD).
 
 ## HUD
 

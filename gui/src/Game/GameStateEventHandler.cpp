@@ -37,6 +37,8 @@ static float getClosestWrappedTarget(float current, int target, std::size_t mapS
     if (mapSize == 0)
         return static_cast<float>(target);
 
+    // Zappy maps wrap around: choose the closest visual target so 0 -> width - 1
+    // moves through the border instead of crossing the whole map
     float mapSizeF = static_cast<float>(mapSize);
     float wrappedTarget = static_cast<float>(target);
     float delta = wrappedTarget - current;
@@ -91,6 +93,8 @@ void GameStateEventHandler::operator()(const Zappy::Networking::PlayerPosition &
     float now = GetTime();
 
     if (hasMoved) {
+        // Start from the currently displayed position, not the old tile, to avoid a jump
+        // when a new ppo arrives while the previous interpolation is still running
         Player::DisplayPosition start = player->second.getDisplayPosition(now);
         float duration = getMovementDuration(_state);
         Player::DisplayPosition target = {
@@ -99,6 +103,7 @@ void GameStateEventHandler::operator()(const Zappy::Networking::PlayerPosition &
         };
 
         player->second.startMovement(now, start, target, duration);
+        // Special states like Dead/Incantation/Broadcast keep priority over Walk
         Player::AnimState currentState = player->second.getEffectiveAnimState(now);
         if (currentState == Player::AnimState::Idle || currentState == Player::AnimState::Walk)
             player->second.setAnimState(Player::AnimState::Walk, now, duration);
@@ -124,6 +129,7 @@ void GameStateEventHandler::operator()(const Zappy::Networking::PlayerInventory 
 
     if (player == _state.players.end())
         return;
+    // pin (player inventory) is a state sync, not a movement event: snap if the server position differs
     if (player->second.x != event.x || player->second.y != event.y) {
         player->second.x = event.x;
         player->second.y = event.y;
