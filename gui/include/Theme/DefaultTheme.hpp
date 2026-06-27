@@ -14,7 +14,7 @@ namespace GUI {
 class DefaultTheme : public ITheme {
     public:
         void drawTile(Vector3 pos, Vector3 size, bool isLight) const override;
-        void drawResource(std::size_t resourceIndex, Vector3 pos, float height) const override;
+        void drawResource(std::size_t resourceIndex, Vector3 pos) const override;
         void drawPlayer(Vector3 pos, float rotationDeg, Player::AnimState state) const override;
         void drawEgg(Vector3 pos) const override;
 

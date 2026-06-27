@@ -18,7 +18,7 @@
   "playerTranslation": { "y": -0.5 },
   "playerLabelHeight": 2,
 
-  "eggScale": 0.03,
+  "eggScale": 0.3,
   "eggRotation": { "x": -90 },
 
   "resourceScale": 0.01,

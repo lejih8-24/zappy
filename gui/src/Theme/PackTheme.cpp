@@ -377,7 +377,7 @@ void PackTheme::drawTile(Vector3 pos, Vector3 size, bool isLight) const
     _fallback.drawTile(pos, size, isLight);
 }
 
-void PackTheme::drawResource(std::size_t resourceIndex, Vector3 pos, float height) const
+void PackTheme::drawResource(std::size_t resourceIndex, Vector3 pos) const
 {
     if (resourceIndex < _resources.size() && _resources[resourceIndex].has_value()) {
         const auto &ov = _resourceOverrides[resourceIndex];
@@ -387,7 +387,7 @@ void PackTheme::drawResource(std::size_t resourceIndex, Vector3 pos, float heigh
         drawStaticModel(*_resources[resourceIndex], pos, scale, corr, trans);
         return;
     }
-    _fallback.drawResource(resourceIndex, pos, height);
+    _fallback.drawResource(resourceIndex, pos);
 }
 
 void PackTheme::drawPlayer(Vector3 pos, float rotationDeg, Player::AnimState state) const

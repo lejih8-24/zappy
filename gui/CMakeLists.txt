@@ -31,6 +31,7 @@ add_executable(zappy_gui
                src/Map.cpp
                src/Render.cpp
                src/UI/Hud.cpp
+               src/UI/PlayerInfoPanel.cpp
                src/Window.cpp
                src/main.cpp)
 

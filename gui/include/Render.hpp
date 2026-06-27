@@ -12,8 +12,10 @@
 #include "Map.hpp"
 #include "Theme/ThemeManager.hpp"
 #include "UI/Hud.hpp"
+#include "UI/PlayerInfoPanel.hpp"
 #include "Window.hpp"
 
+#include <optional>
 #include <string_view>
 
 namespace Zappy::Networking {
@@ -37,6 +39,7 @@ class Render {
         void drawFocusOverlay() const;
         void drawCameraLockLabel() const;
         void drawHelpText() const;
+        void drawSelectedPlayerPanel() const;
 
         GameState _state;
         Window _window;
@@ -44,6 +47,8 @@ class Render {
         Map _map;
         GameCamera _camera;
         Hud _hud;
+        PlayerInfoPanel _playerInfoPanel;
+        std::optional<int> _selectedPlayerId;
 };
 
 }

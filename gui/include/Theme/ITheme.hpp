@@ -18,7 +18,7 @@ class ITheme {
         virtual ~ITheme() = default;
 
         virtual void drawTile(Vector3 pos, Vector3 size, bool isLight) const = 0;
-        virtual void drawResource(std::size_t resourceIndex, Vector3 pos, float height) const = 0;
+        virtual void drawResource(std::size_t resourceIndex, Vector3 pos) const = 0;
         virtual void drawPlayer(Vector3 pos, float rotationDeg, Player::AnimState state) const = 0;
         virtual void drawEgg(Vector3 pos) const = 0;
 
