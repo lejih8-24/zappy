@@ -70,3 +70,10 @@ node_modules/
 
 # Config node modules
 .config/node_modules/
+
+# AI drone runtime state
+.zappy_stats/
+ai.logs
+
+# GUI build directory
+build_gui/

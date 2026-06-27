@@ -12,9 +12,17 @@
     "level_up": 5,
     "walk": 6
   },
+  "playerScale": 0.5,
+  "playerRotation": { "x": 0, "y": 180, "z": 0 },
+  "playerLabelHeight": 2,
+
   "eggScale": 0.03,
   "eggRotation": { "x": -90 },
-  "playerScale": 0.32,
-  "playerLabelHeight": 2.2,
-  "playerRotation": { "x": 0, "y": 0, "z": 0 }
+
+  "resourceScale": 0.01,
+
+  "tileScale": 0.0016,
+  "tileTranslation": { "x": -4.5, "y": -1.5, "z": -3.5},
+
+  "backgroundColor": { "r": 0, "g": 0, "b": 0 }
 }

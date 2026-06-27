@@ -92,6 +92,40 @@ static Vector3 parseRotation(std::string_view packName, const char *blockName)
     return rot;
 }
 
+static Color parseBackgroundColor(std::string_view packName)
+{
+    std::string manifestPath = std::string(PACKS_DIR) + std::string(packName) + "/manifest.json";
+    if (!std::filesystem::exists(manifestPath))
+        return DARKBLUE;
+
+    std::ifstream file(manifestPath);
+    std::ostringstream buf;
+    buf << file.rdbuf();
+    std::string json = buf.str();
+
+    auto blockStart = json.find("\"backgroundColor\"");
+    if (blockStart == std::string::npos)
+        return DARKBLUE;
+    auto blockOpen = json.find('{', blockStart);
+    auto blockClose = json.find('}', blockOpen);
+    if (blockOpen == std::string::npos || blockClose == std::string::npos)
+        return DARKBLUE;
+
+    Color c = DARKBLUE;
+    std::regex channel("\"([rgb])\"\\s*:\\s*(\\d+)");
+    std::sregex_iterator it(json.cbegin() + blockOpen, json.cbegin() + blockClose, channel);
+    std::sregex_iterator end;
+    for (; it != end; ++it) {
+        char ch = (*it)[1].str()[0];
+        int v = std::clamp(std::stoi((*it)[2].str()), 0, 255);
+        if (ch == 'r') c.r = static_cast<unsigned char>(v);
+        else if (ch == 'g') c.g = static_cast<unsigned char>(v);
+        else if (ch == 'b') c.b = static_cast<unsigned char>(v);
+    }
+    c.a = 255;
+    return c;
+}
+
 static Matrix parseRotationMatrix(std::string_view packName, const char *blockName)
 {
     Vector3 rot = parseRotation(packName, blockName);
@@ -101,10 +135,11 @@ static Matrix parseRotationMatrix(std::string_view packName, const char *blockNa
     return MatrixMultiply(MatrixMultiply(rx, ry), rz);
 }
 
-static void drawStaticModel(const Model &model, Vector3 pos, float scale, const Matrix &correction)
+static void drawStaticModel(const Model &model, Vector3 pos, float scale, const Matrix &correction,
+    Vector3 offset = {0.0f, 0.0f, 0.0f})
 {
     Matrix s = MatrixScale(scale, scale, scale);
-    Matrix t = MatrixTranslate(pos.x, pos.y, pos.z);
+    Matrix t = MatrixTranslate(pos.x + offset.x, pos.y + offset.y, pos.z + offset.z);
     Matrix transform = MatrixMultiply(MatrixMultiply(s, correction), t);
     for (int i = 0; i < model.meshCount; i++)
         DrawMesh(model.meshes[i], model.materials[model.meshMaterial[i]], transform);
@@ -171,6 +206,7 @@ PackTheme::PackTheme(std::string_view packName)
     , _playerScale(parseManifestFloat(packName, "playerScale", 1.0f, 0.001f, 100.0f))
     , _playerLabelHeight(parseManifestFloat(packName, "playerLabelHeight", 2.5f, 0.0f, 20.0f))
     , _playerLabelScale(parseManifestFloat(packName, "playerLabelScale", 140.0f, 10.0f, 500.0f))
+    , _backgroundColor(parseBackgroundColor(packName))
 {
     std::string packDir = std::string(PACKS_DIR) + std::string(packName);
     if (!std::filesystem::exists(packDir) || !std::filesystem::is_directory(packDir)) {
@@ -194,6 +230,7 @@ PackTheme::PackTheme(std::string_view packName)
         _egg = LoadModel(eggPath.c_str());
         _eggScale = parseManifestFloat(packName, "eggScale", 1.0f, 0.000001f, 100.0f);
         _eggCorrection = parseRotationMatrix(packName, "eggRotation");
+        _eggTranslation = parseRotation(packName, "eggTranslation");
     }
 
     std::string tilePath = resolvePath(packName, "tile.glb");
@@ -201,10 +238,12 @@ PackTheme::PackTheme(std::string_view packName)
         _tile = LoadModel(tilePath.c_str());
         _tileScale = parseManifestFloat(packName, "tileScale", 1.0f, 0.000001f, 100.0f);
         _tileCorrection = parseRotationMatrix(packName, "tileRotation");
+        _tileTranslation = parseRotation(packName, "tileTranslation");
     }
 
     _resourceScale = parseManifestFloat(packName, "resourceScale", 1.0f, 0.000001f, 100.0f);
     _resourceCorrection = parseRotationMatrix(packName, "resourceRotation");
+    _resourceTranslation = parseRotation(packName, "resourceTranslation");
     for (std::size_t i = 0; i < RESOURCE_FILES.size(); ++i) {
         std::string rPath = resolvePath(packName, RESOURCE_FILES[i]);
         if (!rPath.empty())
@@ -232,7 +271,7 @@ int PackTheme::getAnimIndex(const std::string &name, int defaultIndex) const
 void PackTheme::drawTile(Vector3 pos, Vector3 size, bool isLight) const
 {
     if (_tile.has_value()) {
-        drawStaticModel(*_tile, pos, _tileScale, _tileCorrection);
+        drawStaticModel(*_tile, pos, _tileScale, _tileCorrection, _tileTranslation);
         return;
     }
     _fallback.drawTile(pos, size, isLight);
@@ -241,7 +280,7 @@ void PackTheme::drawTile(Vector3 pos, Vector3 size, bool isLight) const
 void PackTheme::drawResource(std::size_t resourceIndex, Vector3 pos, float height) const
 {
     if (resourceIndex < _resources.size() && _resources[resourceIndex].has_value()) {
-        drawStaticModel(*_resources[resourceIndex], pos, _resourceScale, _resourceCorrection);
+        drawStaticModel(*_resources[resourceIndex], pos, _resourceScale, _resourceCorrection, _resourceTranslation);
         return;
     }
     _fallback.drawResource(resourceIndex, pos, height);
@@ -278,7 +317,7 @@ void PackTheme::drawPlayer(Vector3 pos, float rotationDeg, Player::AnimState sta
 void PackTheme::drawEgg(Vector3 pos) const
 {
     if (_egg.has_value()) {
-        drawStaticModel(*_egg, pos, _eggScale, _eggCorrection);
+        drawStaticModel(*_egg, pos, _eggScale, _eggCorrection, _eggTranslation);
         return;
     }
     _fallback.drawEgg(pos);
@@ -292,6 +331,11 @@ float PackTheme::getPlayerLabelHeight() const
 float PackTheme::getPlayerLabelScale() const
 {
     return _playerLabelScale;
+}
+
+Color PackTheme::getBackgroundColor() const
+{
+    return _backgroundColor;
 }
 
 }

@@ -24,6 +24,7 @@ class ITheme {
 
         virtual float getPlayerLabelHeight() const = 0;
         virtual float getPlayerLabelScale() const = 0;
+        virtual Color getBackgroundColor() const = 0;
 };
 
 }

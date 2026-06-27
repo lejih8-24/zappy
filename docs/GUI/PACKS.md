@@ -69,7 +69,8 @@ Every pack must have a `manifest.json` at its root. This is what identifies a fo
   "tileScale": 1.0,
   "tileRotation": { "x": 0, "y": 0, "z": 0 },
   "resourceScale": 1.0,
-  "resourceRotation": { "x": 0, "y": 0, "z": 0 }
+  "resourceRotation": { "x": 0, "y": 0, "z": 0 },
+  "backgroundColor": { "r": 0, "g": 82, "b": 172 }
 }
 ```
 
@@ -86,10 +87,14 @@ Every pack must have a `manifest.json` at its root. This is what identifies a fo
 | `playerLabelScale` | no | 140.0 | 10.0 - 500.0 | Label font size factor: `fontSize = clamp(playerLabelScale / cameraDistance, 8, 22)`. Higher = readable from further away. |
 | `eggScale` | no | 1.0 | 0.000001 - 100.0 | Uniform scale applied to `egg.glb`. Use when the GLB was exported at a different unit scale. |
 | `eggRotation` | no | `{0,0,0}` | any angle | Euler angles (degrees) to correct the egg model orientation. Any axis can be omitted. |
+| `eggTranslation` | no | `{0,0,0}` | any value | World-space XYZ offset applied to the egg position after scale and rotation. Useful when the model origin is not at its base. |
 | `tileScale` | no | 1.0 | 0.000001 - 100.0 | Uniform scale applied to `tile.glb`. |
 | `tileRotation` | no | `{0,0,0}` | any angle | Euler angles (degrees) to correct the tile model orientation. Any axis can be omitted. |
+| `tileTranslation` | no | `{0,0,0}` | any value | World-space XYZ offset applied to each tile position after scale and rotation. |
 | `resourceScale` | no | 1.0 | 0.000001 - 100.0 | Uniform scale applied to all resource models (`food.glb`, `linemate.glb`, etc.). |
 | `resourceRotation` | no | `{0,0,0}` | any angle | Euler angles (degrees) applied to all resource models. Any axis can be omitted. |
+| `resourceTranslation` | no | `{0,0,0}` | any value | World-space XYZ offset applied to all resource positions after scale and rotation. |
+| `backgroundColor` | no | `{0,82,172}` | 0-255 per channel | RGB background/sky color. Any channel can be omitted (defaults to DARKBLUE). |
 
 Values outside the listed range are silently clamped to the nearest bound. Rotation angles are unclamped (any positive or negative degree value is valid).
 

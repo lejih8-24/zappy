@@ -27,10 +27,10 @@ bool Window::shouldClose() const
     return WindowShouldClose();
 }
 
-void Window::beginFrame()
+void Window::beginFrame(Color background)
 {
     BeginDrawing();
-    ClearBackground(DARKBLUE);
+    ClearBackground(background);
 }
 
 void Window::endFrame()
