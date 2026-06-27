@@ -58,9 +58,6 @@ void Zappy::Server::onShutdown()
 void Zappy::Server::onClientAccepted(Client& client)
 {
     logger.info() << client.name() << ": connected" << std::endl;
-
-    using std::chrono_literals::operator ""ms;
-    m_UpdateDuration = 20'000ms / m_Game.gameSpeed();
 }
 
 void Zappy::Server::onClientDisconnected(Client& client)
@@ -80,8 +77,9 @@ void Zappy::Server::updateStart()
     m_Game.update(m_DeltaTime);
 
     using std::chrono_literals::operator ""ms;
-    if (m_UpdateDuration > 0ms)
-        m_UpdateDuration = DEFAULT_TIMEOUT / m_Game.gameSpeed();
+    m_UpdateDuration = m_Game.activePlayers() > 0
+        ? DEFAULT_TIMEOUT / m_Game.gameSpeed()
+        : -1ms;
 }
 
 void Zappy::Server::updateClient(Client& client)
@@ -89,6 +87,11 @@ void Zappy::Server::updateClient(Client& client)
     logger.debug() << "updating " << client.name() << std::endl;
 
     client.update(m_Game, m_DeltaTime);
+}
+
+void Zappy::Server::updateClientPost(Client& client)
+{
+    client.updatePost();
 }
 
 int Zappy::Server::pollTimeout(int previousTimeout)

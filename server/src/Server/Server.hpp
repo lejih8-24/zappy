@@ -55,6 +55,7 @@ namespace Zappy {
             void updateStart() override;
 
             void updateClient(Client& client) override;
+            void updateClientPost(Client& client) override;
             void onClientAccepted(Client& client) override;
             void onClientDisconnected(Client& client) override;
 
