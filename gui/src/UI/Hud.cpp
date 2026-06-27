@@ -266,7 +266,7 @@ auto Hud::getLines(const GameState &state, float currentTime) const -> HudLines
     return lines;
 }
 
-void Hud::drawLine(const Canvas &canvas, const HudLine &line, int x, int y, int fontSize) const
+void Hud::drawLine(const ICanvas &canvas, const HudLine &line, int x, int y, int fontSize) const
 {
     int textX = x;
 
@@ -276,7 +276,7 @@ void Hud::drawLine(const Canvas &canvas, const HudLine &line, int x, int y, int 
     }
 }
 
-void Hud::draw(const Canvas &canvas, const GameState &state, float currentTime)
+void Hud::draw(const ICanvas &canvas, const GameState &state, float currentTime)
 {
     if (!_visible)
         return;

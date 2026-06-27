@@ -6,11 +6,10 @@
 */
 
 #include "Graphics/Canvas.hpp"
+#include "UI/Scale.hpp"
 
 #include "raylib.h"
 
-#include <algorithm>
-#include <cmath>
 #include <string>
 
 static ::Color toRaylibColor(GUI::Color color)
@@ -37,15 +36,21 @@ int Canvas::height() const
 
 int Canvas::scaleSize(int value) const
 {
-    const float heightScale = static_cast<float>(height()) / 900.0F;
-    const float scale = std::max(1.0F, 1.0F + (heightScale - 1.0F) * 0.7F);
+    return UI::scaleSize(value, height());
+}
 
-    return static_cast<int>(std::round(static_cast<float>(value) * scale));
+// Reused across calls so passing a std::string_view to raylib's null-terminated
+// C API doesn't allocate a fresh buffer on every draw call.
+static const char *toCString(std::string_view text)
+{
+    static thread_local std::string buffer;
+    buffer.assign(text);
+    return buffer.c_str();
 }
 
 int Canvas::measureText(std::string_view text, int fontSize) const
 {
-    return MeasureText(std::string(text).c_str(), fontSize);
+    return MeasureText(toCString(text), fontSize);
 }
 
 void Canvas::drawFPS(int x, int y) const
@@ -55,7 +60,7 @@ void Canvas::drawFPS(int x, int y) const
 
 void Canvas::drawText(std::string_view text, int x, int y, int fontSize, Color color) const
 {
-    DrawText(std::string(text).c_str(), x, y, fontSize, toRaylibColor(color));
+    DrawText(toCString(text), x, y, fontSize, toRaylibColor(color));
 }
 
 void Canvas::drawLine(int startX, int startY, int endX, int endY, Color color) const

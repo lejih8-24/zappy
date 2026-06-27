@@ -34,7 +34,7 @@ Vec3 Map::getTilePosition(float x, float y, const GameState &state, float height
     };
 }
 
-void Map::drawTiles(const Canvas &canvas, const GameState &state) const
+void Map::drawTiles(const ICanvas &canvas, const GameState &state) const
 {
     for (std::size_t row = 0; row < state.mapHeight; ++row) {
         for (std::size_t col = 0; col < state.mapWidth; ++col) {
@@ -46,7 +46,7 @@ void Map::drawTiles(const Canvas &canvas, const GameState &state) const
     }
 }
 
-void Map::drawResources(const Canvas &canvas, const GameState &state) const
+void Map::drawResources(const ICanvas &canvas, const GameState &state) const
 {
     // Fraction of squareSize used to spread each resource slot from tile center
     static constexpr float resourceOffset = 0.28F;
@@ -75,7 +75,7 @@ void Map::drawResources(const Canvas &canvas, const GameState &state) const
     }
 }
 
-void Map::drawPlayers(const Canvas &canvas, const GameState &state, float currentTime) const
+void Map::drawPlayers(const ICanvas &canvas, const GameState &state, float currentTime) const
 {
     for (const auto &[id, player] : state.players) {
         (void)id;
@@ -87,7 +87,7 @@ void Map::drawPlayers(const Canvas &canvas, const GameState &state, float curren
     }
 }
 
-void Map::drawEggs(const Canvas &canvas, const GameState &state) const
+void Map::drawEggs(const ICanvas &canvas, const GameState &state) const
 {
     for (const auto &[id, egg] : state.eggs) {
         (void)id;
@@ -96,7 +96,7 @@ void Map::drawEggs(const Canvas &canvas, const GameState &state) const
     }
 }
 
-void Map::draw(const Canvas &canvas, const GameState &state, float currentTime) const
+void Map::draw(const ICanvas &canvas, const GameState &state, float currentTime) const
 {
     drawTiles(canvas, state);
     drawResources(canvas, state);
@@ -104,7 +104,7 @@ void Map::draw(const Canvas &canvas, const GameState &state, float currentTime) 
     drawEggs(canvas, state);
 }
 
-void Map::drawCountLabel(const Canvas &canvas, Vec2 screenPos, int fontSize, unsigned int quantity) const
+void Map::drawCountLabel(const ICanvas &canvas, Vec2 screenPos, int fontSize, unsigned int quantity) const
 {
     std::string label = "x" + std::to_string(quantity);
     int textWidth = canvas.measureText(label, fontSize);
@@ -114,7 +114,7 @@ void Map::drawCountLabel(const Canvas &canvas, Vec2 screenPos, int fontSize, uns
     canvas.drawText(label, sx, sy, fontSize, Colors::Yellow);
 }
 
-void Map::drawResourceLabels(const Canvas &canvas, const GameState &state, const GameCamera &camera) const
+void Map::drawResourceLabels(const ICanvas &canvas, const GameState &state, const GameCamera &camera) const
 {
     static constexpr float resourceOffset = 0.28F;
     static constexpr std::array<Vec2, Zappy::Game::Resources::RESOURCE_COUNT> resourceSlots = {
@@ -148,7 +148,7 @@ void Map::drawResourceLabels(const Canvas &canvas, const GameState &state, const
     }
 }
 
-void Map::drawPlayerLabels(const Canvas &canvas, const GameState &state, const GameCamera &camera,
+void Map::drawPlayerLabels(const ICanvas &canvas, const GameState &state, const GameCamera &camera,
     float currentTime) const
 {
     for (const auto &[id, player] : state.players) {
@@ -179,7 +179,7 @@ Vec3 Map::getPlayerWorldPos(const Player &player, const GameState &state, float 
     return getTilePosition(displayPos.x, displayPos.y, state, 0.0f);
 }
 
-void Map::drawLabels(const Canvas &canvas, const GameState &state, const GameCamera &camera, float currentTime) const
+void Map::drawLabels(const ICanvas &canvas, const GameState &state, const GameCamera &camera, float currentTime) const
 {
     drawResourceLabels(canvas, state, camera);
     drawPlayerLabels(canvas, state, camera, currentTime);

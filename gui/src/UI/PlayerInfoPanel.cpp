@@ -32,7 +32,7 @@ static const char *animStateName(GUI::Player::AnimState state)
 
 namespace GUI {
 
-void PlayerInfoPanel::draw(const Canvas &canvas, const Player &player, float currentTime) const
+void PlayerInfoPanel::draw(const ICanvas &canvas, const Player &player, float currentTime) const
 {
     const int padding = canvas.scaleSize(12);
     const int fontSize = canvas.scaleSize(20);

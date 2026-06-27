@@ -7,8 +7,8 @@
 
 #pragma once
 
+#include "Graphics/IWindow.hpp"
 #include "Graphics/Types.hpp"
-#include "Window.hpp"
 
 #include <memory>
 #include <optional>
@@ -21,7 +21,7 @@ class GameCamera {
         ~GameCamera();
 
         // Call once per frame before begin3D() — handles mouse + scroll input
-        void update(const Window &window);
+        void update(const IWindow &window);
 
         void begin3D() const;
         void end3D()   const;
@@ -39,7 +39,7 @@ class GameCamera {
     private:
         struct CameraData;
 
-        void updateFreeCamera(const Window &window);
+        void updateFreeCamera(const IWindow &window);
         void moveCamera(Vec3 direction, float distance);
         Vec3 getForwardVector() const;
         Vec3 getRightVector() const;

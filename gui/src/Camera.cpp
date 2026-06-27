@@ -48,7 +48,7 @@ GameCamera::GameCamera(Vec3 position, Vec3 target, float fovy)
 
 GameCamera::~GameCamera() = default;
 
-void GameCamera::update(const Window &window)
+void GameCamera::update(const IWindow &window)
 {
     if (window.isKeyPressed(Key::Escape) && window.isCursorHidden())
         window.showCursor();
@@ -62,7 +62,7 @@ void GameCamera::update(const Window &window)
         reset();
 }
 
-void GameCamera::updateFreeCamera(const Window &window)
+void GameCamera::updateFreeCamera(const IWindow &window)
 {
     const bool isSprinting = window.isKeyDown(Key::LeftShift) || window.isKeyDown(Key::RightShift);
     const float speedMultiplier = isSprinting ? cameraSprintMultiplier : 1.0F;

@@ -352,7 +352,7 @@ int PackTheme::getAnimIndex(const std::string &name, int defaultIndex) const
     return it != _animations.end() ? it->second : defaultIndex;
 }
 
-void PackTheme::drawTile(const Canvas &canvas, Vec3 pos, Vec3 size, bool isLight) const
+void PackTheme::drawTile(const ICanvas &canvas, Vec3 pos, Vec3 size, bool isLight) const
 {
     if (_tile.has_value()) {
         _tile->draw(pos, _tileScale, _tileRotation, _tileTranslation);
@@ -361,7 +361,7 @@ void PackTheme::drawTile(const Canvas &canvas, Vec3 pos, Vec3 size, bool isLight
     _fallback.drawTile(canvas, pos, size, isLight);
 }
 
-void PackTheme::drawResource(const Canvas &canvas, std::size_t resourceIndex, Vec3 pos) const
+void PackTheme::drawResource(const ICanvas &canvas, std::size_t resourceIndex, Vec3 pos) const
 {
     if (resourceIndex < _resources.size() && _resources[resourceIndex].has_value()) {
         const auto &ov = _resourceOverrides[resourceIndex];
@@ -374,7 +374,7 @@ void PackTheme::drawResource(const Canvas &canvas, std::size_t resourceIndex, Ve
     _fallback.drawResource(canvas, resourceIndex, pos);
 }
 
-void PackTheme::drawPlayer(const Canvas &canvas, Vec3 pos, float rotationDeg, Player::AnimState state,
+void PackTheme::drawPlayer(const ICanvas &canvas, Vec3 pos, float rotationDeg, Player::AnimState state,
     float animationElapsed) const
 {
     if (_player) {
@@ -399,7 +399,7 @@ void PackTheme::drawPlayer(const Canvas &canvas, Vec3 pos, float rotationDeg, Pl
     _fallback.drawPlayer(canvas, pos, rotationDeg, state, animationElapsed);
 }
 
-void PackTheme::drawEgg(const Canvas &canvas, Vec3 pos) const
+void PackTheme::drawEgg(const ICanvas &canvas, Vec3 pos) const
 {
     if (_egg.has_value()) {
         _egg->draw(pos, _eggScale, _eggRotation, _eggTranslation);

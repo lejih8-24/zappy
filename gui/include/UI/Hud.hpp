@@ -8,7 +8,7 @@
 #pragma once
 
 #include "Game/GameState.hpp"
-#include "Graphics/Canvas.hpp"
+#include "Graphics/ICanvas.hpp"
 
 #include <cstddef>
 #include <string>
@@ -31,7 +31,7 @@ class Hud {
         ~Hud() = default;
 
         void update(HudAction action);
-        void draw(const Canvas &canvas, const GameState &state, float currentTime);
+        void draw(const ICanvas &canvas, const GameState &state, float currentTime);
 
     private:
         struct HudSegment {
@@ -57,7 +57,7 @@ class Hud {
             unsigned int playerQuantity) const;
         void addResourcesLines(const GameState &state, HudLines &lines) const;
         HudLines getLines(const GameState &state, float currentTime) const;
-        void drawLine(const Canvas &canvas, const HudLine &line, int x, int y, int fontSize) const;
+        void drawLine(const ICanvas &canvas, const HudLine &line, int x, int y, int fontSize) const;
 
         bool _visible = true;
         std::size_t _page = 0;

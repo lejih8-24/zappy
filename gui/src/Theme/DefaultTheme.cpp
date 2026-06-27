@@ -21,18 +21,18 @@ static constexpr std::array<GUI::Color, 7> RESOURCE_COLORS = {
 
 namespace GUI {
 
-void DefaultTheme::drawTile(const Canvas &canvas, Vec3 pos, Vec3 size, bool isLight) const
+void DefaultTheme::drawTile(const ICanvas &canvas, Vec3 pos, Vec3 size, bool isLight) const
 {
     canvas.drawCube(pos, size, isLight ? Colors::Green : Colors::DarkGreen);
     canvas.drawCubeWires(pos, size, Colors::Black);
 }
 
-void DefaultTheme::drawResource(const Canvas &canvas, std::size_t resourceIndex, Vec3 pos) const
+void DefaultTheme::drawResource(const ICanvas &canvas, std::size_t resourceIndex, Vec3 pos) const
 {
     canvas.drawCube(pos, {0.32F, 0.20F, 0.32F}, RESOURCE_COLORS[resourceIndex]);
 }
 
-void DefaultTheme::drawPlayer(const Canvas &canvas, Vec3 pos, float rotationDeg, Player::AnimState state,
+void DefaultTheme::drawPlayer(const ICanvas &canvas, Vec3 pos, float rotationDeg, Player::AnimState state,
     float animationElapsed) const
 {
     (void)rotationDeg;
@@ -41,7 +41,7 @@ void DefaultTheme::drawPlayer(const Canvas &canvas, Vec3 pos, float rotationDeg,
     canvas.drawCube(pos, {0.75f, 1.1f, 0.75f}, Colors::Blue);
 }
 
-void DefaultTheme::drawEgg(const Canvas &canvas, Vec3 pos) const
+void DefaultTheme::drawEgg(const ICanvas &canvas, Vec3 pos) const
 {
     canvas.drawSphere(pos, 0.35f, Colors::RayWhite);
 }

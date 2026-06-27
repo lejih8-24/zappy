@@ -7,64 +7,38 @@
 
 #pragma once
 
-#include "Graphics/Types.hpp"
+#include "Graphics/IWindow.hpp"
 #include <string>
 
 namespace GUI {
 
-enum class Key {
-    Escape,
-    F11,
-    H,
-    Right,
-    Left,
-    Down,
-    Up,
-    R,
-    W,
-    A,
-    S,
-    D,
-    Space,
-    LeftControl,
-    LeftShift,
-    RightShift,
-    KeypadAdd,
-    KeypadSubtract,
-};
-
-enum class MouseButton {
-    Left,
-    Middle,
-};
-
-class Window {
+class Window : public IWindow {
     public:
         Window(int width, int height, const std::string &title, int fps = 60);
-        ~Window();
-    
+        ~Window() override;
+
         Window(const Window &) = delete;
         Window &operator=(const Window &) = delete;
-    
-        bool shouldClose() const;
-    
+
+        bool shouldClose() const override;
+
         static void disableLogs();
 
-        void beginFrame(Color background = Colors::DarkBlue);
-        void endFrame();
-        void toggleFullscreen();
+        void beginFrame(Color background = Colors::DarkBlue) override;
+        void endFrame() override;
+        void toggleFullscreen() override;
 
-        float now() const;
-        float frameTime() const;
-        bool isKeyPressed(Key key) const;
-        bool isKeyDown(Key key) const;
-        bool isMouseButtonPressed(MouseButton button) const;
-        bool isMouseButtonDown(MouseButton button) const;
-        Vec2 mouseDelta() const;
-        float mouseWheel() const;
-        void hideCursor() const;
-        void showCursor() const;
-        bool isCursorHidden() const;
+        float now() const override;
+        float frameTime() const override;
+        bool isKeyPressed(Key key) const override;
+        bool isKeyDown(Key key) const override;
+        bool isMouseButtonPressed(MouseButton button) const override;
+        bool isMouseButtonDown(MouseButton button) const override;
+        Vec2 mouseDelta() const override;
+        float mouseWheel() const override;
+        void hideCursor() const override;
+        void showCursor() const override;
+        bool isCursorHidden() const override;
 };
 
 }
