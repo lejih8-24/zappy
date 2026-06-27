@@ -79,6 +79,7 @@ auto Zappy::Game::Game::hatchEgg(std::string_view team) -> Player*
 
         Player& player = emplacePlayer(team);
         player.moveTo(x, y);
+        player.setOrientation(static_cast<Orientation>(random(1u, 4u)));
         m_GraphicsEvents.emplace_back(
             Event::playerNew(
                 player.id(), player.position(),

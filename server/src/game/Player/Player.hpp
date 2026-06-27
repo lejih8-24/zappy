@@ -39,6 +39,7 @@ namespace Zappy::Game {
             inline int id() const noexcept { return m_Id; }
             inline std::pair<unsigned int, unsigned int> position() const noexcept { return m_Position; }
             inline Orientation orientation() const noexcept { return m_Orientation; }
+            inline void setOrientation(Orientation orientation) noexcept { m_Orientation = orientation; }
             inline unsigned char level() const noexcept { return m_Level; }
             inline Resources& inventory() noexcept { return m_Inventory; }
             inline const Resources& inventory() const noexcept { return m_Inventory; }
