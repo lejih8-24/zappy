@@ -145,6 +145,35 @@ static void drawStaticModel(const Model &model, Vector3 pos, float scale, const 
         DrawMesh(model.meshes[i], model.materials[model.meshMaterial[i]], transform);
 }
 
+static constexpr std::array<const char *, 7> RESOURCE_NAMES = {
+    "food", "linemate", "deraumere", "sibur", "mendiane", "phiras", "thystame"
+};
+
+static std::size_t findMatchingBrace(const std::string &json, std::size_t openPos)
+{
+    int depth = 0;
+    for (std::size_t i = openPos; i < json.size(); ++i) {
+        if (json[i] == '{') ++depth;
+        else if (json[i] == '}') { --depth; if (depth == 0) return i; }
+    }
+    return std::string::npos;
+}
+
+static std::string parseResourceBlock(const std::string &json, std::string_view resourceName)
+{
+    std::string key = std::string("\"") + std::string(resourceName) + "\"";
+    auto pos = json.find(key);
+    if (pos == std::string::npos)
+        return {};
+    auto open = json.find('{', pos + key.size());
+    if (open == std::string::npos)
+        return {};
+    auto close = findMatchingBrace(json, open);
+    if (close == std::string::npos)
+        return {};
+    return json.substr(open + 1, close - open - 1);
+}
+
 static std::unordered_map<std::string, int> parseAnimations(std::string_view packName)
 {
     std::unordered_map<std::string, int> result;
@@ -198,6 +227,75 @@ static float parseManifestFloat(std::string_view packName, const char *key, floa
     return defaultValue;
 }
 
+static std::array<GUI::PackTheme::ResourceOverride, 7> parseResourceOverrides(std::string_view packName)
+{
+    std::array<GUI::PackTheme::ResourceOverride, 7> result{};
+
+    std::string manifestPath = std::string(PACKS_DIR) + std::string(packName) + "/manifest.json";
+    if (!std::filesystem::exists(manifestPath))
+        return result;
+
+    std::ifstream file(manifestPath);
+    std::ostringstream buf;
+    buf << file.rdbuf();
+    std::string json = buf.str();
+
+    std::regex scaleRe("\"scale\"\\s*:\\s*(\\d+(?:\\.\\d+)?)");
+    std::regex axisRe("\"([xyz])\"\\s*:\\s*(-?\\d+(?:\\.\\d+)?)");
+
+    for (std::size_t i = 0; i < RESOURCE_NAMES.size(); ++i) {
+        std::string block = parseResourceBlock(json, RESOURCE_NAMES[i]);
+        if (block.empty())
+            continue;
+
+        std::smatch sm;
+        if (std::regex_search(block, sm, scaleRe))
+            result[i].scale = std::clamp(std::stof(sm[1].str()), 0.000001f, 100.0f);
+
+        auto parseSubBlock = [&](const char *subKey) -> std::string {
+            auto pos = block.find(std::string("\"") + subKey + "\"");
+            if (pos == std::string::npos) return {};
+            auto open = block.find('{', pos);
+            if (open == std::string::npos) return {};
+            auto close = findMatchingBrace(block, open);
+            if (close == std::string::npos) return {};
+            return block.substr(open + 1, close - open - 1);
+        };
+
+        std::string rotBlock = parseSubBlock("rotation");
+        if (!rotBlock.empty()) {
+            Vector3 rot = {0, 0, 0};
+            std::sregex_iterator it(rotBlock.begin(), rotBlock.end(), axisRe);
+            for (; it != std::sregex_iterator{}; ++it) {
+                char a = (*it)[1].str()[0];
+                float v = std::stof((*it)[2].str());
+                if (a == 'x') rot.x = v;
+                else if (a == 'y') rot.y = v;
+                else if (a == 'z') rot.z = v;
+            }
+            Matrix rx = MatrixRotateX(DEG2RAD * rot.x);
+            Matrix ry = MatrixRotateY(DEG2RAD * rot.y);
+            Matrix rz = MatrixRotateZ(DEG2RAD * rot.z);
+            result[i].correction = MatrixMultiply(MatrixMultiply(rx, ry), rz);
+        }
+
+        std::string transBlock = parseSubBlock("translation");
+        if (!transBlock.empty()) {
+            Vector3 trans = {0, 0, 0};
+            std::sregex_iterator it(transBlock.begin(), transBlock.end(), axisRe);
+            for (; it != std::sregex_iterator{}; ++it) {
+                char a = (*it)[1].str()[0];
+                float v = std::stof((*it)[2].str());
+                if (a == 'x') trans.x = v;
+                else if (a == 'y') trans.y = v;
+                else if (a == 'z') trans.z = v;
+            }
+            result[i].translation = trans;
+        }
+    }
+    return result;
+}
+
 namespace GUI {
 
 PackTheme::PackTheme(std::string_view packName)
@@ -245,6 +343,7 @@ PackTheme::PackTheme(std::string_view packName)
     _resourceScale = parseManifestFloat(packName, "resourceScale", 1.0f, 0.000001f, 100.0f);
     _resourceCorrection = parseRotationMatrix(packName, "resourceRotation");
     _resourceTranslation = parseRotation(packName, "resourceTranslation");
+    _resourceOverrides = parseResourceOverrides(packName);
     for (std::size_t i = 0; i < RESOURCE_FILES.size(); ++i) {
         std::string rPath = resolvePath(packName, RESOURCE_FILES[i]);
         if (!rPath.empty())
@@ -281,7 +380,11 @@ void PackTheme::drawTile(Vector3 pos, Vector3 size, bool isLight) const
 void PackTheme::drawResource(std::size_t resourceIndex, Vector3 pos, float height) const
 {
     if (resourceIndex < _resources.size() && _resources[resourceIndex].has_value()) {
-        drawStaticModel(*_resources[resourceIndex], pos, _resourceScale, _resourceCorrection, _resourceTranslation);
+        const auto &ov = _resourceOverrides[resourceIndex];
+        float scale = ov.scale.value_or(_resourceScale);
+        Matrix corr = ov.correction.value_or(_resourceCorrection);
+        Vector3 trans = ov.translation.value_or(_resourceTranslation);
+        drawStaticModel(*_resources[resourceIndex], pos, scale, corr, trans);
         return;
     }
     _fallback.drawResource(resourceIndex, pos, height);
