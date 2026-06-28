@@ -239,8 +239,8 @@ void Zappy::Client::PlayerRunState::setCommand(std::string_view args, PlayerRunS
 
 void Zappy::Client::PlayerRunState::incantationCommand(std::string_view, PlayerRunState& state, Client& client, Game::Game& game)
 {
-    // TODO: implement
-
+    bool success = game.doPlayerIncantation(state.m_Player);
+    state.queueMessage(success ? "Elevation underway\n" : "ko\n");
     // Don't add cooldown, since the game already
     // adds it to all involved players
 }

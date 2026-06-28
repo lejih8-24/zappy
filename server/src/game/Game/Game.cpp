@@ -46,6 +46,8 @@ void Zappy::Game::Game::update(std::chrono::nanoseconds dt)
 
         endPlayerIncantation(*it);
         it = m_EvolveGroups.erase(it);
+        if (it == m_EvolveGroups.end())
+            break;
     }
 }
 
