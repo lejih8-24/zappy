@@ -460,6 +460,9 @@ void Zappy::Game::Game::endPlayerIncantation(EvolutionGroup& group)
 
         auto& player = m_Players.at(id);
 
+        if (player.position() != group.position)
+            continue;  // probably got ejected before the end haha
+
         if (success) {
             player.levelUp();
             player.addMessage("Current level: " + std::to_string(player.level()));
