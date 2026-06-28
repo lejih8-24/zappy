@@ -13,6 +13,9 @@ class IsHungry(Node):
         if ai.states.ready_for_incantation:
             return NodeStatus.FAILURE
 
+        if ai.states.level == 8:
+            return NodeStatus.SUCCESS
+
         if ai.states.is_master:
             panic_threshold = 14
             comfort_threshold = 21
