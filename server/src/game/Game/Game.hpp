@@ -62,6 +62,7 @@ namespace Zappy::Game {
             void setGameSpeed(unsigned int speed) noexcept { m_GameSpeed = speed; }
 
             std::size_t activePlayers() const;
+            std::chrono::milliseconds timeToNextEvent() const;
 
             // Game config and events
             inline void setMapSize(std::pair<unsigned int, unsigned int> size) { m_Map.resize(size.first, size.second); }

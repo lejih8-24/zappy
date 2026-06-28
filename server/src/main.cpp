@@ -12,7 +12,7 @@
 void run(int argc, char *argv[])
 {
     #ifdef NDEBUG
-    Zappy::logger.setLevel(Zappy::Utils::Logger::WARNING);
+    Zappy::logger.setLevel(Zappy::Utils::Logger::INFO);
     #endif
 
     auto server = Zappy::Server::Builder()

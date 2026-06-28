@@ -64,6 +64,36 @@ std::size_t Zappy::Game::Game::activePlayers() const
     return total;
 }
 
+std::chrono::milliseconds Zappy::Game::Game::timeToNextEvent() const
+{
+    std::chrono::duration<double, std::milli> shortestCooldown = std::max(
+        std::chrono::duration<double, std::milli>(0),
+        RESOURCE_RESPAWN_DELAY / m_GameSpeed - m_TimeSinceResourceRespawn
+    );
+
+    for (const auto& [_, player] : m_Players) {
+        if (player.cooldown() < 0.001ms)
+            continue;
+
+        if (player.cooldown() >= shortestCooldown)
+            continue;
+
+        shortestCooldown = player.cooldown();
+    }
+
+    for (const auto& group : m_EvolveGroups) {
+        if (group.timeLeft < 0.001ms)
+            continue;
+
+        if (group.timeLeft >= shortestCooldown)
+            continue;
+
+        shortestCooldown = group.timeLeft;
+    }
+
+    return std::chrono::duration_cast<std::chrono::milliseconds>(shortestCooldown) + 1ms;
+}
+
 void Zappy::Game::Game::setTeams(std::span<std::string> names, std::size_t maxMembers)
 {
     m_Teams.clear();
