@@ -8,7 +8,7 @@ from CommandModel import *
 from BroadcastManager import BroadcastManager
 from btree.bt_nodes import IsHungry, ActionSearchFood, ActionFarmStones, CanElevate, \
     ActionGroupAndIncant, \
-    HasMasterCall, ActionJoinMaster, ActionContributeStones
+    HasMasterCall, ActionJoinMaster, ActionContributeStones, ShouldReproduce, ActionFork
 from ai_movement import AINavigator
 from ai_states import AIState
 from dashboard import Display
@@ -16,6 +16,8 @@ from logger import AILogger
 from btree.bt_core import Selector, Sequence
 from constants import Role, State
 from network import ServerEvent, ProtocolParser
+import subprocess
+import sys
 
 
 class ZappyAI:
@@ -44,6 +46,7 @@ class ZappyAI:
             Sequence([IsHungry(), ActionSearchFood()]),
             Sequence([HasMasterCall(), ActionJoinMaster(), ActionContributeStones()]),
             Sequence([CanElevate(), ActionGroupAndIncant()]),
+            Sequence([ShouldReproduce(), ActionFork()]),
             ActionFarmStones()
         ])
 
@@ -66,6 +69,9 @@ class ZappyAI:
 
         # Attention : Ce log va s'afficher très souvent, mais il est vital pour le debug.
         self.logger.Info(f"[COMMS_RECV] dir={direction} | sender={sender_id} | req={req} | lvl={level}")
+
+        if self.states.level == 8:
+            return
 
         if req != "DATA_SHARE" and level != self.states.level:
             self.logger.Info(f"[COMMS_DROP] Rejet de {req} venant de {sender_id} : Différence de niveau ({level} vs {self.states.level}).")
@@ -114,6 +120,28 @@ class ZappyAI:
             self.states.clear_master_call()
 
             self.states.arrived_at_master = False
+
+        elif req.type == "EJECT" or decoded.get("data") == "EJECT":
+            self.logger.Warn(f"[TRAUMA] Je me suis fait éjecter !")
+
+            self.pending_commands.clear()
+            self.states.vision_grid = None
+
+            if self.states.is_master or self.states.arrived_at_master or self.states.ready_for_incantation:
+                self.logger.Warn("[TRAUMA] Mon rituel a été violemment interrompu ! Annulation générale.")
+
+                if self.states.is_master:
+                    msg = self.comms.format_message("ALL", self.states.level, Role.Master, State.GROUPING, "ABORT")
+                    self.queue_command(BroadcastCommand(self.id, msg))
+
+                self.states.is_master = False
+                self.states.ready_for_incantation = False
+                self.states.arrived_at_master = False
+                self.states.clear_master_call()
+
+                self.states.master_wait_cycle = None
+                self.states.join_wait_cycle = None
+                self.states.wait_start_cycle = None
 
     def _handle_command_response(self, raw_message: str):
         """Flux FIFO strictement respecté : On POP toujours la commande en premier !"""
@@ -166,6 +194,16 @@ class ZappyAI:
         elif event.type == "RESPONSE":
             self._handle_command_response(event.data["raw"])
 
+    def launch_new_drone(self):
+        """Clone le processus actuel pour connecter un nouveau drone au serveur."""
+        import subprocess
+        import sys
+        try:
+            subprocess.Popen([sys.executable] + sys.argv, start_new_session=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            self.logger.Info("[SYSTEM] Nouveau processus de drone lancé en arrière-plan !")
+        except Exception as e:
+            self.logger.Error(f"[SYSTEM] Erreur lors du lancement du renfort : {e}")
+
     def _update_state_from_result(self, command, result):
         if isinstance(command, InventoryCommand) and isinstance(result, dict):
             self.states.inventory = result
@@ -182,8 +220,15 @@ class ZappyAI:
             self.states.inventory[command.obj_name] = self.states.inventory.get(command.obj_name, 1) - 1
             self.states.vision_grid = None
 
+        elif isinstance(command, ConnectNbrCommand):
+            try:
+                self.states.available_slots = int(result)
+            except ValueError:
+                self.states.available_slots = 0
+
         elif isinstance(command, ForkCommand) and result is True:
-            self.logger.Good("L'oeuf a été pondu avec succès ! Retour au travail.")
+            self.logger.Good("L'œuf a été pondu avec succès ! Un nouveau drone arrivera dans 600 ticks.")
+            self._launch_new_drone()
 
         elif isinstance(command, TurnRightCommand) and result is True:
             self.states.orientation = (self.states.orientation + 1) % 4
@@ -203,7 +248,6 @@ class ZappyAI:
             elif self.states.orientation == 3:
                 self.states.pos_x = (self.states.pos_x - 1) % self.map_x
             self.states.vision_grid = None
-
     def _decide_next_action(self):
         self.cycle_count += 1
         if getattr(self.states, 'ready_for_incantation', False):
