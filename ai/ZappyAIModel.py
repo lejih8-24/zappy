@@ -115,6 +115,28 @@ class ZappyAI:
 
             self.states.arrived_at_master = False
 
+        elif req.type == "EJECT" or decoded.get("data") == "EJECT":
+            self.logger.Warn(f"[TRAUMA] Je me suis fait éjecter !")
+
+            self.pending_commands.clear()
+            self.states.vision_grid = None
+
+            if self.states.is_master or self.states.arrived_at_master or self.states.ready_for_incantation:
+                self.logger.Warn("[TRAUMA] Mon rituel a été violemment interrompu ! Annulation générale.")
+
+                if self.states.is_master:
+                    msg = self.comms.format_message("ALL", self.states.level, Role.Master, State.GROUPING, "ABORT")
+                    self.queue_command(BroadcastCommand(self.id, msg))
+
+                self.states.is_master = False
+                self.states.ready_for_incantation = False
+                self.states.arrived_at_master = False
+                self.states.clear_master_call()
+
+                self.states.master_wait_cycle = None
+                self.states.join_wait_cycle = None
+                self.states.wait_start_cycle = None
+
     def _handle_command_response(self, raw_message: str):
         """Flux FIFO strictement respecté : On POP toujours la commande en premier !"""
 
