@@ -132,7 +132,10 @@ void Map::drawCountLabel(const ICanvas &canvas, Vec2 screenPos, int fontSize, un
     int textWidth = canvas.measureText(label, fontSize);
     int sx = static_cast<int>(screenPos.x) - textWidth / 2;
     int sy = static_cast<int>(screenPos.y);
-    canvas.drawText(label, sx + 1, sy + 1, fontSize, Colors::Black); // drop shadow
+    canvas.drawText(label, sx - 1, sy, fontSize, Colors::Black); // outline for readability
+    canvas.drawText(label, sx + 1, sy, fontSize, Colors::Black);
+    canvas.drawText(label, sx, sy - 1, fontSize, Colors::Black);
+    canvas.drawText(label, sx, sy + 1, fontSize, Colors::Black);
     canvas.drawText(label, sx, sy, fontSize, Colors::Yellow);
 }
 
@@ -161,7 +164,7 @@ void Map::drawResourceLabels(const ICanvas &canvas, const GameState &state, cons
                 if (screenPos) {
                     float dist = camera.distanceTo(worldPos);
                     // Font scales inversely with distance, clamped to readable range
-                    int fontSize = std::clamp(static_cast<int>(80.0f / dist), 6, 16);
+                    int fontSize = std::clamp(static_cast<int>(260.0f / dist), 18, 40);
                     drawCountLabel(canvas, *screenPos, fontSize, quantity);
                 }
             }
