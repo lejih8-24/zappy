@@ -42,5 +42,6 @@ namespace Zappy::Game {
 
             static std::string serverGetTime(unsigned int speed);
             static std::string serverSetTime(unsigned int speed);
+            static std::string serverGameEnd(std::string_view teamName);
     };
 }
