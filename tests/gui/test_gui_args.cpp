@@ -137,3 +137,13 @@ Test(gui_args, missing_value_for_height)
 {
     cr_assert_throw(parse({"-p", "4242", "--height"}), ArgsException);
 }
+
+Test(gui_args, port_negative)
+{
+    cr_assert_throw(parse({"-p", "-1"}), ArgsException);
+}
+
+Test(gui_args, width_not_a_number)
+{
+    cr_assert_throw(parse({"-p", "4242", "--width", "abc"}), ArgsException);
+}
