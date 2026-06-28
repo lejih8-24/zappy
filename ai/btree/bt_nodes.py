@@ -1,6 +1,6 @@
 from .bt_core import Node, NodeStatus
 from CommandModel import LookCommand, ForwardCommand, TurnLeftCommand, TurnRightCommand, SetCommand, BroadcastCommand, \
-    IncantationCommand, TakeCommand
+    IncantationCommand, TakeCommand, ForkCommand, ConnectNbrCommand
 from pathfinding import find_path_to_closest
 
 
@@ -12,6 +12,9 @@ class IsHungry(Node):
 
         if ai.states.ready_for_incantation:
             return NodeStatus.FAILURE
+
+        if ai.states.level == 8:
+            return NodeStatus.SUCCESS
 
         if ai.states.is_master:
             panic_threshold = 14
@@ -58,6 +61,55 @@ class HasMasterCall(Node):
             return NodeStatus.SUCCESS
         return NodeStatus.FAILURE
 
+class ShouldReproduce(Node):
+    """Vérifie si le drone a accumulé assez de réserves pour pondre en toute sécurité."""
+    def tick(self, ai) -> NodeStatus:
+        if ai.states.ready_for_incantation or ai.states.is_master or ai.states.last_master_id is not None:
+            return NodeStatus.FAILURE
+
+        if ai.states.inventory.get("food", 0) > 40 and (ai.cycle_count - ai.states.last_fork_cycle > 600):
+            return NodeStatus.SUCCESS
+
+        return NodeStatus.FAILURE
+
+
+class ActionFork(Node):
+    """Gère la reproduction de manière optimisée en vérifiant les slots disponibles."""
+
+    def tick(self, ai) -> NodeStatus:
+        if len(ai.pending_commands) > 0:
+            return NodeStatus.RUNNING
+
+        if ai.states.fork_step == "INIT":
+            ai.logger.Info("[REPRODUCTION] Vérification des places (Connect_nbr)...")
+
+            ai.queue_command(ConnectNbrCommand())
+            ai.states.fork_step = "EVALUATE"
+            return NodeStatus.RUNNING
+
+        elif ai.states.fork_step == "EVALUATE":
+            slots = ai.states.available_slots
+
+            if slots > 0:
+                ai.logger.Good(
+                    f"[REPRODUCTION] {slots} place(s) libre(s) ! J'économise 42 ticks et j'invoque un renfort.")
+                ai.launch_new_drone()
+                ai.states.last_fork_cycle = ai.cycle_count
+                ai.states.fork_step = "INIT"
+                return NodeStatus.SUCCESS
+            else:
+                ai.logger.Info("[REPRODUCTION] Équipe complète. Je lance l'incubation (Fork)...")
+
+                ai.queue_command(ForkCommand())
+                ai.states.fork_step = "WAIT_FORK"
+                return NodeStatus.RUNNING
+
+        elif ai.states.fork_step == "WAIT_FORK":
+            ai.states.last_fork_cycle = ai.cycle_count
+            ai.states.fork_step = "INIT"
+            return NodeStatus.SUCCESS
+
+        return NodeStatus.FAILURE
 
 class ActionSearchFood(Node):
     def tick(self, ai) -> NodeStatus:
