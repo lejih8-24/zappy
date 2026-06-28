@@ -124,3 +124,18 @@ Test(player, animation_elapsed_uses_anim_start_when_idle)
     float elapsed = p.getAnimationElapsed(2.5f, Player::AnimState::Broadcast);
     cr_assert_float_eq(elapsed, 1.5f, 1e-5f);
 }
+
+Test(player, dead_state_persists_while_moving)
+{
+    Player p(1, 0, 0, 1, "team1");
+    p.startMovement(0.0f, {0.0f, 0.0f}, {1.0f, 0.0f}, 10.0f);
+    p.setAnimState(Player::AnimState::Dead, 0.0f);
+    cr_assert_eq(p.getEffectiveAnimState(5.0f), Player::AnimState::Dead);
+}
+
+Test(player, level_up_overrides_idle)
+{
+    Player p(1, 0, 0, 1, "team1");
+    p.setAnimState(Player::AnimState::LevelUp, 0.0f, 5.0f);
+    cr_assert_eq(p.getEffectiveAnimState(1.0f), Player::AnimState::LevelUp);
+}
