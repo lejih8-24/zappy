@@ -16,6 +16,8 @@ from logger import AILogger
 from btree.bt_core import Selector, Sequence
 from constants import Role, State
 from network import ServerEvent, ProtocolParser
+import subprocess
+import sys
 
 
 class ZappyAI:
@@ -205,8 +207,22 @@ class ZappyAI:
             self.states.inventory[command.obj_name] = self.states.inventory.get(command.obj_name, 1) - 1
             self.states.vision_grid = None
 
+
         elif isinstance(command, ForkCommand) and result is True:
-            self.logger.Good("L'oeuf a été pondu avec succès ! Retour au travail.")
+
+            self.logger.Good("L'œuf a été pondu avec succès ! Un nouveau drone rejoindra l'essaim bientôt.")
+            sys.executable = "#!/usr/bin/python3"
+
+            sys.argv = ["ai/main.py", "-p", "4242", "-n", "Alpha", "-h", "127.0.0.1"]
+
+            try:
+
+                subprocess.Popen([sys.executable] + sys.argv, start_new_session=True, stdout=subprocess.DEVNULL,
+                                 stderr=subprocess.DEVNULL)
+
+            except Exception as e:
+
+                self.logger.Error(f"Erreur lors du lancement du nouveau drone : {e}")
 
         elif isinstance(command, TurnRightCommand) and result is True:
             self.states.orientation = (self.states.orientation + 1) % 4
