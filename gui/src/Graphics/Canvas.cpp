@@ -41,6 +41,7 @@ int Canvas::scaleSize(int value) const
 
 // Reused across calls so passing a std::string_view to raylib's null-terminated
 // C API doesn't allocate a fresh buffer on every draw call.
+// WARN: not safe to call twice in the same expression — each call overwrites the same buffer.
 static const char *toCString(std::string_view text)
 {
     static thread_local std::string buffer;
