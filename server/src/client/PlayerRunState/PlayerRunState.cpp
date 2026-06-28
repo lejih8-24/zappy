@@ -196,6 +196,7 @@ void Zappy::Client::PlayerRunState::broadcastCommand(std::string_view msg, Playe
     sanitizedMessage += '\n';
 
     game.playerBroadcast(state.m_Player, sanitizedMessage);
+    state.queueMessage("ok\n");
     state.addCooldown(Game::PLAYER_BROADCAST_COOLDOWN);
 }
 
@@ -215,7 +216,8 @@ void Zappy::Client::PlayerRunState::forkCommand(std::string_view, PlayerRunState
 
 void Zappy::Client::PlayerRunState::ejectCommand(std::string_view, PlayerRunState& state, Client& client, Game::Game& game)
 {
-    game.playerEject(state.m_Player);
+    bool success = game.playerEject(state.m_Player);
+    state.queueMessage(success ? "ok\n" : "ko\n");
     state.addCooldown(Game::PLAYER_EJECT_COOLDOWN);
 }
 
