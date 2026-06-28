@@ -21,4 +21,7 @@ add_subdirectory(lib/liblattice)
 add_subdirectory(ai)
 add_subdirectory(gui)
 add_subdirectory(server)
-add_subdirectory(tests)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_subdirectory(tests)
+endif()
