@@ -42,6 +42,7 @@ Zappy::Client::PlayerRunState::PlayerRunState(Game::Player& player)
 
 void Zappy::Client::PlayerRunState::update(Client& client, std::chrono::nanoseconds dt)
 {
+    // queuePlayerMessages();
     sendQueuedMessages(client);
 
     if (m_Player.inventory().food == 0 && m_Player.timeToLive() <= 0.0ms) {
@@ -68,7 +69,7 @@ void Zappy::Client::PlayerRunState::update(Client& client, std::chrono::nanoseco
         // cooldown
         if (hasMessages())
             return;
-        client.setState(std::make_unique<PlayerWaitState>(m_Player, m_Player.cooldown()));
+        client.setState(std::make_unique<PlayerWaitState>(m_Player));
         return;
     }
 
@@ -86,6 +87,16 @@ void Zappy::Client::PlayerRunState::update(Client& client, std::chrono::nanoseco
 void Zappy::Client::PlayerRunState::disconnect(Game::Game& game)
 {
     game.killPlayer(m_Player);
+}
+
+void Zappy::Client::PlayerRunState::queuePlayerMessages()
+{
+    auto message = m_Player.popMessage();
+
+    while (message) {
+        queueMessage(*message);
+        message = m_Player.popMessage();
+    }
 }
 
 void Zappy::Client::PlayerRunState::addCooldown(std::chrono::duration<double, std::milli> duration)

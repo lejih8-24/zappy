@@ -31,6 +31,7 @@ namespace Zappy::Client {
             void disconnect(Game::Game& game) override;
 
         private:
+            void queuePlayerMessages();
             void addCooldown(std::chrono::duration<double, std::milli> duration);
 
             static void toLowercase(std::string& repr);
