@@ -86,3 +86,9 @@ Test(pack_manifest, animations_missing_returns_empty)
     auto anims = m.animations();
     cr_assert(anims.empty());
 }
+
+Test(pack_manifest, number_egg_scale)
+{
+    PackManifest m("penguin");
+    cr_assert_float_eq(m.number("eggScale", 1.0f), 0.3f, 1e-5f);
+}
