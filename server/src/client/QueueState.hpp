@@ -49,6 +49,8 @@ namespace Zappy::Client {
             inline void queueMessage(std::string&& message) { m_SendQueue.emplace_back(message); }
             inline bool hasMessages() noexcept { return !m_SendQueue.empty(); }
 
+            inline void transferQueue(QueueState& queue) { m_SendQueue.swap(queue.m_SendQueue); }
+
         private:
             /**
              * Merges all* events into a single

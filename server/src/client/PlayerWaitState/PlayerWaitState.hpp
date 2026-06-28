@@ -21,6 +21,7 @@ namespace Zappy::Client {
 
         public:
             PlayerWaitState(Game::Player& player);
+            PlayerWaitState(Game::Player& player, QueueState& queue);
 
             void update(Client& client, std::chrono::nanoseconds dt) override;
             void disconnect(Game::Game& game) override;

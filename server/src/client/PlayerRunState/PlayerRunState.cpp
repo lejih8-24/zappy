@@ -40,8 +40,19 @@ Zappy::Client::PlayerRunState::PlayerRunState(Game::Player& player)
 
 }
 
+Zappy::Client::PlayerRunState::PlayerRunState(Game::Player& player, QueueState& queue)
+    : PlayerRunState(player)
+{
+    transferQueue(queue);
+}
+
 void Zappy::Client::PlayerRunState::update(Client& client, std::chrono::nanoseconds dt)
 {
+    if (m_Player.cooldown() > 0.0ms) {
+        client.setState(std::make_unique<PlayerWaitState>(m_Player, *this));
+        return;
+    }
+
     queuePlayerMessages();
     sendQueuedMessages(client);
 
@@ -59,18 +70,6 @@ void Zappy::Client::PlayerRunState::update(Client& client, std::chrono::nanoseco
         }
 
         game().playerFeed(m_Player);
-    }
-
-    if (m_Player.cooldown() > 0.0ms) {
-        // There are still some
-        // messages queued, so skip
-        // to next update to send
-        // them before going into
-        // cooldown
-        if (hasMessages())
-            return;
-        client.setState(std::make_unique<PlayerWaitState>(m_Player));
-        return;
     }
 
     std::string command;

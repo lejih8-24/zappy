@@ -87,6 +87,8 @@ std::chrono::milliseconds Zappy::Game::Game::timeToNextEvent() const
 
         if (group.timeLeft >= shortestCooldown)
             continue;
+
+        shortestCooldown = group.timeLeft;
     }
 
     return std::chrono::duration_cast<std::chrono::milliseconds>(shortestCooldown) + 1ms;
