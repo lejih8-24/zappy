@@ -8,7 +8,9 @@
 
 #include "Game.hpp"
 #include <zappy/game.hpp>
+#include <numbers>
 #include <random>
+#include <cmath>
 
 
 using std::chrono_literals::operator""ms;
@@ -199,6 +201,19 @@ bool Zappy::Game::Game::playerDropResource(Player& player, ResourceType type)
     return true;
 }
 
+void Zappy::Game::Game::playerBroadcast(const Player& sender, std::string_view msg)
+{
+    m_GraphicsEvents.emplace_back(Event::playerBroadcast(sender.id(), msg));
+
+    for (auto& [_, player] : m_Players) {
+        if (&player == &sender)
+            continue;
+
+        auto orientation = orientationTo(player, sender);
+        player.addMessage("message " + std::to_string(orientation) + ", " + std::string(msg));
+    }
+}
+
 auto Zappy::Game::Game::doPlayerIncantation(const Player& initiator) -> EvolutionGroup*
 {
     if (initiator.level() >= MAX_PLAYER_LEVEL)
@@ -245,6 +260,126 @@ auto Zappy::Game::Game::doPlayerIncantation(const Player& initiator) -> Evolutio
     }
 
     return &group;
+}
+
+/**
+ * Returns the value from 1 to 8
+ * designating the orientation
+ * of the player `from` to the
+ * orientation to the player `to`
+ * according to the assignment.
+ */
+unsigned int Zappy::Game::Game::orientationTo(const Player& to, const Player& from)
+{
+    static constexpr unsigned int BUCKETS = 8;
+
+    auto [dist, angle] = shortestDistanceTo(to, from);
+    float destinationAngle = std::fmodf(angle + std::numbers::pi, 2.f * std::numbers::pi);
+
+    // Turn range [0; 2pi[ -> [0; 8[ -> [[0; 7]]
+    unsigned int angleBucket = (BUCKETS * destinationAngle) / (2.f * std::numbers::pi);
+
+    // Make angle bucket relative to player orientation
+    angleBucket = (angleBucket + orientationOffset(to.orientation())) % BUCKETS;
+
+    angleBucket++;  // [[0; 7]] -> [[1; 8]]
+    return angleBucket;
+}
+
+/**
+ * Returns the shortest distance
+ * from the player `from` to the
+ * player `to`, as well as the
+ * angle taken to find the shortest
+ * distance.
+ */
+std::pair<float, float> Zappy::Game::Game::shortestDistanceTo(const Player& to, const Player& from)
+{
+    auto [mapX, mapY] = m_Map.size();
+    auto [toX, toY] = to.position();
+
+    std::array<std::pair<int, int>, 4> possiblePaths = {{
+        { toX + mapX, toY },
+        { toX - mapX, toY },
+        { toX, toY + mapY },
+        { toX, toY - mapY },
+    }};
+
+    std::pair<float, float> shortestDistance = distanceTo(to.position(), from);
+    for (const auto& path : possiblePaths) {
+        auto distance = distanceTo(path, from);
+
+        if (distance.first >= shortestDistance.first)
+            continue;
+
+        shortestDistance = distance;
+    }
+
+    return shortestDistance;
+}
+
+/**
+ * Finds the distance from the player
+ * to the target position, as well as
+ * the angle taken to reach it.
+ *
+ * Note:
+ * The angle starts at EAST (positive x),
+ * and goes towards NORTH (negative y).
+ */
+std::pair<float, float> Zappy::Game::Game::distanceTo(std::pair<int, int> position, const Player& player)
+{
+    auto [posX, posY] = position;
+    auto [playerX, playerY] = player.position();
+
+    float dist = std::sqrtf(
+        (posX - playerX) * (posX - playerX) +
+        (posY - playerY) * (posY - playerY)
+    );
+
+    float angleNorm = normalizedAtan2(
+        static_cast<float>(posY) - playerY,
+        static_cast<float>(posX) - playerX
+    );
+
+    return { dist, angleNorm };
+}
+
+/**
+ * Returns an angle in the
+ * range [0; 2pi].
+ */
+float normalizedAtan2(float y, float x)
+{
+    // Note: we invert y because going up / north
+    // on our map means decreasing y (i.e. it's inverted).
+    float angle = std::atan2f(-y, x == 0.f ? 0.01f : x);
+
+    return angle > 0.f
+        ? angle
+        : angle + std::numbers::pi * 2.f;
+}
+
+/**
+ * Returns the offset that needs to be
+ * added to the angle bucket based
+ * on the player's orientation. It follows
+ * the following diagram:
+ *
+ *      N                +2
+ *
+ * W         E      +4        +0
+ *
+ *      S                +6
+ */
+unsigned int Zappy::Game::Game::orientationOffset(Orientation orientation)
+{
+    switch (orientation) {
+        case Orientation::EAST:  return 0;
+        case Orientation::NORTH: return 2;
+        case Orientation::WEST:  return 4;
+        case Orientation::SOUTH: return 6;
+    }
 }
 
 bool Zappy::Game::Game::isSuccessfulEvolution(const EvolutionGroup& group) const

@@ -81,11 +81,18 @@ namespace Zappy::Game {
             bool playerCollectResource(Player& player, ResourceType resource);
             bool playerDropResource(Player& player, ResourceType resource);
 
+            void playerBroadcast(const Player& player, std::string_view msg);
             EvolutionGroup* doPlayerIncantation(const Player& initiator);
 
             void killPlayer(const Player& player);
 
         private:
+            unsigned int orientationTo(const Player& to, const Player& from);
+            std::pair<float, float> shortestDistanceTo(const Player& to, const Player& player);
+            std::pair<float, float> distanceTo(std::pair<int, int> position, const Player& player);
+            static float normalizedAtan2(float y, float x);
+            static unsigned int orientationOffset(Orientation orientation);
+
             bool isSuccessfulEvolution(const EvolutionGroup& group) const;
             void endPlayerIncantation(EvolutionGroup& group);
             Player& emplacePlayer(std::string_view team);
