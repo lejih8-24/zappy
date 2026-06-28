@@ -118,3 +118,15 @@ Test(response_parser, dispatch_pnw)
     cr_assert(std::holds_alternative<NewPlayerConnect>(ev));
     cr_assert_eq(std::get<NewPlayerConnect>(ev).id, 2);
 }
+
+Test(response_parser, player_expulsion)
+{
+    auto ev = ResponseParser::parsePlayerExpulsion("pex #8");
+    cr_assert_eq(ev.id, 8);
+}
+
+Test(response_parser, server_game_end)
+{
+    auto ev = ResponseParser::parseServerGameEnd("seg winners");
+    cr_assert_str_eq(ev.winnerTeam.c_str(), "winners");
+}
