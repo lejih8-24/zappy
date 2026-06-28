@@ -68,7 +68,7 @@ std::chrono::milliseconds Zappy::Game::Game::timeToNextEvent() const
 {
     std::chrono::duration<double, std::milli> shortestCooldown = std::max(
         std::chrono::duration<double, std::milli>(0),
-        RESOURCE_RESPAWN_DELAY - m_TimeSinceResourceRespawn
+        RESOURCE_RESPAWN_DELAY / m_GameSpeed - m_TimeSinceResourceRespawn
     );
 
     for (const auto& [_, player] : m_Players) {
@@ -89,8 +89,7 @@ std::chrono::milliseconds Zappy::Game::Game::timeToNextEvent() const
             continue;
     }
 
-    std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(shortestCooldown) << std::endl;
-    return std::chrono::duration_cast<std::chrono::milliseconds>(shortestCooldown);
+    return std::chrono::duration_cast<std::chrono::milliseconds>(shortestCooldown) + 1ms;
 }
 
 void Zappy::Game::Game::setTeams(std::span<std::string> names, std::size_t maxMembers)
