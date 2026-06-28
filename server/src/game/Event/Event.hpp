@@ -34,6 +34,7 @@ namespace Zappy::Game {
             static std::string playerIncantationStart(std::pair<unsigned int, unsigned int> pos, unsigned int level, std::span<int> players);
             static std::string playerIncantationStart(std::pair<unsigned int, unsigned int> pos, unsigned int level, std::string_view playerIds);
             static std::string playerIncantationEnd(std::pair<unsigned int, unsigned int> pos, bool success);
+            static std::string playerFork(int playerId);
 
             static std::string eggNew(int eggId, int playerId, std::pair<unsigned int, unsigned int> pos);
             static std::string eggHatch(int eggId);

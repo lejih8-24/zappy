@@ -126,6 +126,11 @@ std::string Zappy::Game::Event::playerIncantationEnd(std::pair<unsigned int, uns
                   + std::to_string(static_cast<int>(success)) + "\n";
 }
 
+std::string Zappy::Game::Event::playerFork(int playerId)
+{
+  return "pfk #" + std::to_string(playerId) + "\n";
+}
+
 std::string Zappy::Game::Event::eggNew(int eggId, int playerId, std::pair<unsigned int, unsigned int> pos)
 {
     return "enw "s + "#" + std::to_string(eggId)    + " "
