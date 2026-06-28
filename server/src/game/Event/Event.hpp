@@ -27,6 +27,7 @@ namespace Zappy::Game {
             static std::string playerPosition(int playerId, std::pair<unsigned int, unsigned int> pos, Orientation orientation);
             static std::string playerLevel(int playerId, unsigned int level);
             static std::string playerInventory(int playerId, std::pair<unsigned int, unsigned int> pos, const Resources& inventory);
+            static std::string playerEject(int playerId);
             static std::string playerBroadcast(int playerId, std::string_view message);
             static std::string playerDie(int playerId);
             static std::string playerCollect(int playerId, unsigned int resource);

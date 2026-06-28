@@ -75,6 +75,11 @@ std::string Zappy::Game::Event::playerInventory(int playerId, std::pair<unsigned
                    + std::to_string(inventory.thystame)  + "\n";
 }
 
+std::string Zappy::Game::Event::playerEject(int playerId)
+{
+    return "pex #" + std::to_string(playerId) + "\n";
+}
+
 std::string Zappy::Game::Event::playerBroadcast(int playerId, std::string_view message)
 {
     std::string evt = "pbc #" + std::to_string(playerId) + " " + std::string(message);
