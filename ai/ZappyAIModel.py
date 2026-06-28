@@ -70,6 +70,9 @@ class ZappyAI:
         # Attention : Ce log va s'afficher très souvent, mais il est vital pour le debug.
         self.logger.Info(f"[COMMS_RECV] dir={direction} | sender={sender_id} | req={req} | lvl={level}")
 
+        if self.states.level == 8:
+            return
+        
         if req != "DATA_SHARE" and level != self.states.level:
             self.logger.Info(f"[COMMS_DROP] Rejet de {req} venant de {sender_id} : Différence de niveau ({level} vs {self.states.level}).")
             return
