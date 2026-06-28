@@ -14,7 +14,7 @@ namespace GUI {
 
 class GameStateEventHandler : public Zappy::Networking::BaseEventHandler {
     public:
-        GameStateEventHandler(GameState &state);
+        GameStateEventHandler(GameState &state, float currentTime);
 
         using Zappy::Networking::BaseEventHandler::operator();
 
@@ -28,6 +28,9 @@ class GameStateEventHandler : public Zappy::Networking::BaseEventHandler {
         void operator()(const Zappy::Networking::PlayerCollectResource &event);
         void operator()(const Zappy::Networking::PlayerDropResource &event);
         void operator()(const Zappy::Networking::PlayerDie &event);
+        void operator()(const Zappy::Networking::PlayerBroadcast &event);
+        void operator()(const Zappy::Networking::PlayerExpulsion &event);
+        void operator()(const Zappy::Networking::PlayerLayEgg &event);
         void operator()(const Zappy::Networking::EggCreate &event);
         void operator()(const Zappy::Networking::EggConnect &event);
         void operator()(const Zappy::Networking::EggDie &event);
@@ -39,6 +42,7 @@ class GameStateEventHandler : public Zappy::Networking::BaseEventHandler {
 
     private:
         GameState &_state;
+        float _currentTime;
 };
 
 }

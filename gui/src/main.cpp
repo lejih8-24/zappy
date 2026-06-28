@@ -8,16 +8,16 @@
 #include "GuiArgs.hpp"
 #include "Game/GameState.hpp"
 #include "Render.hpp"
+#include "Window.hpp"
 #include "exceptions/ArgsException.hpp"
 #include "game/Resources/Resources.hpp"
 #include <networking.hpp>
-#include "raylib.h"
 #include <iostream>
 
 int main(int argc, char *argv[])
 {
     #ifdef NDEBUG
-    ::SetTraceLogLevel(LOG_NONE);
+    GUI::Window::disableLogs();
     #endif
 
     try {
@@ -30,7 +30,8 @@ int main(int argc, char *argv[])
             return 84;
         }
 
-        GUI::Render render(args.getHost(), args.getPort(), args.getPack());
+        GUI::Render render(args.getHost(), args.getPort(), args.getPack(),
+            args.getWidth(), args.getHeight());
 
         render.renderLoop(client);
     } catch (const Zappy::Exceptions::ArgsException &error) {

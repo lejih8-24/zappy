@@ -1,0 +1,9 @@
+food.glb -> "Salmon" (https://skfb.ly/6nUq8) by scrampunk is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
+tile.glb -> "Floating Ice Island" (https://skfb.ly/oPsyI) by starchild is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
+egg.glb -> "Egg" (https://skfb.ly/6uALr) by joe_carrot is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
+linemate.glb -> "Ice Cube" (https://skfb.ly/oA9yq) by spiffatron is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
+deraumere.glb -> "Purple Seashell" (https://skfb.ly/onuJA) by Meerschaum Digital is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
+sibur.glb -> "amber" (https://skfb.ly/6RyIx) by roen is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
+mendiane.glb -> "low poly red coral" https://sketchfab.com/3d-models/low-poly-red-coral-2135043d1e9c45919cfba5011c5a6cae
+phiras.glb -> "Crystal" (https://skfb.ly/ovsOG) by Kyyy_24 is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
+thystame.glb -> "Pink Crystal" (https://skfb.ly/6WUrW) by Kigaroth is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).

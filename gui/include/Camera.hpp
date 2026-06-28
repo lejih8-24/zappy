@@ -2,24 +2,27 @@
 ** EPITECH PROJECT, 2026
 ** Project - Zappy
 ** File description:
-** GameCamera wrapper around raylib Camera3D
+** GameCamera wrapper
 */
 
 #pragma once
 
-#include "raylib.h"
+#include "Graphics/IWindow.hpp"
+#include "Graphics/Types.hpp"
+
+#include <memory>
+#include <optional>
 
 namespace GUI {
 
 class GameCamera {
     public:
-        GameCamera(Vector3 position, Vector3 target, float fovy = 45.0f);
-        ~GameCamera() = default;
+        GameCamera(Vec3 position, Vec3 target, float fovy = 45.0f);
+        ~GameCamera();
 
         // Call once per frame before begin3D() — handles mouse + scroll input
-        void update();
+        void update(const IWindow &window);
 
-        // Wrap BeginMode3D / EndMode3D
         void begin3D() const;
         void end3D()   const;
 
@@ -29,18 +32,19 @@ class GameCamera {
         // Returns true when cursor is captured (camera actively controlled)
         bool isCursorLocked() const;
 
-        // Access underlying raylib camera if needed
-        const Camera3D &get() const { return _camera; }
+        std::optional<Vec2> projectToScreen(Vec3 worldPos) const;
+        float distanceTo(Vec3 worldPos) const;
+        std::optional<float> screenCenterHitDistance(Vec3 worldPos, float radius) const;
 
     private:
-        void updateFreeCamera();
-        void moveCamera(Vector3 direction, float distance);
-        Vector3 getForwardVector() const;
-        Vector3 getRightVector() const;
+        struct CameraData;
 
-        Camera3D _camera;
-        Vector3  _initPosition;
-        Vector3  _initTarget;
+        void updateFreeCamera(const IWindow &window);
+        void moveCamera(Vec3 direction, float distance);
+        Vec3 getForwardVector() const;
+        Vec3 getRightVector() const;
+
+        std::unique_ptr<CameraData> _cameraData;
 };
 
 }

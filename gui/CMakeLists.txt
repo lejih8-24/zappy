@@ -23,7 +23,10 @@ add_executable(zappy_gui
                src/Game/ServerMessage.cpp
                src/Game/Tile.cpp
                src/Game/CharacterModel.cpp
+               src/Game/StaticModel.cpp
+               src/Graphics/Canvas.cpp
                src/Theme/DefaultTheme.cpp
+               src/Theme/PackManifest.cpp
                src/Theme/PackTheme.cpp
                src/Theme/ThemeManager.cpp
                src/Camera.cpp
@@ -31,6 +34,7 @@ add_executable(zappy_gui
                src/Map.cpp
                src/Render.cpp
                src/UI/Hud.cpp
+               src/UI/PlayerInfoPanel.cpp
                src/Window.cpp
                src/main.cpp)
 
