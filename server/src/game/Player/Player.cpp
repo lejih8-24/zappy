@@ -51,7 +51,7 @@ std::optional<std::string> Zappy::Game::Player::popMessage()
     if (m_Messages.empty())
         return std::nullopt;
 
-    std::optional<std::string> message;
+    std::optional<std::string> message = {""};
     message->swap(m_Messages.back());
     m_Messages.pop_back();
     return message;
