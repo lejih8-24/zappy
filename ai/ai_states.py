@@ -30,6 +30,9 @@ class AIState:
         self.last_call_cycle = 0
         self.join_wait_cycle = None
         self.wait_start_cycle = None
+        self.last_fork_cycle = 0
+        self.available_slots = 0
+        self.fork_step = "INIT"
 
         self.orientation = 0
         self.pos_x = 0

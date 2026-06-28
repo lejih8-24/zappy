@@ -15,15 +15,23 @@
   },
   "playerScale": 0.5,
   "playerRotation": { "x": 0, "y": 180, "z": 0 },
-  "playerTranslation": { "y": -0.5 },
+  "playerTranslation": { "y": -0.35 },
   "playerLabelHeight": 2,
 
   "eggScale": 0.3,
   "eggRotation": { "x": -90 },
+  "eggTranslation": { "y": -0.6 },
 
   "resourceScale": 0.01,
+  "resourceTranslation": { "y": -0.1 },
 
   "food": { "scale": 0.5, "translation": { "x": 0.5, "y": -0.5 } },
+  "linemate": { "scale": 0.008, "translation": { "y": -0.25 } },
+  "deraumere": { "scale": 0.018, "translation": { "y": -0.55 } },
+  "sibur": { "scale": 0.008, "translation": { "y": 0.14 } },
+  "mendiane": { "scale": 0.08, "translation": { "y": -0.65 } },
+  "phiras": { "scale": 0.25, "translation": { "y": -0.50 } },
+  "thystame": { "scale": 0.03, "translation": { "y": -0.54 } },
 
   "tileScale": 0.0016,
   "tileTranslation": { "x": -4.5, "y": -1.5, "z": -3.5},
