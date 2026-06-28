@@ -78,7 +78,7 @@ void Zappy::Server::updateStart()
 
     using std::chrono_literals::operator ""ms;
     m_UpdateDuration = m_Game.activePlayers() > 0
-        ? DEFAULT_TIMEOUT / m_Game.gameSpeed()
+        ? m_Game.timeToNextEvent()
         : -1ms;
 }
 
@@ -96,6 +96,7 @@ void Zappy::Server::updateClientPost(Client& client)
 
 int Zappy::Server::pollTimeout(int previousTimeout)
 {
+    return m_UpdateDuration.count();
     if (m_UpdateDuration.count() < 0)
         return -1;
 

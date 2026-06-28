@@ -24,8 +24,6 @@ namespace Zappy {
     class Server : public LatticeServer {
         using Client = Client::Client;
 
-        static constexpr std::chrono::milliseconds DEFAULT_TIMEOUT { 20'000 };
-
         Game::Game m_Game;
         std::chrono::milliseconds m_UpdateDuration;
         std::chrono::steady_clock::time_point m_UpdateStart;
