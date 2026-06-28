@@ -128,6 +128,16 @@ Each block supports the same three keys as the global fields:
 
 Fallback chain per field: per-resource block > global `resource*` field > code default. Omitting a key in the per-resource block falls back to the global value, not to the code default.
 
+### How the manifest is parsed
+
+The manifest is loaded by the `PackManifest` component (`gui/src/Theme/PackManifest.cpp`). It reads `manifest.json` **once** per pack and resolves every field from that single cached buffer, so adding fields does not multiply file reads. The parser is intentionally tolerant:
+
+- Fields may appear in any order, and unknown fields are ignored.
+- Any missing or malformed field falls back to its default (see the table above) instead of being a fatal error.
+- Only the pack folder and its `manifest.json` are mandatory; every model and tuning field is optional.
+
+`PackTheme` consumes the parsed `PackManifest` and is responsible solely for rendering (choosing model vs. primitive fallback), which keeps manifest parsing and drawing cleanly separated.
+
 ## Player Animation States
 
 Player animations are embedded as tracks in a single `player.glb` file. The manifest `animations` block maps state names to track indices in that file.
@@ -209,9 +219,14 @@ The track order in the exported GLB determines the indices used in the manifest 
 
 ## Model Limitations
 
-raylib enforces a hard limit of **65535 vertices per mesh**. Models that exceed this will trigger a fallback to primitives automatically - the GUI will not crash, but the 3D model will not render.
+Two GLB constraints trigger an automatic fallback to primitives. In both cases the GUI never crashes - the entity simply renders as its primitive shape:
 
-If your model falls back to a primitive cube unexpectedly, open it in Blender, add a **Decimate** modifier to the mesh, and reduce the ratio until the vertex count drops below 65535, then re-export as GLB.
+- **Vertex count:** raylib enforces a hard limit of **65535 vertices per mesh**. Models that exceed this fall back to a primitive.
+- **Index type:** meshes that use 32-bit (`UNSIGNED_INT` / glTF `componentType` 5125) indices are rejected before loading, because the skinning backend cannot convert them safely. The affected character model falls back to a primitive cube.
+
+Both checks live in the model layer (`CharacterModel`): the constructor throws on an unsupported file and `PackTheme` catches it to select the primitive fallback, instead of the pack theme inspecting the file itself.
+
+If your model falls back to a primitive cube unexpectedly, open it in Blender, add a **Decimate** modifier to the mesh, and reduce the ratio until the vertex count drops below 65535, then re-export as GLB. Keeping the mesh under 65535 vertices also keeps the exporter on 16-bit indices, which avoids the index-type rejection.
 
 ## Creating a New Pack
 
