@@ -19,6 +19,7 @@ namespace Zappy::Game {
     inline constexpr std::chrono::duration<double, std::milli> FOOD_ALIVE_TIME { 126'000 };  // 126 sec
     inline constexpr std::chrono::duration<double, std::milli> RESOURCE_RESPAWN_DELAY { 20'000 };
 
+    inline constexpr std::size_t MAX_LEVEL_PLAYER_WIN_REQUIREMENT = 6;
 
     /**
      * Trantor resource densities.

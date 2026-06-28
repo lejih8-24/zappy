@@ -19,6 +19,7 @@ namespace Zappy::Game {
         public:
             std::size_t members;
             std::size_t maxMembers;
+            std::size_t maxLevelMembers;
 
         public:
             Team() noexcept;

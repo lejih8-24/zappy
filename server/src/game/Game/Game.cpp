@@ -51,6 +51,11 @@ void Zappy::Game::Game::update(std::chrono::nanoseconds dt)
         if (it == m_EvolveGroups.end())
             break;
     }
+
+    std::string_view winner = determineWinner();
+
+    if (!winner.empty())
+        m_GraphicsEvents.emplace_back(Event::serverGameEnd(winner));
 }
 
 std::size_t Zappy::Game::Game::activePlayers() const
@@ -498,6 +503,9 @@ void Zappy::Game::Game::endPlayerIncantation(EvolutionGroup& group)
             player.levelUp();
             player.addMessage("Current level: " + std::to_string(player.level()));
             m_GraphicsEvents.emplace_back(Event::playerLevel(player.id(), player.level()));
+
+            if (player.level() == MAX_PLAYER_LEVEL)
+                m_Teams[std::string(player.team())].maxLevelMembers++;
         } else {
             player.addMessage("ko");
         }
@@ -517,6 +525,24 @@ void Zappy::Game::Game::killPlayer(const Player& player)
     if (it == m_Players.end())
         return;
     m_Players.erase(it);
+}
+
+/**
+ * Attempts to determine the
+ * winning team by checking
+ * the appropriate criteria.
+ *
+ * If no team is found, an empty
+ * string view is returned.
+ */
+std::string_view Zappy::Game::Game::determineWinner() const
+{
+    for (auto& [_, team] : m_Teams) {
+        if (team.maxLevelMembers >= MAX_LEVEL_PLAYER_WIN_REQUIREMENT)
+            return team.name();
+    }
+
+    return {};
 }
 
 auto Zappy::Game::Game::emplacePlayer(std::string_view teamName) -> Player&

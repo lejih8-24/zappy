@@ -151,10 +151,15 @@ std::string Zappy::Game::Event::eggHatch(int eggId)
 
 std::string Zappy::Game::Event::serverGetTime(unsigned int speed)
 {
-  return "sgt " + std::to_string(speed) + "\n";
+    return "sgt " + std::to_string(speed) + "\n";
 }
 
 std::string Zappy::Game::Event::serverSetTime(unsigned int speed)
 {
-  return "sst " + std::to_string(speed) + "\n";
+    return "sst " + std::to_string(speed) + "\n";
+}
+
+std::string Zappy::Game::Event::serverGameEnd(std::string_view teamName)
+{
+    return "seg " + std::string(teamName) + "\n";
 }

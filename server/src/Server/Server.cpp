@@ -221,6 +221,13 @@ auto Zappy::Server::Builder::addTeamName(std::string_view name) -> Builder&&
     if (name == "GRAPHIC")
         throw Exceptions::ParseException("team name may not be reserved name \"GRAPHIC\"");
 
+    if (name.empty())
+        throw Exceptions::ParseException("team name may not be empty.");
+
+    auto res = std::find(m_TeamNames.begin(), m_TeamNames.end(), name);
+    if (res != m_TeamNames.end())
+        throw Exceptions::ParseException("duplicate team names are disallowed.");
+
     m_TeamNames.emplace_back(name);
     return std::move(*this);
 }
