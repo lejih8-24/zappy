@@ -8,19 +8,16 @@
 #include "Render.hpp"
 
 #include "Game/GameStateEventHandler.hpp"
-#include "UI/Scale.hpp"
 #include <networking.hpp>
-#include "raylib.h"
-#include "raymath.h"
 
 #include <string>
 #include <variant>
 
 namespace GUI {
 
-Render::Render(std::string_view host, int port, std::string_view pack)
+Render::Render(std::string_view host, int port, std::string_view pack, int width, int height)
     : _state()
-    , _window(1440, 900,
+    , _window(width, height,
           std::string("Zappy GUI - ").append(host).append(":").append(std::to_string(port)), 60)
     , _themeManager(pack)
     , _map(_themeManager.active())
@@ -46,14 +43,14 @@ void Render::drawHelpText() const
         "[X] quit",
         "[ESC] lock camera/settings",
     };
-    const int fontSize = UI::scaleSize(20);
-    const int lineSpacing = UI::scaleSize(28);
-    const int startY = GetScreenHeight() / 2 + UI::scaleSize(55);
+    const int fontSize = _canvas.scaleSize(20);
+    const int lineSpacing = _canvas.scaleSize(28);
+    const int startY = _canvas.height() / 2 + _canvas.scaleSize(55);
 
     for (std::size_t i = 0; i < sizeof(helpLines) / sizeof(helpLines[0]); ++i) {
-        const int textWidth = MeasureText(helpLines[i], fontSize);
-        DrawText(helpLines[i], (GetScreenWidth() - textWidth) / 2, startY + static_cast<int>(i) * lineSpacing,
-            fontSize, RAYWHITE);
+        const int textWidth = _canvas.measureText(helpLines[i], fontSize);
+        _canvas.drawText(helpLines[i], (_canvas.width() - textWidth) / 2,
+            startY + static_cast<int>(i) * lineSpacing, fontSize, Colors::RayWhite);
     }
 }
 
@@ -61,8 +58,8 @@ void Render::drawCameraLockLabel() const
 {
     const char *lockLabel = _camera.isCursorLocked() ? "[ESC] lock camera/settings" : "[LOCKED] Click to unlock";
 
-    DrawText(lockLabel, UI::scaleSize(10), UI::scaleSize(62), UI::scaleSize(18),
-        _camera.isCursorLocked() ? GREEN : YELLOW);
+    _canvas.drawText(lockLabel, _canvas.scaleSize(10), _canvas.scaleSize(62), _canvas.scaleSize(18),
+        _camera.isCursorLocked() ? Colors::Green : Colors::Yellow);
 }
 
 void Render::drawFocusOverlay() const
@@ -70,12 +67,13 @@ void Render::drawFocusOverlay() const
     if (_camera.isCursorLocked())
         return;
 
-    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), {0, 0, 0, 100});
+    _canvas.drawRectangle(0, 0, _canvas.width(), _canvas.height(), {0, 0, 0, 100});
     const char *msg = "Click to unlock";
-    int fontSize = UI::scaleSize(36);
-    int tw = MeasureText(msg, fontSize);
+    int fontSize = _canvas.scaleSize(36);
+    int tw = _canvas.measureText(msg, fontSize);
 
-    DrawText(msg, (GetScreenWidth() - tw) / 2, GetScreenHeight() / 2 - fontSize / 2, fontSize, RAYWHITE);
+    _canvas.drawText(msg, (_canvas.width() - tw) / 2, _canvas.height() / 2 - fontSize / 2, fontSize,
+        Colors::RayWhite);
 }
 
 void Render::drawCrosshair() const
@@ -83,18 +81,18 @@ void Render::drawCrosshair() const
     if (!_camera.isCursorLocked())
         return;
 
-    int cx = GetScreenWidth() / 2;
-    int cy = GetScreenHeight() / 2;
-    int crosshairSize = UI::scaleSize(12);
+    int cx = _canvas.width() / 2;
+    int cy = _canvas.height() / 2;
+    int crosshairSize = _canvas.scaleSize(12);
 
-    DrawLine(cx - crosshairSize, cy, cx + crosshairSize, cy, RAYWHITE);
-    DrawLine(cx, cy - crosshairSize, cx, cy + crosshairSize, RAYWHITE);
+    _canvas.drawLine(cx - crosshairSize, cy, cx + crosshairSize, cy, Colors::RayWhite);
+    _canvas.drawLine(cx, cy - crosshairSize, cx, cy + crosshairSize, Colors::RayWhite);
 }
 
 void Render::draw3DScene()
 {
     _camera.begin3D();
-    _map.draw(_state);
+    _map.draw(_canvas, _state, _window.now());
     _camera.end3D();
 }
 
@@ -104,17 +102,17 @@ void Render::drawSelectedPlayerPanel() const
         return;
     auto it = _state.players.find(*_selectedPlayerId);
     if (it != _state.players.end())
-        _playerInfoPanel.draw(it->second);
+        _playerInfoPanel.draw(_canvas, it->second, _window.now());
 }
 
 void Render::drawFrame()
 {
     _window.beginFrame(_themeManager.active().getBackgroundColor());
-    DrawFPS(10, 10);
+    _canvas.drawFPS(10, 10);
 
     draw3DScene();
-    _map.drawLabels(_state, _camera.get());
-    _hud.draw(_state, _window);
+    _map.drawLabels(_canvas, _state, _camera, _window.now());
+    _hud.draw(_canvas, _state, _window.now());
     drawSelectedPlayerPanel();
     drawCrosshair();
     drawFocusOverlay();
@@ -126,31 +124,29 @@ void Render::drawFrame()
 
 void Render::handleGameInput()
 {
-    if (IsKeyPressed(KEY_F11))
+    if (_window.isKeyPressed(Key::F11))
         _window.toggleFullscreen();
-    if (IsKeyPressed(KEY_H))
+    if (_window.isKeyPressed(Key::H))
         _hud.update(HudAction::ToggleVisibility);
-    if (IsKeyPressed(KEY_RIGHT))
+    if (_window.isKeyPressed(Key::Right))
         _hud.update(HudAction::NextPage);
-    if (IsKeyPressed(KEY_LEFT))
+    if (_window.isKeyPressed(Key::Left))
         _hud.update(HudAction::PreviousPage);
-    if (IsKeyPressed(KEY_DOWN))
+    if (_window.isKeyPressed(Key::Down))
         _hud.update(HudAction::ScrollDown);
-    if (IsKeyPressed(KEY_UP))
+    if (_window.isKeyPressed(Key::Up))
         _hud.update(HudAction::ScrollUp);
 
-    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && _camera.isCursorLocked()) {
-        Vector2 center = { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f };
-        Ray ray = GetMouseRay(center, _camera.get());
+    if (_window.isMouseButtonPressed(MouseButton::Left) && _camera.isCursorLocked()) {
         int selected = -1;
         float closestDist = 1000.0f;
 
         for (const auto &[id, player] : _state.players) {
-            Vector3 pos = _map.getPlayerWorldPos(player, _state);
+            Vec3 pos = _map.getPlayerWorldPos(player, _state, _window.now());
             pos.y += 0.6f;
-            RayCollision hit = GetRayCollisionSphere(ray, pos, 0.6f);
-            if (hit.hit && hit.distance < closestDist) {
-                closestDist = hit.distance;
+            auto hitDistance = _camera.screenCenterHitDistance(pos, 0.6f);
+            if (hitDistance && *hitDistance < closestDist) {
+                closestDist = *hitDistance;
                 selected = id;
             }
         }
@@ -164,7 +160,7 @@ void Render::handleGameInput()
 
 void Render::pollServerEvents(Zappy::Networking::GraphicsClient &client)
 {
-    GameStateEventHandler handler(_state);
+    GameStateEventHandler handler(_state, _window.now());
 
     while (auto event = client.pollEvent())
         std::visit(handler, *event);
@@ -172,7 +168,7 @@ void Render::pollServerEvents(Zappy::Networking::GraphicsClient &client)
 
 void Render::cleanupDeadPlayers()
 {
-    float now = GetTime();
+    float now = _window.now();
 
     for (auto player = _state.players.begin(); player != _state.players.end();) {
         if (!player->second.alive && player->second.animState == Player::AnimState::Dead) {
@@ -196,7 +192,7 @@ void Render::update(Zappy::Networking::GraphicsClient &client)
     pollServerEvents(client);
     cleanupDeadPlayers();
     handleGameInput();
-    _camera.update();
+    _camera.update(_window);
 }
 
 void Render::renderLoop(Zappy::Networking::GraphicsClient &client)

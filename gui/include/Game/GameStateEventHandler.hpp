@@ -14,7 +14,7 @@ namespace GUI {
 
 class GameStateEventHandler : public Zappy::Networking::BaseEventHandler {
     public:
-        GameStateEventHandler(GameState &state);
+        GameStateEventHandler(GameState &state, float currentTime);
 
         using Zappy::Networking::BaseEventHandler::operator();
 
@@ -42,6 +42,7 @@ class GameStateEventHandler : public Zappy::Networking::BaseEventHandler {
 
     private:
         GameState &_state;
+        float _currentTime;
 };
 
 }

@@ -13,11 +13,11 @@ namespace GUI {
 
 class DefaultTheme : public ITheme {
     public:
-        void drawTile(Vector3 pos, Vector3 size, bool isLight) const override;
-        void drawResource(std::size_t resourceIndex, Vector3 pos) const override;
-        void drawPlayer(Vector3 pos, float rotationDeg, Player::AnimState state,
+        void drawTile(const ICanvas &canvas, Vec3 pos, Vec3 size, bool isLight) const override;
+        void drawResource(const ICanvas &canvas, std::size_t resourceIndex, Vec3 pos) const override;
+        void drawPlayer(const ICanvas &canvas, Vec3 pos, float rotationDeg, Player::AnimState state,
             float animationElapsed = 0.0F) const override;
-        void drawEgg(Vector3 pos) const override;
+        void drawEgg(const ICanvas &canvas, Vec3 pos) const override;
 
         float getPlayerLabelHeight() const override;
         float getPlayerLabelScale() const override;

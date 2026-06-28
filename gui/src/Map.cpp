@@ -14,7 +14,7 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
-#include <raymath.h>
+#include <vector>
 
 // Y size of every resource model - center at half height above tile surface
 static constexpr float RESOURCE_HEIGHT = 0.20F;
@@ -36,19 +36,6 @@ static std::unordered_map<int, int> buildStackIndex(const GUI::GameState &state)
     return index;
 }
 
-// Returns nullopt if worldPos is behind the camera or outside screen bounds
-static std::optional<Vector2> projectToScreen(Vector3 worldPos, Camera3D camera, Vector3 camForward)
-{
-    // dot product <= 0 means the point is behind or perpendicular to the camera
-    if (Vector3DotProduct(camForward, Vector3Subtract(worldPos, camera.position)) <= 0)
-        return {};
-    Vector2 screen = GetWorldToScreen(worldPos, camera);
-    if (screen.x < 0 || screen.x > static_cast<float>(GetScreenWidth()) ||
-        screen.y < 0 || screen.y > static_cast<float>(GetScreenHeight()))
-        return {};
-    return screen;
-}
-
 namespace GUI {
 
 Map::Map(ITheme &theme, float squareSize)
@@ -58,7 +45,7 @@ Map::Map(ITheme &theme, float squareSize)
 }
 
 // Centers the grid on the world origin so the map is symmetrical around (0,0)
-Vector3 Map::getTilePosition(float x, float y, const GameState &state, float height) const
+Vec3 Map::getTilePosition(float x, float y, const GameState &state, float height) const
 {
     return {
         (x - static_cast<float>(state.mapWidth) / 2.0f) * _squareSize,
@@ -67,30 +54,30 @@ Vector3 Map::getTilePosition(float x, float y, const GameState &state, float hei
     };
 }
 
-void Map::drawTiles(const GameState &state) const
+void Map::drawTiles(const ICanvas &canvas, const GameState &state) const
 {
     for (std::size_t row = 0; row < state.mapHeight; ++row) {
         for (std::size_t col = 0; col < state.mapWidth; ++col) {
             // Y = -0.1f so the tile sits just below Y=0 where players stand
-            Vector3 pos = getTilePosition(static_cast<int>(col), static_cast<int>(row), state, -0.1f);
-            Vector3 size = { _squareSize - 0.1f, 0.2f, _squareSize - 0.1f };
-            _theme.drawTile(pos, size, (col + row) % 2 == 0);
+            Vec3 pos = getTilePosition(static_cast<int>(col), static_cast<int>(row), state, -0.1f);
+            Vec3 size = { _squareSize - 0.1f, 0.2f, _squareSize - 0.1f };
+            _theme.drawTile(canvas, pos, size, (col + row) % 2 == 0);
         }
     }
 }
 
-void Map::drawResources(const GameState &state) const
+void Map::drawResources(const ICanvas &canvas, const GameState &state) const
 {
     // Fraction of squareSize used to spread each resource slot from tile center
     static constexpr float resourceOffset = 0.28F;
-    static constexpr std::array<Vector2, Zappy::Game::Resources::RESOURCE_COUNT> resourceSlots = {
-        Vector2{-1.0F, -1.0F}, //? Food
-        Vector2{0.0F, -1.0F},  //? Linemate
-        Vector2{1.0F, -1.0F},  //? Deraumere
-        Vector2{-1.0F, 0.0F},  //? Sibur
-        Vector2{1.0F, 0.0F},   //? Mendiane
-        Vector2{-1.0F, 1.0F},  //? Phiras
-        Vector2{0.0F, 1.0F},   //? Thystame
+    static constexpr std::array<Vec2, Zappy::Game::Resources::RESOURCE_COUNT> resourceSlots = {
+        Vec2{-1.0F, -1.0F}, //? Food
+        Vec2{0.0F, -1.0F},  //? Linemate
+        Vec2{1.0F, -1.0F},  //? Deraumere
+        Vec2{-1.0F, 0.0F},  //? Sibur
+        Vec2{1.0F, 0.0F},   //? Mendiane
+        Vec2{-1.0F, 1.0F},  //? Phiras
+        Vec2{0.0F, 1.0F},   //? Thystame
     };
 
     for (const Tile &tile : state.tiles) {
@@ -98,68 +85,68 @@ void Map::drawResources(const GameState &state) const
         for (unsigned int quantity : tile.resources) {
             if (quantity > 0) {
                 // Y = half height so the model sits on the tile surface
-                Vector3 pos = getTilePosition(tile.x, tile.y, state, RESOURCE_HEIGHT / 2.0F);
+                Vec3 pos = getTilePosition(tile.x, tile.y, state, RESOURCE_HEIGHT / 2.0F);
                 pos.x += resourceSlots[resourceIndex].x * _squareSize * resourceOffset;
                 pos.z += resourceSlots[resourceIndex].y * _squareSize * resourceOffset;
-                _theme.drawResource(resourceIndex, pos);
+                _theme.drawResource(canvas, resourceIndex, pos);
             }
             ++resourceIndex;
         }
     }
 }
 
-void Map::drawPlayers(const GameState &state) const
+void Map::drawPlayers(const ICanvas &canvas, const GameState &state, float currentTime) const
 {
     auto stackIndex = buildStackIndex(state);
     float stackSpacing = _theme.getPlayerLabelHeight();
-    float now = GetTime();
     for (const auto &[id, player] : state.players) {
         float height = static_cast<float>(stackIndex.at(id)) * stackSpacing;
-        Player::DisplayPosition displayPos = player.getDisplayPosition(now);
-        Vector3 pos = getTilePosition(displayPos.x, displayPos.y, state, height);
-        Player::AnimState animState = player.getEffectiveAnimState(now);
-        _theme.drawPlayer(pos, player.rotationDeg, animState, player.getAnimationElapsed(now, animState));
+        Player::DisplayPosition displayPos = player.getDisplayPosition(currentTime);
+        Vec3 pos = getTilePosition(displayPos.x, displayPos.y, state, height);
+        Player::AnimState animState = player.getEffectiveAnimState(currentTime);
+        _theme.drawPlayer(canvas, pos, player.rotationDeg, animState,
+            player.getAnimationElapsed(currentTime, animState));
     }
 }
 
-void Map::drawEggs(const GameState &state) const
+void Map::drawEggs(const ICanvas &canvas, const GameState &state) const
 {
     for (const auto &[id, egg] : state.eggs) {
         (void)id;
-        Vector3 pos = getTilePosition(egg.x, egg.y, state, 0.35f);
-        _theme.drawEgg(pos);
+        Vec3 pos = getTilePosition(egg.x, egg.y, state, 0.35f);
+        _theme.drawEgg(canvas, pos);
     }
 }
 
-void Map::draw(const GameState &state) const
+void Map::draw(const ICanvas &canvas, const GameState &state, float currentTime) const
 {
-    drawTiles(state);
-    drawResources(state);
-    drawPlayers(state);
-    drawEggs(state);
+    drawTiles(canvas, state);
+    drawResources(canvas, state);
+    drawPlayers(canvas, state, currentTime);
+    drawEggs(canvas, state);
 }
 
-void Map::drawCountLabel(Vector2 screenPos, int fontSize, unsigned int quantity) const
+void Map::drawCountLabel(const ICanvas &canvas, Vec2 screenPos, int fontSize, unsigned int quantity) const
 {
     std::string label = "x" + std::to_string(quantity);
-    int textWidth = MeasureText(label.c_str(), fontSize);
+    int textWidth = canvas.measureText(label, fontSize);
     int sx = static_cast<int>(screenPos.x) - textWidth / 2;
     int sy = static_cast<int>(screenPos.y);
-    DrawText(label.c_str(), sx + 1, sy + 1, fontSize, BLACK); // drop shadow
-    DrawText(label.c_str(), sx, sy, fontSize, YELLOW);
+    canvas.drawText(label, sx + 1, sy + 1, fontSize, Colors::Black); // drop shadow
+    canvas.drawText(label, sx, sy, fontSize, Colors::Yellow);
 }
 
-void Map::drawResourceLabels(const GameState &state, Camera3D camera, Vector3 camForward) const
+void Map::drawResourceLabels(const ICanvas &canvas, const GameState &state, const GameCamera &camera) const
 {
     static constexpr float resourceOffset = 0.28F;
-    static constexpr std::array<Vector2, Zappy::Game::Resources::RESOURCE_COUNT> resourceSlots = {
-        Vector2{-1.0F, -1.0F}, //? Food
-        Vector2{0.0F, -1.0F},  //? Linemate
-        Vector2{1.0F, -1.0F},  //? Deraumere
-        Vector2{-1.0F, 0.0F},  //? Sibur
-        Vector2{1.0F, 0.0F},   //? Mendiane
-        Vector2{-1.0F, 1.0F},  //? Phiras
-        Vector2{0.0F, 1.0F},   //? Thystame
+    static constexpr std::array<Vec2, Zappy::Game::Resources::RESOURCE_COUNT> resourceSlots = {
+        Vec2{-1.0F, -1.0F}, //? Food
+        Vec2{0.0F, -1.0F},  //? Linemate
+        Vec2{1.0F, -1.0F},  //? Deraumere
+        Vec2{-1.0F, 0.0F},  //? Sibur
+        Vec2{1.0F, 0.0F},   //? Mendiane
+        Vec2{-1.0F, 1.0F},  //? Phiras
+        Vec2{0.0F, 1.0F},   //? Thystame
     };
 
     for (const Tile &tile : state.tiles) {
@@ -167,15 +154,15 @@ void Map::drawResourceLabels(const GameState &state, Camera3D camera, Vector3 ca
         for (unsigned int quantity : tile.resources) {
             if (quantity > 1) {
                 // Float label above the resource model
-                Vector3 worldPos = getTilePosition(tile.x, tile.y, state, RESOURCE_HEIGHT + 0.3f);
+                Vec3 worldPos = getTilePosition(tile.x, tile.y, state, RESOURCE_HEIGHT + 0.3f);
                 worldPos.x += resourceSlots[resourceIndex].x * _squareSize * resourceOffset;
                 worldPos.z += resourceSlots[resourceIndex].y * _squareSize * resourceOffset;
-                auto screenPos = projectToScreen(worldPos, camera, camForward);
+                auto screenPos = camera.projectToScreen(worldPos);
                 if (screenPos) {
-                    float dist = Vector3Distance(camera.position, worldPos);
+                    float dist = camera.distanceTo(worldPos);
                     // Font scales inversely with distance, clamped to readable range
                     int fontSize = std::clamp(static_cast<int>(80.0f / dist), 6, 16);
-                    drawCountLabel(*screenPos, fontSize, quantity);
+                    drawCountLabel(canvas, *screenPos, fontSize, quantity);
                 }
             }
             ++resourceIndex;
@@ -183,46 +170,45 @@ void Map::drawResourceLabels(const GameState &state, Camera3D camera, Vector3 ca
     }
 }
 
-void Map::drawPlayerLabels(const GameState &state, Camera3D camera, Vector3 camForward) const
+void Map::drawPlayerLabels(const ICanvas &canvas, const GameState &state, const GameCamera &camera,
+    float currentTime) const
 {
     auto stackIndex = buildStackIndex(state);
     float stackSpacing = _theme.getPlayerLabelHeight();
-    float now = GetTime();
     for (const auto &[id, player] : state.players) {
         float height = static_cast<float>(stackIndex.at(id)) * stackSpacing + stackSpacing;
-        Player::DisplayPosition displayPos = player.getDisplayPosition(now);
-        Vector3 labelPos = getTilePosition(displayPos.x, displayPos.y, state, height);
+        Player::DisplayPosition displayPos = player.getDisplayPosition(currentTime);
+        Vec3 labelPos = getTilePosition(displayPos.x, displayPos.y, state, height);
 
-        auto screenPos = projectToScreen(labelPos, camera, camForward);
+        auto screenPos = camera.projectToScreen(labelPos);
         if (!screenPos)
             continue;
 
-        float dist = Vector3Distance(camera.position, labelPos);
+        float dist = camera.distanceTo(labelPos);
         // Font scales inversely with distance, clamped to readable range
         int fontSize = std::clamp(static_cast<int>(_theme.getPlayerLabelScale() / dist), 8, 22);
         std::string label = player.teamName + " L" + std::to_string(player.level);
-        int textWidth = MeasureText(label.c_str(), fontSize);
+        int textWidth = canvas.measureText(label, fontSize);
         int sx = static_cast<int>(screenPos->x) - textWidth / 2;
         int sy = static_cast<int>(screenPos->y);
 
-        DrawText(label.c_str(), sx + 1, sy + 1, fontSize, BLACK); // drop shadow
-        DrawText(label.c_str(), sx, sy, fontSize, RAYWHITE);
+        canvas.drawText(label, sx + 1, sy + 1, fontSize, Colors::Black); // drop shadow
+        canvas.drawText(label, sx, sy, fontSize, Colors::RayWhite);
     }
 }
 
-Vector3 Map::getPlayerWorldPos(const Player &player, const GameState &state) const
+Vec3 Map::getPlayerWorldPos(const Player &player, const GameState &state, float currentTime) const
 {
     auto stackIndex = buildStackIndex(state);
     float height = static_cast<float>(stackIndex.at(player.id)) * _theme.getPlayerLabelHeight();
-    Player::DisplayPosition displayPos = player.getDisplayPosition(GetTime());
+    Player::DisplayPosition displayPos = player.getDisplayPosition(currentTime);
     return getTilePosition(displayPos.x, displayPos.y, state, height);
 }
 
-void Map::drawLabels(const GameState &state, Camera3D camera) const
+void Map::drawLabels(const ICanvas &canvas, const GameState &state, const GameCamera &camera, float currentTime) const
 {
-    Vector3 camForward = Vector3Normalize(Vector3Subtract(camera.target, camera.position));
-    drawResourceLabels(state, camera, camForward);
-    drawPlayerLabels(state, camera, camForward);
+    drawResourceLabels(canvas, state, camera);
+    drawPlayerLabels(canvas, state, camera, currentTime);
 }
 
 }

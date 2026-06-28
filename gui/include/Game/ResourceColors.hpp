@@ -7,21 +7,21 @@
 
 #pragma once
 
+#include "Graphics/Types.hpp"
 #include <game.hpp>
-#include "raylib.h"
 
 #include <array>
 
 namespace GUI {
 
 inline constexpr std::array<Color, Zappy::Game::Resources::RESOURCE_COUNT> ResourceColors = {
-    BROWN,     //? Food
-    LIGHTGRAY, //? Linemate
-    VIOLET,    //? Deraumere
-    YELLOW,    //? Sibur
-    ORANGE,    //? Mendiane
-    SKYBLUE,   //? Phiras
-    MAGENTA,   //? Thystame
+    Colors::Brown,     //? Food
+    Colors::LightGray, //? Linemate
+    Colors::Violet,    //? Deraumere
+    Colors::Yellow,    //? Sibur
+    Colors::Orange,    //? Mendiane
+    Colors::SkyBlue,   //? Phiras
+    Colors::Magenta,   //? Thystame
 };
 
 }
