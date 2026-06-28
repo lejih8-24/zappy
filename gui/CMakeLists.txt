@@ -8,7 +8,6 @@
 cmake_minimum_required(VERSION 3.15)
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/lib/raylib     ${CMAKE_BINARY_DIR}/lib/raylib)
-add_subdirectory(${CMAKE_SOURCE_DIR}/lib/liblattice ${CMAKE_BINARY_DIR}/lib/liblattice)
 
 add_executable(zappy_gui
                src/game/Resources/Resources.cpp
