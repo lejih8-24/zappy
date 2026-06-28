@@ -88,6 +88,8 @@ namespace Zappy::Game {
             void killPlayer(const Player& player);
 
         private:
+            std::string_view determineWinner() const;
+
             unsigned int orientationTo(const Player& to, const Player& from);
             std::pair<float, float> shortestDistanceTo(const Player& to, const Player& player);
             std::pair<float, float> distanceTo(std::pair<int, int> position, const Player& player);
