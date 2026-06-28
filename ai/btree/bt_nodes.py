@@ -1,6 +1,6 @@
 from .bt_core import Node, NodeStatus
 from CommandModel import LookCommand, ForwardCommand, TurnLeftCommand, TurnRightCommand, SetCommand, BroadcastCommand, \
-    IncantationCommand, TakeCommand
+    IncantationCommand, TakeCommand, ForkCommand
 from pathfinding import find_path_to_closest
 
 
@@ -61,6 +61,29 @@ class HasMasterCall(Node):
             return NodeStatus.SUCCESS
         return NodeStatus.FAILURE
 
+class ShouldReproduce(Node):
+    """Vérifie si le drone a accumulé assez de réserves pour pondre en toute sécurité."""
+    def tick(self, ai) -> NodeStatus:
+        if ai.states.ready_for_incantation or ai.states.is_master or ai.states.last_master_id is not None:
+            return NodeStatus.FAILURE
+
+        if ai.states.inventory.get("food", 0) > 40 and (ai.cycle_count - ai.states.last_fork_cycle > 600):
+            return NodeStatus.SUCCESS
+
+        return NodeStatus.FAILURE
+
+class ActionFork(Node):
+    """Lance la commande Fork et active le cooldown."""
+    def tick(self, ai) -> NodeStatus:
+        if len(ai.pending_commands) > 0:
+            return NodeStatus.RUNNING
+
+        ai.logger.Info("[REPRODUCTION] Réserves optimales atteintes ! Je pond un œuf.")
+        ai.queue_command(ForkCommand())
+
+        ai.states.last_fork_cycle = ai.cycle_count
+
+        return NodeStatus.SUCCESS
 
 class ActionSearchFood(Node):
     def tick(self, ai) -> NodeStatus:

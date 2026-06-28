@@ -8,7 +8,7 @@ from CommandModel import *
 from BroadcastManager import BroadcastManager
 from btree.bt_nodes import IsHungry, ActionSearchFood, ActionFarmStones, CanElevate, \
     ActionGroupAndIncant, \
-    HasMasterCall, ActionJoinMaster, ActionContributeStones
+    HasMasterCall, ActionJoinMaster, ActionContributeStones, ShouldReproduce, ActionFork
 from ai_movement import AINavigator
 from ai_states import AIState
 from dashboard import Display
@@ -44,6 +44,7 @@ class ZappyAI:
             Sequence([IsHungry(), ActionSearchFood()]),
             Sequence([HasMasterCall(), ActionJoinMaster(), ActionContributeStones()]),
             Sequence([CanElevate(), ActionGroupAndIncant()]),
+            Sequence([ShouldReproduce(), ActionFork()]),
             ActionFarmStones()
         ])
 
