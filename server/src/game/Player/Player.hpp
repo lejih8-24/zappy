@@ -12,6 +12,7 @@
 #include <string_view>
 #include <string>
 #include <chrono>
+#include <deque>
 
 
 namespace Zappy::Game {
@@ -35,10 +36,14 @@ namespace Zappy::Game {
         Resources m_Inventory;
         Duration m_TimeToLive;
         Duration m_Cooldown;
+        std::deque<std::string> m_Messages;
 
         public:
             Player() noexcept;
             Player(std::string_view team);
+
+            void addMessage(std::string&& msg);
+            std::optional<std::string> popMessage();
 
             inline Duration timeToLive() const noexcept { return m_TimeToLive; }
             inline Duration reduceTimeToLive(Duration amnt) noexcept { m_TimeToLive -= amnt; return m_TimeToLive; }
@@ -54,11 +59,10 @@ namespace Zappy::Game {
             inline Orientation orientation() const noexcept { return m_Orientation; }
             inline void setOrientation(Orientation orientation) noexcept { m_Orientation = orientation; }
             inline unsigned char level() const noexcept { return m_Level; }
+            inline void levelUp() noexcept { m_Level++; }
             inline Resources& inventory() noexcept { return m_Inventory; }
             inline const Resources& inventory() const noexcept { return m_Inventory; }
             inline void moveTo(unsigned int x, unsigned int y) { m_Position = { x, y }; }
-
-            inline void levelUp() noexcept { m_Level++; }
 
             void moveForward(std::pair<unsigned int, unsigned int> size);
             void turnRight();

@@ -38,6 +38,25 @@ Zappy::Game::Player::Player(std::string_view team)
     m_Inventory.food = INITIAL_PLAYER_FOOD;
 }
 
+void Zappy::Game::Player::addMessage(std::string&& msg)
+{
+    if (!msg.ends_with('\n'))
+        msg.push_back('\n');
+
+    m_Messages.push_front(std::move(msg));
+}
+
+std::optional<std::string> Zappy::Game::Player::popMessage()
+{
+    if (m_Messages.empty())
+        return std::nullopt;
+
+    std::optional<std::string> message;
+    message->swap(m_Messages.back());
+    m_Messages.pop_back();
+    return message;
+}
+
 void Zappy::Game::Player::moveForward(std::pair<unsigned int, unsigned int> size)
 {
     auto  [maxX, maxY] = size;
