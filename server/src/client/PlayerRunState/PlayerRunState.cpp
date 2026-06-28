@@ -42,7 +42,7 @@ Zappy::Client::PlayerRunState::PlayerRunState(Game::Player& player)
 
 void Zappy::Client::PlayerRunState::update(Client& client, std::chrono::nanoseconds dt)
 {
-    // queuePlayerMessages();
+    queuePlayerMessages();
     sendQueuedMessages(client);
 
     if (m_Player.inventory().food == 0 && m_Player.timeToLive() <= 0.0ms) {
@@ -77,7 +77,6 @@ void Zappy::Client::PlayerRunState::update(Client& client, std::chrono::nanoseco
     if (!client.readline(command))
         return;
 
-    toLowercase(command);
     runCommand(client, command);
 
     if (hasMessages())
@@ -104,13 +103,13 @@ void Zappy::Client::PlayerRunState::addCooldown(std::chrono::duration<double, st
     m_Player.addCooldown(duration / game().gameSpeed());
 }
 
-void Zappy::Client::PlayerRunState::toLowercase(std::string& repr)
+void Zappy::Client::PlayerRunState::toLowercase(char* start, char* end)
 {
     // See https://en.cppreference.com/cpp/string/byte/tolower
     std::transform(
-        repr.begin(),
-        repr.end(),
-        repr.begin(),
+        start,
+        end,
+        start,
         [](unsigned char c){ return std::tolower(c); }
     );
 }
@@ -118,6 +117,10 @@ void Zappy::Client::PlayerRunState::toLowercase(std::string& repr)
 void Zappy::Client::PlayerRunState::runCommand(Client& client, std::string& line)
 {
     auto commandEnd = line.find(' ');
+    commandEnd = commandEnd == std::string::npos ? line.size() : commandEnd;
+
+    toLowercase(line.data(), line.data() + commandEnd);
+
     std::string_view lineView = line;
     std::string_view command = lineView.substr(0, commandEnd);
     std::string_view args = commandEnd + 1 >= lineView.size() ? std::string_view() : lineView.substr(commandEnd + 1);
@@ -184,9 +187,15 @@ void Zappy::Client::PlayerRunState::inventoryCommand(std::string_view, PlayerRun
     state.addCooldown(Game::PLAYER_INVENTORY_COOLDOWN);
 }
 
-void Zappy::Client::PlayerRunState::broadcastCommand(std::string_view, PlayerRunState& state, Client& client, Game::Game& game)
+void Zappy::Client::PlayerRunState::broadcastCommand(std::string_view msg, PlayerRunState& state, Client& client, Game::Game& game)
 {
-    // TODO: implement
+    // Sanitize message, since we'll be broadcasting it
+    while (msg.ends_with('\n'))
+        msg = msg.substr(0, msg.size() - 1);
+    std::string sanitizedMessage = logger.escape(msg);
+    sanitizedMessage += '\n';
+
+    game.playerBroadcast(state.m_Player, sanitizedMessage);
     state.addCooldown(Game::PLAYER_BROADCAST_COOLDOWN);
 }
 

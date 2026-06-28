@@ -34,7 +34,7 @@ namespace Zappy::Client {
             void queuePlayerMessages();
             void addCooldown(std::chrono::duration<double, std::milli> duration);
 
-            static void toLowercase(std::string& repr);
+            static void toLowercase(char* start, char* end);
             void runCommand(Client& client, std::string& command);
 
             static void forwardCommand(std::string_view args, PlayerRunState& state, Client& client, Game::Game& game);
