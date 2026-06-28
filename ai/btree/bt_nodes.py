@@ -1,6 +1,6 @@
 from .bt_core import Node, NodeStatus
 from CommandModel import LookCommand, ForwardCommand, TurnLeftCommand, TurnRightCommand, SetCommand, BroadcastCommand, \
-    IncantationCommand, TakeCommand, ForkCommand
+    IncantationCommand, TakeCommand, ForkCommand, ConnectNbrCommand
 from pathfinding import find_path_to_closest
 
 
@@ -72,18 +72,44 @@ class ShouldReproduce(Node):
 
         return NodeStatus.FAILURE
 
+
 class ActionFork(Node):
-    """Lance la commande Fork et active le cooldown."""
+    """Gère la reproduction de manière optimisée en vérifiant les slots disponibles."""
+
     def tick(self, ai) -> NodeStatus:
         if len(ai.pending_commands) > 0:
             return NodeStatus.RUNNING
 
-        ai.logger.Info("[REPRODUCTION] Réserves optimales atteintes ! Je pond un œuf.")
-        ai.queue_command(ForkCommand())
+        if ai.states.fork_step == "INIT":
+            ai.logger.Info("[REPRODUCTION] Vérification des places (Connect_nbr)...")
 
-        ai.states.last_fork_cycle = ai.cycle_count
+            ai.queue_command(ConnectNbrCommand())
+            ai.states.fork_step = "EVALUATE"
+            return NodeStatus.RUNNING
 
-        return NodeStatus.SUCCESS
+        elif ai.states.fork_step == "EVALUATE":
+            slots = ai.states.available_slots
+
+            if slots > 0:
+                ai.logger.Good(
+                    f"[REPRODUCTION] {slots} place(s) libre(s) ! J'économise 42 ticks et j'invoque un renfort.")
+                ai.launch_new_drone()
+                ai.states.last_fork_cycle = ai.cycle_count
+                ai.states.fork_step = "INIT"
+                return NodeStatus.SUCCESS
+            else:
+                ai.logger.Info("[REPRODUCTION] Équipe complète. Je lance l'incubation (Fork)...")
+
+                ai.queue_command(ForkCommand())
+                ai.states.fork_step = "WAIT_FORK"
+                return NodeStatus.RUNNING
+
+        elif ai.states.fork_step == "WAIT_FORK":
+            ai.states.last_fork_cycle = ai.cycle_count
+            ai.states.fork_step = "INIT"
+            return NodeStatus.SUCCESS
+
+        return NodeStatus.FAILURE
 
 class ActionSearchFood(Node):
     def tick(self, ai) -> NodeStatus:

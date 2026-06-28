@@ -72,7 +72,7 @@ class ZappyAI:
 
         if self.states.level == 8:
             return
-        
+
         if req != "DATA_SHARE" and level != self.states.level:
             self.logger.Info(f"[COMMS_DROP] Rejet de {req} venant de {sender_id} : Différence de niveau ({level} vs {self.states.level}).")
             return
@@ -194,6 +194,16 @@ class ZappyAI:
         elif event.type == "RESPONSE":
             self._handle_command_response(event.data["raw"])
 
+    def launch_new_drone(self):
+        """Clone le processus actuel pour connecter un nouveau drone au serveur."""
+        import subprocess
+        import sys
+        try:
+            subprocess.Popen([sys.executable] + sys.argv, start_new_session=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            self.logger.Info("[SYSTEM] Nouveau processus de drone lancé en arrière-plan !")
+        except Exception as e:
+            self.logger.Error(f"[SYSTEM] Erreur lors du lancement du renfort : {e}")
+
     def _update_state_from_result(self, command, result):
         if isinstance(command, InventoryCommand) and isinstance(result, dict):
             self.states.inventory = result
@@ -210,22 +220,15 @@ class ZappyAI:
             self.states.inventory[command.obj_name] = self.states.inventory.get(command.obj_name, 1) - 1
             self.states.vision_grid = None
 
+        elif isinstance(command, ConnectNbrCommand):
+            try:
+                self.states.available_slots = int(result)
+            except ValueError:
+                self.states.available_slots = 0
 
         elif isinstance(command, ForkCommand) and result is True:
-
-            self.logger.Good("L'œuf a été pondu avec succès ! Un nouveau drone rejoindra l'essaim bientôt.")
-            sys.executable = "#!/usr/bin/python3"
-
-            sys.argv = ["ai/main.py", "-p", "4242", "-n", "Alpha", "-h", "127.0.0.1"]
-
-            try:
-
-                subprocess.Popen([sys.executable] + sys.argv, start_new_session=True, stdout=subprocess.DEVNULL,
-                                 stderr=subprocess.DEVNULL)
-
-            except Exception as e:
-
-                self.logger.Error(f"Erreur lors du lancement du nouveau drone : {e}")
+            self.logger.Good("L'œuf a été pondu avec succès ! Un nouveau drone arrivera dans 600 ticks.")
+            self._launch_new_drone()
 
         elif isinstance(command, TurnRightCommand) and result is True:
             self.states.orientation = (self.states.orientation + 1) % 4
@@ -245,7 +248,6 @@ class ZappyAI:
             elif self.states.orientation == 3:
                 self.states.pos_x = (self.states.pos_x - 1) % self.map_x
             self.states.vision_grid = None
-
     def _decide_next_action(self):
         self.cycle_count += 1
         if getattr(self.states, 'ready_for_incantation', False):
