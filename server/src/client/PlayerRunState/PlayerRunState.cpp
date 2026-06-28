@@ -208,7 +208,8 @@ void Zappy::Client::PlayerRunState::connectNbrCommand(std::string_view, PlayerRu
 
 void Zappy::Client::PlayerRunState::forkCommand(std::string_view, PlayerRunState& state, Client& client, Game::Game& game)
 {
-    // TODO: implement
+    game.playerLayEgg(state.m_Player);
+    state.queueMessage("ok\n");
     state.addCooldown(Game::PLAYER_FORK_COOLDOWN);
 }
 
