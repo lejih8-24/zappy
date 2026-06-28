@@ -84,7 +84,12 @@ void Zappy::Game::Game::playerLayEgg(const Player& player)
 {
     auto [x, y] = player.position();
     auto& egg = m_Eggs.emplace_back(player.id(), player.team(), x, y);
-    m_GraphicsEvents.push_back(Event::eggNew(egg.id(), egg.parentId(), egg.getPosition()));
+
+    auto& team = m_Teams[std::string(player.team())];
+    team.maxMembers++;
+
+    m_GraphicsEvents.emplace_back(Event::playerFork(player.id()));
+    m_GraphicsEvents.emplace_back(Event::eggNew(egg.id(), egg.parentId(), egg.getPosition()));
 }
 
 auto Zappy::Game::Game::hatchEgg(std::string_view team) -> Player*

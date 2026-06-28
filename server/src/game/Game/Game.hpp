@@ -71,7 +71,6 @@ namespace Zappy::Game {
 
             void setTeams(std::span<std::string> names, std::size_t maxMembers);
 
-            void playerLayEgg(int playerId) { return playerLayEgg(m_Players[playerId]); }
             void playerLayEgg(const Player& player);
             Player* hatchEgg(std::string_view team);
 
