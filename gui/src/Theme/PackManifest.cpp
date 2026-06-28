@@ -78,8 +78,10 @@ std::unordered_map<std::string, int> PackManifest::animations() const
     if (animStart == std::string::npos)
         return result;
     auto blockStart = _json.find('{', animStart);
-    auto blockEnd = _json.find('}', blockStart);
-    if (blockStart == std::string::npos || blockEnd == std::string::npos)
+    if (blockStart == std::string::npos)
+        return result;
+    auto blockEnd = findMatchingBrace(_json, blockStart);
+    if (blockEnd == std::string::npos)
         return result;
 
     std::string block = _json.substr(blockStart + 1, blockEnd - blockStart - 1);
