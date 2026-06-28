@@ -27,7 +27,8 @@ namespace GUI {
 
 class Render {
     public:
-        Render(std::string_view host, int port, std::string_view pack = "default");
+        Render(std::string_view host, int port, std::string_view pack = "default",
+            int width = 1440, int height = 900);
         void renderLoop(Zappy::Networking::GraphicsClient &client);
 
     private:
