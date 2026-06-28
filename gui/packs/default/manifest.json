@@ -1,0 +1,7 @@
+{
+  "name": "Default",
+  "version": "1.0.0",
+  "description": "Built-in primitive renderer (cubes and spheres, no external assets required)",
+  "author": "Zappy Team",
+  "type": "primitive"
+}

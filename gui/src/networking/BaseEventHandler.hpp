@@ -1,0 +1,44 @@
+/*
+** EPITECH PROJECT, 2026
+** Project - Zappy
+** File description:
+** Header file for
+** BaseEventHandler class
+*/
+
+#pragma once
+
+#include <networking/events.hpp>
+
+
+namespace Zappy::Networking {
+    class BaseEventHandler {
+        public:
+            constexpr BaseEventHandler() noexcept = default;
+
+            constexpr inline void operator()(const EggConnect& data) {}
+            constexpr inline void operator()(const EggCreate& data) {}
+            constexpr inline void operator()(const EggDie& data) {}
+            constexpr inline void operator()(const MapSize& data) {}
+            constexpr inline void operator()(const NewPlayerConnect& data) {}
+            constexpr inline void operator()(const PlayerBroadcast& data) {}
+            constexpr inline void operator()(const PlayerCollectResource& data) {}
+            constexpr inline void operator()(const PlayerDie& data) {}
+            constexpr inline void operator()(const PlayerDropResource& data) {}
+            constexpr inline void operator()(const PlayerExpulsion& data) {}
+            constexpr inline void operator()(const PlayerIncantationEnd& data) {}
+            constexpr inline void operator()(const PlayerIncantationStart& data) {}
+            constexpr inline void operator()(const PlayerInventory& data) {}
+            constexpr inline void operator()(const PlayerLayEgg& data) {}
+            constexpr inline void operator()(const PlayerLevel& data) {}
+            constexpr inline void operator()(const PlayerPosition& data) {}
+            constexpr inline void operator()(const ServerBadParameter& data) {}
+            constexpr inline void operator()(const ServerGameEnd& data) {}
+            constexpr inline void operator()(const ServerGetTime& data) {}
+            constexpr inline void operator()(const ServerMessage& data) {}
+            constexpr inline void operator()(const ServerSetTime& data) {}
+            constexpr inline void operator()(const ServerUnknownCommand& data) {}
+            constexpr inline void operator()(const TeamName& data) {}
+            constexpr inline void operator()(const TileContents& data) {}
+    };
+}

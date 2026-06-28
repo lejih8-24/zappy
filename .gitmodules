@@ -1,3 +1,7 @@
+[submodule "raylib"]
+  path = lib/raylib
+  url = https://github.com/raysan5/raylib.git
+
 [submodule "liblattice"]
   path = lib/liblattice
   url = git@github.com:Bard-Gaming/liblattice.git
