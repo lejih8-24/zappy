@@ -16,8 +16,6 @@
 #include <stdexcept>
 #include <string>
 
-static constexpr const char *DEFAULT_MODEL_PATH = PACKS_DIR "penguin/player.glb";
-
 // The model backend converts u32 (UNSIGNED_INT) mesh indices to u16, corrupting any index > 65535.
 // Loading such a file causes a segfault inside the skin processor.
 // We pre-check the GLB JSON chunk for componentType 5125 (UNSIGNED_INT) and refuse to
@@ -49,10 +47,6 @@ struct GUI::CharacterModel::ModelData {
     int animationCount = 0;
     Matrix correction = MatrixIdentity();
 };
-
-GUI::CharacterModel::CharacterModel() : CharacterModel(DEFAULT_MODEL_PATH)
-{
-}
 
 GUI::CharacterModel::CharacterModel(std::string_view path, bool loadAnimations)
     : _modelData(std::make_unique<ModelData>())

@@ -14,7 +14,6 @@
 namespace GUI {
 class CharacterModel {
     public:
-        CharacterModel();
         explicit CharacterModel(std::string_view path, bool loadAnimations = true);
         ~CharacterModel();
 
