@@ -215,7 +215,7 @@ void Zappy::Client::PlayerRunState::forkCommand(std::string_view, PlayerRunState
 
 void Zappy::Client::PlayerRunState::ejectCommand(std::string_view, PlayerRunState& state, Client& client, Game::Game& game)
 {
-    // TODO: implement
+    game.playerEject(state.m_Player);
     state.addCooldown(Game::PLAYER_EJECT_COOLDOWN);
 }
 
