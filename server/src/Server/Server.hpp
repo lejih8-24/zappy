@@ -76,10 +76,12 @@ namespace Zappy {
                     inline Builder&& fromArguments(int argc, char *argv[]) { return fromArguments(std::span(const_cast<const char**>(argv), const_cast<const char**>(argv + argc))); }
                     Builder&& fromArguments(std::span<const char*> args);
 
-                    inline Builder&& setHostname(std::string_view hostname)                { m_Hostname = hostname;          return std::move(*this); }
-                    inline Builder&& setPort(std::uint16_t port)                           { m_Port = port;                  return std::move(*this); }
-                    inline Builder&& setMapSize(std::uint32_t width, std::uint32_t height) { m_MapSize = { width, height };  return std::move(*this); }
-                    inline Builder&& setMaxClientsPerTeam(std::uint32_t clients)           { m_ClientsPerTeam = clients;     return std::move(*this); }
+                    Builder&& setHostname(std::string_view hostname);
+                    Builder&& setPort(std::uint16_t port);
+                    inline Builder&& setMapSize(std::uint32_t width, std::uint32_t height) { return std::move(*this).setMapWidth(width).setMapHeight(height); }
+                    Builder&& setMapWidth(std::uint32_t width);
+                    Builder&& setMapHeight(std::uint32_t height);
+                    Builder&& setMaxClientsPerTeam(std::uint32_t clients);
                     Builder&& setTickSpeed(std::uint32_t speed);
                     Builder&& addTeamName(std::string_view name);
                     Builder&& setTeamNames(std::span<std::string_view> names);
@@ -106,9 +108,9 @@ namespace Zappy {
                             return;
 
                         if (ec == std::errc::result_out_of_range)
-                            throw Exceptions::ParseException("value " + std::string(repr) + " is out of range");
+                            throw Exceptions::ParseException("zappy: value " + std::string(repr) + " is out of range");
 
-                        throw Exceptions::ParseException("value " + std::string(repr) + " is not a number");
+                        throw Exceptions::ParseException("zappy: value " + std::string(repr) + " is not a number");
                     }
             };
     };

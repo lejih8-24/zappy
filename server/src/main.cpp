@@ -16,6 +16,7 @@ void run(int argc, char *argv[])
     #endif
 
     auto server = Zappy::Server::Builder()
+        .setHostname("localhost")
         .fromArguments(argc, argv)
         .build();
 

@@ -131,23 +131,69 @@ auto Zappy::Server::Builder::fromArguments(std::span<const char*> args) -> Build
     }
 
     if (m_Port == 0)
-        throw Exceptions::ParseException(std::string(progName) + ": missing required argument -p (port)");
+        throw Exceptions::ArgumentParseException(progName, "missing required argument -p (port)");
     if (m_MapSize.first == 0)
-        throw Exceptions::ParseException(std::string(progName) + ": missing required argument -x (map width)");
+        throw Exceptions::ArgumentParseException(progName, "missing required argument -x (map width)");
     if (m_MapSize.second == 0)
-        throw Exceptions::ParseException(std::string(progName) + ": missing required argument -y (map height)");
+        throw Exceptions::ArgumentParseException(progName, "missing required argument -y (map height)");
     if (m_TeamNames.empty())
-        throw Exceptions::ParseException(std::string(progName) + ": missing required argument -n (team names)");
+        throw Exceptions::ArgumentParseException(progName, "missing required argument -n (team names)");
     if (m_ClientsPerTeam == 0)
-        throw Exceptions::ParseException(std::string(progName) + ": missing required argument -c (clients per team)");
+        throw Exceptions::ArgumentParseException(progName, "missing required argument -c (clients per team)");
+
+    return std::move(*this);
+}
+
+auto Zappy::Server::Builder::setHostname(std::string_view hostname) -> Builder&&
+{
+    if (hostname == "localhost")
+        hostname = "127.0.0.1";
+
+    m_Hostname = hostname;
+
+    return std::move(*this);
+}
+
+auto Zappy::Server::Builder::setPort(std::uint16_t port) -> Builder&&
+{
+    m_Port = port;
+    return std::move(*this);
+}
+
+auto Zappy::Server::Builder::setMapWidth(std::uint32_t width) -> Builder&&
+{
+    if (!(1 <= width && width <= 100))
+        throw Exceptions::ParseException("map width must be in range [1; 100]");
+
+    m_MapSize.first = width;
+
+    return std::move(*this);
+}
+
+auto Zappy::Server::Builder::setMapHeight(std::uint32_t height) -> Builder&&
+{
+    if (!(1 <= height && height <= 100))
+        throw Exceptions::ParseException("map height must be in range [1; 100]");
+
+    m_MapSize.second = height;
+
+    return std::move(*this);
+}
+
+auto Zappy::Server::Builder::setMaxClientsPerTeam(std::uint32_t clients) -> Builder&&
+{
+    if (!(1 <= clients && clients <= 200))
+        throw Exceptions::ParseException("clients per team must be in range [1; 200].");
+
+    m_ClientsPerTeam = clients;
 
     return std::move(*this);
 }
 
 auto Zappy::Server::Builder::setTickSpeed(std::uint32_t speed) -> Builder&&
 {
-    if (speed == 0)
-        throw Exceptions::ParseException("game tick speed (frequency) may not be 0");
+    if (!(1 <= speed && speed <= 10000))
+        throw Exceptions::ParseException("game tick speed (frequency) must be in range [1; 10000]");
 
     m_TickSpeed = speed;
     return std::move(*this);
@@ -242,7 +288,7 @@ std::span<const char*> Zappy::Server::Builder::parseMapWidthOption(std::string_v
     toInt(args[0], width);
     args = args.subspan(1);
 
-    setMapSize(width, m_MapSize.second);
+    setMapWidth(width);
     return args;
 }
 
@@ -255,7 +301,7 @@ std::span<const char*> Zappy::Server::Builder::parseMapHeightOption(std::string_
     toInt(args[0], height);
     args = args.subspan(1);
 
-    setMapSize(m_MapSize.first, height);
+    setMapHeight(height);
     return args;
 }
 
