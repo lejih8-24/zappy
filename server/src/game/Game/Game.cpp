@@ -453,6 +453,7 @@ void Zappy::Game::Game::endPlayerIncantation(EvolutionGroup& group)
     bool success = isSuccessfulEvolution(group);
 
     m_GraphicsEvents.emplace_back(Event::playerIncantationEnd(group.position, success));
+    m_Map[group.position] -= INCANTATION_REQUIREMENTS[group.level].resources;
 
     for (auto id : group.players) {
         if (!m_Players.contains(id))
