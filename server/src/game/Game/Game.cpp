@@ -463,6 +463,7 @@ void Zappy::Game::Game::endPlayerIncantation(EvolutionGroup& group)
         if (success) {
             player.levelUp();
             player.addMessage("Current level: " + std::to_string(player.level()));
+            m_GraphicsEvents.emplace_back(Event::playerLevel(player.id(), player.level()));
         } else {
             player.addMessage("ko");
         }
