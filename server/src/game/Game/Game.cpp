@@ -349,7 +349,7 @@ std::pair<float, float> Zappy::Game::Game::distanceTo(std::pair<int, int> positi
  * Returns an angle in the
  * range [0; 2pi].
  */
-float normalizedAtan2(float y, float x)
+float Zappy::Game::Game::normalizedAtan2(float y, float x)
 {
     // Note: we invert y because going up / north
     // on our map means decreasing y (i.e. it's inverted).
@@ -379,6 +379,7 @@ unsigned int Zappy::Game::Game::orientationOffset(Orientation orientation)
         case Orientation::NORTH: return 2;
         case Orientation::WEST:  return 4;
         case Orientation::SOUTH: return 6;
+        default:                 return 0;
     }
 }
 
