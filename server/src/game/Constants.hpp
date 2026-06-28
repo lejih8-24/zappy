@@ -59,7 +59,7 @@ namespace Zappy::Game {
     inline constexpr std::chrono::duration<double, std::milli> PLAYER_FORWARD_COOLDOWN     { 7'000 };
     inline constexpr std::chrono::duration<double, std::milli> PLAYER_RIGHT_COOLDOWN       { 7'000 };
     inline constexpr std::chrono::duration<double, std::milli> PLAYER_LEFT_COOLDOWN        { 7'000 };
-    inline constexpr std::chrono::duration<double, std::milli> PLAYER_LOOK_COOLDOWN        { 300'000 };
+    inline constexpr std::chrono::duration<double, std::milli> PLAYER_LOOK_COOLDOWN        { 7'000 };
     inline constexpr std::chrono::duration<double, std::milli> PLAYER_INVENTORY_COOLDOWN   { 1'000 };
     inline constexpr std::chrono::duration<double, std::milli> PLAYER_BROADCAST_COOLDOWN   { 7'000 };
     inline constexpr std::chrono::duration<double, std::milli> PLAYER_FORK_COOLDOWN        { 42'000 };
