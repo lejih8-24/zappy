@@ -90,12 +90,12 @@ std::string Zappy::Game::Event::playerDrop(int playerId, unsigned int resource)
     return "pdr #" + std::to_string(playerId) + " " + std::to_string(resource) + "\n";
 }
 
-std::string Zappy::Game::Event::playerIncantationStart(std::pair<unsigned int, unsigned int> pos, unsigned int level, std::span<Player*> players)
+std::string Zappy::Game::Event::playerIncantationStart(std::pair<unsigned int, unsigned int> pos, unsigned int level, std::span<int> players)
 {
     std::string ids;
 
-    for (auto player : players) {
-        ids += std::to_string(player->id()) + " ";
+    for (auto id : players) {
+        ids += std::to_string(id) + " ";
     }
 
     return playerIncantationStart(pos, level, ids);
@@ -107,6 +107,13 @@ std::string Zappy::Game::Event::playerIncantationStart(std::pair<unsigned int, u
                   + std::to_string(pos.second) + " "
                   + std::to_string(level)      + " "
                   + std::string(playerIds)     + "\n";
+}
+
+std::string Zappy::Game::Event::playerIncantationEnd(std::pair<unsigned int, unsigned int> pos, bool success)
+{
+    return "pie " + std::to_string(pos.first)                 + " "
+                  + std::to_string(pos.second)                + " "
+                  + std::to_string(static_cast<int>(success)) + "\n";
 }
 
 std::string Zappy::Game::Event::eggNew(int eggId, int playerId, std::pair<unsigned int, unsigned int> pos)
