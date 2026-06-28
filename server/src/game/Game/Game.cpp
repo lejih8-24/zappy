@@ -206,6 +206,39 @@ bool Zappy::Game::Game::playerDropResource(Player& player, ResourceType type)
     return true;
 }
 
+bool Zappy::Game::Game::playerEject(const Player& ejector)
+{
+    m_GraphicsEvents.emplace_back(Event::playerEject(ejector.id()));
+
+    for (auto& [_, player] : m_Players) {
+        if (&player == &ejector)
+            continue;
+
+        if (player.position() != ejector.position())
+            continue;
+
+        // General formula:
+        // a = offset(P1)
+        // b = offset(P2)
+        // direction = ((b + 1) - a + 8) % 8
+        // (where + 8 and % 8 are just to stay within [1; 8])
+        int a = orientationOffset(ejector.orientation());
+        int b = orientationOffset(player.orientation());
+        unsigned int direction = (b - a + 9) % 8;
+
+        // Move player in ejector's direction
+        auto orientation = player.orientation();
+        player.setOrientation(ejector.orientation());
+        player.moveForward(m_Map.size());
+        player.setOrientation(orientation);
+
+        player.addMessage("eject: " + std::to_string(direction) + "\n");
+        m_GraphicsEvents.emplace_back(Event::playerPosition(player.id(), player.position(), player.orientation()));
+    }
+
+    return true;
+}
+
 void Zappy::Game::Game::playerBroadcast(const Player& sender, std::string_view msg)
 {
     m_GraphicsEvents.emplace_back(Event::playerBroadcast(sender.id(), msg));
@@ -498,6 +531,7 @@ std::pair<unsigned int, unsigned int> Zappy::Game::Game::randomTileResourcePosit
 {
     auto randPos = randomPosition();
 
+    #ifdef ZAPPY_FILL_EMPTY_TILES
     if (m_Map[randPos].empty())
         return randPos;
 
@@ -509,6 +543,7 @@ std::pair<unsigned int, unsigned int> Zappy::Game::Game::randomTileResourcePosit
                 return { x, y };
         }
     }
+    #endif
 
     return randPos;
 }

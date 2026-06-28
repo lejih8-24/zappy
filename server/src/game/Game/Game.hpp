@@ -79,6 +79,7 @@ namespace Zappy::Game {
             void playerFeed(Player& player);
             bool playerCollectResource(Player& player, ResourceType resource);
             bool playerDropResource(Player& player, ResourceType resource);
+            bool playerEject(const Player& player);
 
             void playerBroadcast(const Player& player, std::string_view msg);
             EvolutionGroup* doPlayerIncantation(const Player& initiator);
