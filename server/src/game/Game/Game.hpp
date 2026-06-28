@@ -26,11 +26,20 @@ namespace Zappy::Game {
 
         static std::mt19937 s_RNG;
 
-        public:
+        struct EvolutionGroup {
+            std::chrono::duration<double, std::milli> timeLeft;
+            std::pair<unsigned int, unsigned int> position;
+            std::vector<int> players;
+            unsigned char level;
+        };
+
+        private:
             Utils::Array2D<Resources> m_Map;
             std::map<int, Player> m_Players;
             std::vector<Egg> m_Eggs;
             std::unordered_map<std::string, Team> m_Teams;
+
+            std::vector<EvolutionGroup> m_EvolveGroups;
 
             std::vector<std::string> m_GraphicsEvents;
             unsigned int m_GameSpeed;
@@ -71,11 +80,14 @@ namespace Zappy::Game {
             void playerFeed(Player& player);
             bool playerCollectResource(Player& player, ResourceType resource);
             bool playerDropResource(Player& player, ResourceType resource);
-            bool doPlayerIncantation(const Player& initiator);
+
+            EvolutionGroup* doPlayerIncantation(const Player& initiator);
 
             void killPlayer(const Player& player);
 
         private:
+            bool isSuccessfulEvolution(const EvolutionGroup& group) const;
+            void endPlayerIncantation(EvolutionGroup& group);
             Player& emplacePlayer(std::string_view team);
 
             void regenerateResources();

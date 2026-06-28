@@ -11,6 +11,9 @@
 #include <random>
 
 
+using std::chrono_literals::operator""ms;
+
+
 std::mt19937 Zappy::Game::Game::s_RNG(std::random_device{}());
 
 
@@ -21,6 +24,7 @@ Zappy::Game::Game::Game() noexcept
     , m_Teams()
     , m_GraphicsEvents()
     , m_GameSpeed(1)
+    , m_EvolveGroups()
 {
     regenerateResources();
 }
@@ -33,6 +37,15 @@ void Zappy::Game::Game::update(std::chrono::nanoseconds dt)
     if (m_TimeSinceResourceRespawn >= RESOURCE_RESPAWN_DELAY / m_GameSpeed) {
         regenerateResources();
         m_TimeSinceResourceRespawn = m_TimeSinceResourceRespawn.zero();
+    }
+
+    for (auto it = m_EvolveGroups.begin(); it != m_EvolveGroups.end(); ++it) {
+        it->timeLeft -= dt;
+        if (it->timeLeft > 0.0ms)
+            continue;
+
+        endPlayerIncantation(*it);
+        it = m_EvolveGroups.erase(it);
     }
 }
 
@@ -184,10 +197,10 @@ bool Zappy::Game::Game::playerDropResource(Player& player, ResourceType type)
     return true;
 }
 
-bool Zappy::Game::Game::doPlayerIncantation(const Player& initiator)
+auto Zappy::Game::Game::doPlayerIncantation(const Player& initiator) -> EvolutionGroup*
 {
     if (initiator.level() >= MAX_PLAYER_LEVEL)
-        return false;
+        return nullptr;
 
     auto& requirements = INCANTATION_REQUIREMENTS[initiator.level()];
     auto& availableResources = m_Map[initiator.position()];
@@ -195,9 +208,9 @@ bool Zappy::Game::Game::doPlayerIncantation(const Player& initiator)
     // The initiator's tile doesn't contain the
     // required resources
     if (!availableResources.contains(requirements.resources))
-        return false;
+        return nullptr;
 
-    std::vector<Player*> involvedPlayers;
+    auto& group = m_EvolveGroups.emplace_back();
 
     for (auto& [_, player] : m_Players) {
         if (player.position() != initiator.position())
@@ -205,22 +218,79 @@ bool Zappy::Game::Game::doPlayerIncantation(const Player& initiator)
         if (player.level() != initiator.level())
             continue;
 
-        involvedPlayers.push_back(&player);
+        group.players.push_back(player.id());
     }
 
     // Not enough participating players
-    if (involvedPlayers.size() < requirements.players)
+    if (group.players.size() < requirements.players) {
+        m_EvolveGroups.pop_back();
+        return nullptr;
+    }
+
+    m_GraphicsEvents.emplace_back(Event::playerIncantationStart(initiator.position(), initiator.level(), group.players));
+
+    // Note: don't remove resources from tile;
+    // they are checked again at the end of the
+    // incantation.
+
+    group.level    = initiator.level();
+    group.position = initiator.position();
+    group.timeLeft = PLAYER_INCANTATION_COOLDOWN / m_GameSpeed;
+
+    for (auto id : group.players) {
+        auto& player = m_Players[id];
+        player.addCooldown(group.timeLeft);
+    }
+
+    return &group;
+}
+
+bool Zappy::Game::Game::isSuccessfulEvolution(const EvolutionGroup& group) const
+{
+    auto& requirements = INCANTATION_REQUIREMENTS[group.level];
+    auto& availableResources = m_Map[group.position];
+
+    // the required resources aren't
+    // available anymore
+    if (!availableResources.contains(requirements.resources))
         return false;
 
-    m_GraphicsEvents.emplace_back(Event::playerIncantationStart(initiator.position(), initiator.level(), involvedPlayers));
+    std::size_t participants = 0;
 
-    // Consume the ritual's resources and level up
-    // all involved players
-    availableResources -= requirements.resources;
-    for (auto player : involvedPlayers)
-        player->levelUp();
+    for (auto id : group.players) {
+        // player may have died
+        if (!m_Players.contains(id))
+            continue;
 
-    return true;
+        // player moved / got moved away
+        if (m_Players.at(id).position() != group.position)
+            continue;
+
+        participants++;
+    }
+
+    return participants >= requirements.players;
+}
+
+void Zappy::Game::Game::endPlayerIncantation(EvolutionGroup& group)
+{
+    bool success = isSuccessfulEvolution(group);
+
+    m_GraphicsEvents.emplace_back(Event::playerIncantationEnd(group.position, success));
+
+    for (auto id : group.players) {
+        if (!m_Players.contains(id))
+            continue;
+
+        auto& player = m_Players.at(id);
+
+        if (success) {
+            player.levelUp();
+            player.addMessage("Current level: " + std::to_string(player.level()));
+        } else {
+            player.addMessage("ko");
+        }
+    }
 }
 
 void Zappy::Game::Game::killPlayer(const Player& player)
