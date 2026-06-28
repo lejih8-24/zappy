@@ -18,11 +18,11 @@ namespace Zappy::Game {
 namespace Zappy::Client {
     class PlayerWaitState : public QueueState<128> {
             Game::Player& m_Player;
-            std::chrono::duration<double, std::milli> m_WaitDuration;
 
         public:
-            PlayerWaitState(Game::Player& player, std::chrono::duration<double, std::milli> period);
+            PlayerWaitState(Game::Player& player);
 
             void update(Client& client, std::chrono::nanoseconds dt) override;
+            void disconnect(Game::Game& game) override;
     };
 }
